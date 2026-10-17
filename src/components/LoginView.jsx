@@ -15,7 +15,13 @@ import {
   Check,
   Search,
   Sparkles,
-  QrCode
+  QrCode,
+  BadgeCheck,
+  ScanBarcode,
+  Printer,
+  Monitor,
+  Code2,
+  Cctv
 } from 'lucide-react';
 import SchoolLogo from './SchoolLogo';
 
@@ -629,26 +635,59 @@ export default function LoginView({ data, onLogin }) {
       </div>
 
       {/* Floating Glassmorphism Footer: Powered by CV. ISTANA BARCODE COMPUTER - DEVELOPER CERDAS */}
-      <div className="relative max-w-md w-full mt-4 bg-slate-900/80 backdrop-blur-md border border-white/15 rounded-2xl p-3.5 shadow-2xl text-white transition hover:border-amber-400/50">
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 bg-gradient-to-br from-amber-500/20 to-orange-500/20 border border-amber-400/30 rounded-xl flex items-center justify-center flex-shrink-0 text-amber-400 shadow-inner">
-            <QrCode className="w-5 h-5" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center justify-between gap-1.5 flex-wrap">
-              <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-                Powered by
-              </span>
-              <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-cyan-500/20 border border-cyan-400/30 text-cyan-300">
-                <Sparkles className="w-3 h-3 text-cyan-300" /> DEVELOPER CERDAS
-              </span>
+      <div className="relative max-w-2xl w-full mt-5 bg-[#0b132b]/90 backdrop-blur-md border border-slate-700/80 rounded-2xl p-4 sm:p-5 shadow-2xl text-white transition hover:border-slate-600">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-5">
+          {/* Kolom Kiri: Logo QR + Identitas Perusahaan */}
+          <div className="flex items-center gap-3.5 w-full md:w-auto">
+            <div className="p-3 bg-gradient-to-br from-amber-950/70 to-yellow-950/40 border border-amber-500/60 rounded-2xl flex items-center justify-center flex-shrink-0 text-amber-400 shadow-inner">
+              <QrCode className="w-8 h-8" />
             </div>
-            <p className="text-xs sm:text-sm font-black tracking-tight text-white mt-0.5 truncate">
-              CV. ISTANA BARCODE COMPUTER
-            </p>
-            <p className="text-[10px] text-slate-400 font-medium leading-tight mt-0.5">
-              Official IT Solution & POS Barcode Hardware System
-            </p>
+            <div>
+              <p className="text-[11px] font-black uppercase tracking-widest text-slate-400">
+                POWERED BY
+              </p>
+              <h3 className="text-base sm:text-lg font-black tracking-tight text-white leading-snug">
+                CV. ISTANA BARCODE COMPUTER
+              </h3>
+              <p className="text-xs text-slate-400 font-medium mt-0.5">
+                Official IT Solution & POS Barcode Hardware System
+              </p>
+            </div>
+          </div>
+
+          {/* Kolom Kanan: DEVELOPER CERDAS Badge + Category Pills */}
+          <div className="flex flex-col items-center md:items-end gap-2 w-full md:w-auto">
+            {/* Badge Developer Cerdas */}
+            <div className="w-full md:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-1.5 rounded-full bg-cyan-950/80 border border-cyan-400 text-cyan-300 font-black text-xs shadow-sm tracking-wider">
+              <BadgeCheck className="w-4 h-4 text-cyan-400 flex-shrink-0" />
+              <span>DEVELOPER CERDAS</span>
+            </div>
+
+            {/* Grid 2 Kolom: Barcode, POS, Komputer, Software */}
+            <div className="grid grid-cols-2 gap-1.5 w-full md:w-auto">
+              <div className="px-3 py-1 bg-slate-900/90 border border-slate-700/80 rounded-lg text-xs font-bold text-slate-200 flex items-center justify-center gap-1.5 shadow-2xs">
+                <ScanBarcode className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
+                <span>Barcode</span>
+              </div>
+              <div className="px-3 py-1 bg-slate-900/90 border border-slate-700/80 rounded-lg text-xs font-bold text-slate-200 flex items-center justify-center gap-1.5 shadow-2xs">
+                <Printer className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
+                <span>POS</span>
+              </div>
+              <div className="px-3 py-1 bg-slate-900/90 border border-slate-700/80 rounded-lg text-xs font-bold text-slate-200 flex items-center justify-center gap-1.5 shadow-2xs">
+                <Monitor className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
+                <span>Komputer</span>
+              </div>
+              <div className="px-3 py-1 bg-slate-900/90 border border-slate-700/80 rounded-lg text-xs font-bold text-slate-200 flex items-center justify-center gap-1.5 shadow-2xs">
+                <Code2 className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
+                <span>Software</span>
+              </div>
+            </div>
+
+            {/* Baris Bawah: Smart Digital CCTV */}
+            <div className="w-full md:w-auto px-4 py-1 bg-slate-900/90 border border-slate-700/80 rounded-lg text-xs font-bold text-slate-200 flex items-center justify-center gap-1.5 shadow-2xs">
+              <Cctv className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
+              <span>Smart Digital CCTV</span>
+            </div>
           </div>
         </div>
       </div>

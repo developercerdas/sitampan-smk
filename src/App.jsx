@@ -14,7 +14,7 @@ import ProfilKopView from './components/ProfilKopView';
 import MasterRulesView from './components/MasterRulesView';
 import KuitansiModal from './components/KuitansiModal';
 import { dataService } from './services/dataService';
-import { Database, GitBranch, Bell, Menu, LogOut, QrCode, Sparkles } from 'lucide-react';
+import { Database, GitBranch, Bell, Menu, LogOut, QrCode, Sparkles, BadgeCheck, ScanBarcode, Printer, Monitor, Code2, Cctv } from 'lucide-react';
 
 const USER_STORAGE_KEY = 'SITAMPAN_CURRENT_USER';
 
@@ -270,34 +270,59 @@ export default function App() {
         </main>
 
         {/* Footer Aplikasi Internal */}
-        <footer className="no-print bg-white border-t border-slate-200 py-4 px-4 sm:px-6 text-center text-xs text-slate-500 space-y-2.5">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 max-w-5xl mx-auto">
-            <div className="text-left text-center sm:text-left">
+        <footer className="no-print bg-white border-t border-slate-200 py-4 px-4 sm:px-6 text-center text-xs text-slate-500">
+          <div className="flex flex-col lg:flex-row items-center justify-between gap-4 max-w-6xl mx-auto">
+            <div className="text-center lg:text-left">
               <p className="font-bold text-slate-800 text-xs sm:text-sm">
                 SITAMPAN SMK — {data.sekolah.nama}
               </p>
-              <p className="text-[11px] text-slate-500">
+              <p className="text-[11px] text-slate-500 mt-0.5">
                 Sistem Informasi Tagihan & Manajemen Pembayaran Keuangan SMK (Hybrid Tunai & VA)
               </p>
             </div>
 
-            {/* Badge Developer */}
-            <div className="inline-flex items-center gap-2.5 bg-slate-900 text-white px-3.5 py-1.5 rounded-xl shadow-xs border border-slate-800">
-              <div className="p-1 bg-amber-400/20 text-amber-400 rounded-lg">
-                <QrCode className="w-4 h-4" />
-              </div>
-              <div className="text-left">
-                <div className="flex items-center gap-1.5">
+            {/* Badge Developer Lengkap CV. ISTANA BARCODE COMPUTER */}
+            <div className="bg-[#0b132b] text-white p-3 rounded-2xl border border-slate-800 shadow-md flex flex-col sm:flex-row items-center gap-3.5">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 bg-gradient-to-br from-amber-950/70 to-yellow-950/40 border border-amber-500/50 rounded-xl text-amber-400">
+                  <QrCode className="w-5 h-5" />
+                </div>
+                <div className="text-left">
                   <span className="text-[9px] font-black uppercase tracking-wider text-slate-400">
-                    Powered by
+                    POWERED BY
                   </span>
-                  <span className="text-[8px] font-black uppercase tracking-wider px-1.5 py-0.2 rounded-full bg-cyan-400/20 text-cyan-300 border border-cyan-400/30">
-                    DEVELOPER CERDAS
+                  <p className="text-xs font-black tracking-tight text-white leading-tight">
+                    CV. ISTANA BARCODE COMPUTER
+                  </p>
+                  <p className="text-[9px] text-slate-400">
+                    Official IT Solution & POS Hardware
+                  </p>
+                </div>
+              </div>
+
+              {/* Developer Cerdas + Service Pills */}
+              <div className="flex flex-col sm:items-end gap-1.5 border-t sm:border-t-0 sm:border-l border-slate-800 pt-2 sm:pt-0 sm:pl-3 w-full sm:w-auto">
+                <div className="inline-flex items-center justify-center gap-1 px-2.5 py-0.5 rounded-full bg-cyan-950/80 border border-cyan-400 text-cyan-300 font-extrabold text-[10px]">
+                  <BadgeCheck className="w-3 h-3 text-cyan-400" />
+                  <span>DEVELOPER CERDAS</span>
+                </div>
+                <div className="flex flex-wrap items-center justify-center sm:justify-end gap-1">
+                  <span className="px-2 py-0.5 bg-slate-900 border border-slate-700/80 rounded text-[10px] font-bold text-slate-200 inline-flex items-center gap-1">
+                    <ScanBarcode className="w-2.5 h-2.5 text-amber-400" /> Barcode
+                  </span>
+                  <span className="px-2 py-0.5 bg-slate-900 border border-slate-700/80 rounded text-[10px] font-bold text-slate-200 inline-flex items-center gap-1">
+                    <Printer className="w-2.5 h-2.5 text-amber-400" /> POS
+                  </span>
+                  <span className="px-2 py-0.5 bg-slate-900 border border-slate-700/80 rounded text-[10px] font-bold text-slate-200 inline-flex items-center gap-1">
+                    <Monitor className="w-2.5 h-2.5 text-amber-400" /> Komputer
+                  </span>
+                  <span className="px-2 py-0.5 bg-slate-900 border border-slate-700/80 rounded text-[10px] font-bold text-slate-200 inline-flex items-center gap-1">
+                    <Code2 className="w-2.5 h-2.5 text-amber-400" /> Software
+                  </span>
+                  <span className="px-2 py-0.5 bg-slate-900 border border-slate-700/80 rounded text-[10px] font-bold text-slate-200 inline-flex items-center gap-1">
+                    <Cctv className="w-2.5 h-2.5 text-amber-400" /> CCTV
                   </span>
                 </div>
-                <p className="text-[11px] font-black tracking-tight text-white leading-tight">
-                  CV. ISTANA BARCODE COMPUTER
-                </p>
               </div>
             </div>
           </div>
