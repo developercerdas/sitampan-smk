@@ -14,7 +14,7 @@ import ProfilKopView from './components/ProfilKopView';
 import MasterRulesView from './components/MasterRulesView';
 import KuitansiModal from './components/KuitansiModal';
 import { dataService } from './services/dataService';
-import { Database, GitBranch, Bell, Menu, LogOut } from 'lucide-react';
+import { Database, GitBranch, Bell, Menu, LogOut, ScanBarcode, Sparkles } from 'lucide-react';
 
 const USER_STORAGE_KEY = 'SITAMPAN_CURRENT_USER';
 
@@ -269,17 +269,38 @@ export default function App() {
           )}
         </main>
 
-        {/* Footer */}
-        <footer className="no-print bg-white border-t border-slate-200 py-4 px-6 text-center text-xs text-slate-500">
-          <p className="font-semibold text-slate-700">
-            SITAMPAN SMK — {data.sekolah.nama}
-          </p>
-          <p className="text-[11px] text-slate-500 mt-0.5">
-            <strong>SITAMPAN SMK:</strong> Sistem Informasi Tagihan & Manajemen Pembayaran Keuangan Sekolah Menengah Kejuruan
-          </p>
-          <p className="text-[10px] text-slate-400 mt-0.5">
-            Sistem Keuangan Terpadu (Hybrid Loket Kasir Tunai + Rekening Bank Virtual Account / VA)
-          </p>
+        {/* Footer Aplikasi Internal */}
+        <footer className="no-print bg-white border-t border-slate-200 py-4 px-4 sm:px-6 text-center text-xs text-slate-500 space-y-2.5">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 max-w-5xl mx-auto">
+            <div className="text-left text-center sm:text-left">
+              <p className="font-bold text-slate-800 text-xs sm:text-sm">
+                SITAMPAN SMK — {data.sekolah.nama}
+              </p>
+              <p className="text-[11px] text-slate-500">
+                Sistem Informasi Tagihan & Manajemen Pembayaran Keuangan SMK (Hybrid Tunai & VA)
+              </p>
+            </div>
+
+            {/* Badge Developer */}
+            <div className="inline-flex items-center gap-2.5 bg-slate-900 text-white px-3.5 py-1.5 rounded-xl shadow-xs border border-slate-800">
+              <div className="p-1 bg-amber-400/20 text-amber-400 rounded-lg">
+                <ScanBarcode className="w-4 h-4" />
+              </div>
+              <div className="text-left">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[9px] font-black uppercase tracking-wider text-slate-400">
+                    Powered by
+                  </span>
+                  <span className="text-[8px] font-black uppercase tracking-wider px-1.5 py-0.2 rounded-full bg-cyan-400/20 text-cyan-300 border border-cyan-400/30">
+                    DEVELOPER CERDAS
+                  </span>
+                </div>
+                <p className="text-[11px] font-black tracking-tight text-white leading-tight">
+                  CV. ISTANA BARCODE COMPUTER
+                </p>
+              </div>
+            </div>
+          </div>
         </footer>
       </div>
 

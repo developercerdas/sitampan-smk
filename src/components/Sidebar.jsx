@@ -19,7 +19,8 @@ import {
   X,
   Sparkles,
   PanelLeftClose,
-  PanelLeftOpen
+  PanelLeftOpen,
+  ScanBarcode
 } from 'lucide-react';
 import SchoolLogo from './SchoolLogo';
 
@@ -353,6 +354,28 @@ export default function Sidebar({
               <RotateCcw className="w-3 h-3" />
               <span>Reset Data Standar</span>
             </button>
+          )}
+
+          {/* Developer Branding: CV. ISTANA BARCODE COMPUTER - DEVELOPER CERDAS */}
+          {(!isCollapsed || isMobileOpen) && (
+            <div className="pt-2 border-t border-slate-800/80">
+              <div className="p-2 rounded-xl bg-slate-950/70 border border-slate-800/90 flex items-center gap-2">
+                <div className="p-1.5 bg-amber-400/15 border border-amber-400/25 rounded-lg text-amber-400 flex-shrink-0">
+                  <ScanBarcode className="w-4 h-4" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[9px] font-black uppercase tracking-wider text-slate-500">
+                    Engine by
+                  </p>
+                  <p className="text-[10px] font-black text-slate-200 truncate leading-tight">
+                    CV. ISTANA BARCODE
+                  </p>
+                  <span className="inline-block text-[8px] font-extrabold text-cyan-400 tracking-wider">
+                    DEVELOPER CERDAS
+                  </span>
+                </div>
+              </div>
+            </div>
           )}
         </div>
       </aside>
