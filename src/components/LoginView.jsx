@@ -61,23 +61,55 @@ export default function LoginView({ data, onLogin }) {
   };
 
   const handleQuickLogin = (role, extra = {}) => {
-    if (role === 'ADMIN') {
+    if (role === 'KASIR_HANA') {
       onLogin({
         role: 'ADMIN',
-        nama: 'Ibu Rini (Kasir Loket TU)',
-        username: 'admin_tu'
+        nama: 'Hana Pratiwi, A.Md. (Kasir Bisnis Manajemen)',
+        username: 'hana',
+        kasirKelompok: 'BISNIS_MANAJEMEN',
+        kelompokNama: 'Kelompok Bisnis & Manajemen',
+        allowedJurusan: ['AKL', 'MPLB', 'PM'],
+        petugasLabel: 'Kasir TU - Hana (Bisnis Manajemen)'
+      });
+    } else if (role === 'KASIR_UMI') {
+      onLogin({
+        role: 'ADMIN',
+        nama: 'Umi Kalsum, S.E. (Kasir Pariwisata)',
+        username: 'umi',
+        kasirKelompok: 'PARIWISATA',
+        kelompokNama: 'Kelompok Pariwisata',
+        allowedJurusan: ['KSP', 'HTL'],
+        petugasLabel: 'Kasir TU - Umi (Pariwisata)'
+      });
+    } else if (role === 'ADMIN') {
+      onLogin({
+        role: 'ADMIN',
+        nama: 'Ahmad Junaidi, S.Kom. (Admin Pusat)',
+        username: 'admin',
+        kasirKelompok: 'ALL',
+        kelompokNama: 'Semua Pusat (5 Jurusan)',
+        allowedJurusan: ['AKL', 'MPLB', 'PM', 'KSP', 'HTL'],
+        petugasLabel: 'Admin Pusat TU (Ahmad Junaidi)'
       });
     } else if (role === 'BENDAHARA') {
       onLogin({
         role: 'BENDAHARA',
         nama: 'Hj. Siti Nurhaliza, S.E. (Bendahara Sekolah)',
-        username: 'bendahara_keu'
+        username: 'bendahara',
+        kasirKelompok: 'ALL',
+        kelompokNama: 'Semua Pusat (5 Jurusan)',
+        allowedJurusan: ['AKL', 'MPLB', 'PM', 'KSP', 'HTL'],
+        petugasLabel: 'Bendahara Sekolah (Hj. Siti Nurhaliza)'
       });
     } else if (role === 'KEPALA_SEKOLAH') {
       onLogin({
         role: 'KEPALA_SEKOLAH',
         nama: data.sekolah.kepalaSekolah || 'Drs. H. Mulyadi, M.Pd.',
-        username: 'kepsek_smk'
+        username: 'kepsek',
+        kasirKelompok: 'ALL',
+        kelompokNama: 'Semua Pusat (5 Jurusan)',
+        allowedJurusan: ['AKL', 'MPLB', 'PM', 'KSP', 'HTL'],
+        petugasLabel: 'Kepala Sekolah'
       });
     } else if (role === 'WALI_KELAS') {
       const kls = data.kelas.find((k) => k.id === Number(selectedWaliKelasId)) || data.kelas[0];
@@ -113,12 +145,20 @@ export default function LoginView({ data, onLogin }) {
       const u = username.trim().toLowerCase();
       const p = password.trim();
 
-      if (u === 'admin' && (p === 'admin123' || p === 'admin')) {
+      if (u === 'hana' && (p === 'hana123' || p === 'hana' || p === 'admin123')) {
+        handleQuickLogin('KASIR_HANA');
+      } else if (u === 'umi' && (p === 'umi123' || p === 'umi' || p === 'admin123')) {
+        handleQuickLogin('KASIR_UMI');
+      } else if (u === 'admin' && (p === 'admin123' || p === 'admin')) {
         handleQuickLogin('ADMIN');
       } else if (u === 'bendahara' && (p === 'bendahara123' || p === 'bendahara' || p === 'admin123' || p === 'admin')) {
         handleQuickLogin('BENDAHARA');
       } else if (u === 'kepsek' && (p === 'kepsek123' || p === 'kepsek' || p === 'admin123' || p === 'admin')) {
         handleQuickLogin('KEPALA_SEKOLAH');
+      } else if (staffRole === 'KASIR_HANA' && (p === 'hana123' || p === 'admin123')) {
+        handleQuickLogin('KASIR_HANA');
+      } else if (staffRole === 'KASIR_UMI' && (p === 'umi123' || p === 'admin123')) {
+        handleQuickLogin('KASIR_UMI');
       } else if (staffRole === 'BENDAHARA' && (p === 'bendahara123' || p === 'admin123' || p === 'admin')) {
         handleQuickLogin('BENDAHARA');
       } else if (staffRole === 'KEPALA_SEKOLAH' && (p === 'kepsek123' || p === 'admin123' || p === 'admin')) {
@@ -126,7 +166,7 @@ export default function LoginView({ data, onLogin }) {
       } else if (staffRole === 'ADMIN' && (p === 'admin123' || p === 'admin')) {
         handleQuickLogin('ADMIN');
       } else {
-        setErrorMsg('Username atau password tidak sesuai! (Demo: admin/admin123, bendahara/bendahara123, kepsek/kepsek123)');
+        setErrorMsg('Username atau password tidak sesuai! (Demo: hana/hana123, umi/umi123, admin/admin123, bendahara/bendahara123, kepsek/kepsek123)');
       }
     } else if (activeTab === 'WALI_KELAS') {
       handleQuickLogin('WALI_KELAS');
@@ -348,7 +388,7 @@ export default function LoginView({ data, onLogin }) {
                 {/* Pilihan Cepat Uji Coba NIS per Jurusan (Trial Mode) */}
                 <div className="pt-2 border-t border-slate-100">
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
-                    Contoh NIS Siswa per Jurusan (Bisa Diklik Langsung):
+                    Contoh NIS Siswa 5 Jurusan (Bisa Diklik Langsung):
                   </p>
                   <div className="flex flex-wrap gap-1.5">
                     <button
@@ -360,7 +400,7 @@ export default function LoginView({ data, onLogin }) {
                           : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200'
                       }`}
                     >
-                      AKL: 12640 (Dian)
+                      AKL: 12640 (Dewi)
                     </button>
                     <button
                       type="button"
@@ -371,18 +411,40 @@ export default function LoginView({ data, onLogin }) {
                           : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200'
                       }`}
                     >
-                      PM: 12643 (Abi)
+                      PM: 12643 (Ahmad)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handlePilihNisPreset('12560')}
+                      className={`text-[11px] px-2.5 py-1 rounded-lg border font-semibold transition ${
+                        inputNis === '12560'
+                          ? 'bg-emerald-100 border-emerald-400 text-emerald-900 font-bold'
+                          : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200'
+                      }`}
+                    >
+                      MPLB: 12560 (Rizki)
                     </button>
                     <button
                       type="button"
                       onClick={() => handlePilihNisPreset('12553')}
                       className={`text-[11px] px-2.5 py-1 rounded-lg border font-semibold transition ${
                         inputNis === '12553'
-                          ? 'bg-emerald-100 border-emerald-400 text-emerald-900 font-bold'
+                          ? 'bg-rose-100 border-rose-400 text-rose-900 font-bold'
                           : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200'
                       }`}
                     >
-                      PAR: 12553 (Anjana)
+                      KSP: 12553 (Anisa)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handlePilihNisPreset('12670')}
+                      className={`text-[11px] px-2.5 py-1 rounded-lg border font-semibold transition ${
+                        inputNis === '12670'
+                          ? 'bg-amber-100 border-amber-400 text-amber-900 font-bold'
+                          : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200'
+                      }`}
+                    >
+                      HTL: 12670 (Kevin)
                     </button>
                   </div>
                 </div>
@@ -390,16 +452,16 @@ export default function LoginView({ data, onLogin }) {
             )}
 
             {/* ========================================================= */}
-            {/* FORM ROLE 2: PIMPINAN & STAF TU (KEPSEK, BENDAHARA, KASIR TU) */}
+            {/* FORM ROLE 2: PIMPINAN & STAF TU (KEPSEK, BENDAHARA, KASIR HANA, KASIR UMI) */}
             {/* ========================================================= */}
             {(activeTab === 'ADMIN' || activeTab === 'STAFF') && (
               <div className="space-y-3.5">
-                {/* Selector 3 Peran: Kepsek, Bendahara, Kasir TU */}
+                {/* Selector 5 Peran Manajemen */}
                 <div>
                   <label className="block text-xs font-bold text-slate-700 uppercase mb-1.5">
-                    Pilih Peran Akun Manajemen:
+                    Pilih Akun Kasir / Manajemen:
                   </label>
-                  <div className="grid grid-cols-3 gap-1.5 p-1 bg-slate-100 rounded-xl border border-slate-200 text-xs font-bold">
+                  <div className="grid grid-cols-3 gap-1.5 p-1 bg-slate-100 rounded-xl border border-slate-200 text-xs font-bold mb-1.5">
                     <button
                       type="button"
                       onClick={() => {
@@ -442,11 +504,47 @@ export default function LoginView({ data, onLogin }) {
                       }}
                       className={`py-2 px-1 rounded-lg transition text-center cursor-pointer ${
                         staffRole === 'ADMIN'
-                          ? 'bg-blue-600 text-white shadow-xs font-black'
+                          ? 'bg-slate-800 text-white shadow-xs font-black'
                           : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
                       }`}
                     >
-                      💼 Kasir TU
+                      🏢 Admin Pusat
+                    </button>
+                  </div>
+
+                  {/* 2 Kasir Penanggung Jawab Kelompok Jurusan */}
+                  <div className="grid grid-cols-2 gap-1.5 p-1 bg-blue-50/60 rounded-xl border border-blue-200 text-xs font-bold">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setStaffRole('KASIR_HANA');
+                        setUsername('hana');
+                        setPassword('hana123');
+                        setErrorMsg('');
+                      }}
+                      className={`py-2 px-2 rounded-lg transition text-center cursor-pointer ${
+                        staffRole === 'KASIR_HANA'
+                          ? 'bg-blue-600 text-white shadow-xs font-black'
+                          : 'text-blue-900 hover:bg-blue-100/60'
+                      }`}
+                    >
+                      💼 Kasir Hana (BisMan)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setStaffRole('KASIR_UMI');
+                        setUsername('umi');
+                        setPassword('umi123');
+                        setErrorMsg('');
+                      }}
+                      className={`py-2 px-2 rounded-lg transition text-center cursor-pointer ${
+                        staffRole === 'KASIR_UMI'
+                          ? 'bg-rose-600 text-white shadow-xs font-black'
+                          : 'text-rose-900 hover:bg-rose-100/60'
+                      }`}
+                    >
+                      🏖️ Kasir Umi (Pariwisata)
                     </button>
                   </div>
                 </div>
@@ -457,7 +555,11 @@ export default function LoginView({ data, onLogin }) {
                     ? 'bg-amber-50 border-amber-200 text-amber-950'
                     : staffRole === 'BENDAHARA'
                     ? 'bg-purple-50 border-purple-200 text-purple-950'
-                    : 'bg-blue-50 border-blue-200 text-blue-950'
+                    : staffRole === 'KASIR_HANA'
+                    ? 'bg-blue-50 border-blue-200 text-blue-950'
+                    : staffRole === 'KASIR_UMI'
+                    ? 'bg-rose-50 border-rose-200 text-rose-950'
+                    : 'bg-slate-50 border-slate-300 text-slate-900'
                 }`}>
                   <p className="font-bold flex items-center gap-1.5 text-xs">
                     <ShieldCheck className="w-4 h-4 flex-shrink-0" />
@@ -465,14 +567,22 @@ export default function LoginView({ data, onLogin }) {
                       ? data.sekolah.kepalaSekolah || 'Drs. H. Mulyadi, M.Pd.'
                       : staffRole === 'BENDAHARA'
                       ? 'Hj. Siti Nurhaliza, S.E. (Bendahara Sekolah)'
-                      : 'Ibu Rini (Kasir Loket TU)'}
+                      : staffRole === 'KASIR_HANA'
+                      ? 'Hana Pratiwi, A.Md. — Kasir Kelompok Bisnis Manajemen'
+                      : staffRole === 'KASIR_UMI'
+                      ? 'Umi Kalsum, S.E. — Kasir Kelompok Pariwisata'
+                      : 'Ahmad Junaidi, S.Kom. — Admin Pusat (Semua Jurusan)'}
                   </p>
                   <p className="text-[11px] opacity-80 leading-tight">
                     {staffRole === 'KEPALA_SEKOLAH'
                       ? 'Monitoring Eksekutif Keuangan & Laporan Seluruh Kelas'
                       : staffRole === 'BENDAHARA'
                       ? 'Manajemen Keuangan, Tarif Multi-Jurusan & Validasi Setoran'
-                      : 'Loket Penerimaan Pembayaran Tunai Siswa & Cetak Kuitansi'}
+                      : staffRole === 'KASIR_HANA'
+                      ? 'Mengurusi pembayaran siswa Jurusan AKL, MPLB, dan PM'
+                      : staffRole === 'KASIR_UMI'
+                      ? 'Mengurusi pembayaran siswa Jurusan Kecantikan & Spa dan Perhotelan'
+                      : 'Pusat Manajemen: Membagi, mengatur kasir, dan melayani semua jurusan'}
                   </p>
                 </div>
 
@@ -577,7 +687,7 @@ export default function LoginView({ data, onLogin }) {
                 className="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-900 rounded-lg text-xs font-bold border border-amber-300 transition cursor-pointer"
                 title="Login sebagai Kepala Sekolah"
               >
-                🏛️ Kepala Sekolah
+                🏛️ Kepsek
               </button>
               <button
                 type="button"
@@ -590,10 +700,26 @@ export default function LoginView({ data, onLogin }) {
               <button
                 type="button"
                 onClick={() => handleQuickLogin('ADMIN')}
-                className="px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg text-xs font-semibold border border-blue-200 transition cursor-pointer"
-                title="Login sebagai Kasir Loket TU"
+                className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-lg text-xs font-bold border border-slate-300 transition cursor-pointer"
+                title="Login sebagai Admin Pusat TU"
               >
-                💼 Kasir TU
+                🏢 Admin Pusat
+              </button>
+              <button
+                type="button"
+                onClick={() => handleQuickLogin('KASIR_HANA')}
+                className="px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-blue-800 rounded-lg text-xs font-bold border border-blue-300 transition cursor-pointer"
+                title="Login sebagai Kasir Hana (Kelompok Bisnis Manajemen: AKL, MPLB, PM)"
+              >
+                💼 Kasir Hana (BisMan)
+              </button>
+              <button
+                type="button"
+                onClick={() => handleQuickLogin('KASIR_UMI')}
+                className="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-800 rounded-lg text-xs font-bold border border-rose-300 transition cursor-pointer"
+                title="Login sebagai Kasir Umi (Kelompok Pariwisata: Kecantikan & Spa, Perhotelan)"
+              >
+                🏖️ Kasir Umi (Pariwisata)
               </button>
               <button
                 type="button"
@@ -605,19 +731,27 @@ export default function LoginView({ data, onLogin }) {
               </button>
               <button
                 type="button"
-                onClick={() => handleQuickLogin('SISWA', { siswa: data.siswa[0] })}
+                onClick={() => handleQuickLogin('SISWA', { siswa: data.siswa.find(s => s.jurusanKode === 'PM') || data.siswa[0] })}
                 className="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-lg text-xs font-semibold border border-emerald-200 transition cursor-pointer"
-                title="Login sebagai Siswa PM (Abi)"
+                title="Login sebagai Siswa PM (Ahmad)"
               >
-                🎓 Siswa PM (Abi)
+                🎓 Siswa PM (Ahmad)
               </button>
               <button
                 type="button"
-                onClick={() => handleQuickLogin('SISWA', { siswa: data.siswa[1] || data.siswa[0] })}
+                onClick={() => handleQuickLogin('SISWA', { siswa: data.siswa.find(s => s.jurusanKode === 'AKL') || data.siswa[1] })}
                 className="px-2.5 py-1 bg-teal-50 hover:bg-teal-100 text-teal-800 rounded-lg text-xs font-semibold border border-teal-200 transition cursor-pointer"
-                title="Login sebagai Siswa AKL (Dian)"
+                title="Login sebagai Siswa AKL (Dewi)"
               >
-                🎓 Siswa AKL (Dian)
+                🎓 Siswa AKL (Dewi)
+              </button>
+              <button
+                type="button"
+                onClick={() => handleQuickLogin('SISWA', { siswa: data.siswa.find(s => s.jurusanKode === 'KSP') || data.siswa[0] })}
+                className="px-2.5 py-1 bg-pink-50 hover:bg-pink-100 text-pink-800 rounded-lg text-xs font-semibold border border-pink-200 transition cursor-pointer"
+                title="Login sebagai Siswa Kecantikan (Anisa)"
+              >
+                🎓 Siswa KSP (Anisa)
               </button>
             </div>
           </div>

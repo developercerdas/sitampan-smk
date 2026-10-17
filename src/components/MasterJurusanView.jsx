@@ -33,12 +33,14 @@ export default function MasterJurusanView({ data, onUpdateData, setActiveTab }) 
   const [formData, setFormData] = useState({
     kode: '',
     nama: '',
-    warna: 'blue'
+    warna: 'blue',
+    kelompok: 'BISNIS_MANAJEMEN',
+    kasirPj: 'Hana'
   });
 
   const bukaModalTambah = () => {
     setEditId(null);
-    setFormData({ kode: '', nama: '', warna: 'blue' });
+    setFormData({ kode: '', nama: '', warna: 'blue', kelompok: 'BISNIS_MANAJEMEN', kasirPj: 'Hana' });
     setModalOpen(true);
   };
 
@@ -47,7 +49,9 @@ export default function MasterJurusanView({ data, onUpdateData, setActiveTab }) 
     setFormData({
       kode: j.kode,
       nama: j.nama,
-      warna: j.warna || 'blue'
+      warna: j.warna || 'blue',
+      kelompok: j.kelompok || (j.kode === 'KSP' || j.kode === 'HTL' ? 'PARIWISATA' : 'BISNIS_MANAJEMEN'),
+      kasirPj: j.kasirPj || (j.kelompok === 'PARIWISATA' || j.kode === 'KSP' || j.kode === 'HTL' ? 'Umi' : 'Hana')
     });
     setModalOpen(true);
   };
@@ -172,20 +176,29 @@ export default function MasterJurusanView({ data, onUpdateData, setActiveTab }) 
             >
               <div>
                 <div className="flex items-center justify-between mb-3">
-                  <span className={`px-2.5 py-1 rounded-lg text-xs font-black uppercase tracking-wider border ${warnaObj.bg}`}>
-                    {j.kode}
-                  </span>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className={`px-2.5 py-1 rounded-lg text-xs font-black uppercase tracking-wider border ${warnaObj.bg}`}>
+                      {j.kode}
+                    </span>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                      (j.kelompok === 'PARIWISATA' || j.kode === 'KSP' || j.kode === 'HTL')
+                        ? 'bg-rose-100 text-rose-800 border border-rose-200'
+                        : 'bg-blue-100 text-blue-800 border border-blue-200'
+                    }`}>
+                      {(j.kelompok === 'PARIWISATA' || j.kode === 'KSP' || j.kode === 'HTL') ? '🏖️ Pariwisata' : '💼 BisMan'}
+                    </span>
+                  </div>
                   <div className="flex items-center gap-1">
                     <button
                       onClick={() => bukaModalEdit(j)}
-                      className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition"
+                      className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition cursor-pointer"
                       title="Edit Jurusan"
                     >
                       <Edit className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => handleHapus(j)}
-                      className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition"
+                      className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition cursor-pointer"
                       title="Hapus Jurusan"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -196,6 +209,16 @@ export default function MasterJurusanView({ data, onUpdateData, setActiveTab }) 
                 <h3 className="font-extrabold text-slate-900 text-base leading-snug">
                   {j.nama}
                 </h3>
+                <div className="mt-2 text-xs flex items-center gap-1.5 text-slate-500 font-medium">
+                  <span>Kasir Loket:</span>
+                  <span className={`font-bold px-2 py-0.5 rounded-md text-[11px] ${
+                    (j.kasirPj === 'Umi' || j.kode === 'KSP' || j.kode === 'HTL')
+                      ? 'bg-rose-50 text-rose-700 border border-rose-200'
+                      : 'bg-blue-50 text-blue-700 border border-blue-200'
+                  }`}>
+                    {j.kasirPj || (j.kelompok === 'PARIWISATA' || j.kode === 'KSP' || j.kode === 'HTL' ? 'Umi' : 'Hana')}
+                  </span>
+                </div>
               </div>
 
               <div className="mt-5 pt-4 border-t border-slate-100 grid grid-cols-2 gap-2 text-xs">
@@ -257,6 +280,46 @@ export default function MasterJurusanView({ data, onUpdateData, setActiveTab }) 
                   onChange={(e) => setFormData({ ...formData, nama: e.target.value })}
                   className="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-purple-500 focus:outline-none"
                 />
+              </div>
+
+              {/* Pembagian Kelompok & Kasir Penanggung Jawab */}
+              <div className="grid grid-cols-2 gap-3 p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">
+                    Kelompok Bidang
+                  </label>
+                  <select
+                    value={formData.kelompok}
+                    onChange={(e) => {
+                      const kel = e.target.value;
+                      setFormData({
+                        ...formData,
+                        kelompok: kel,
+                        namaKelompok: kel === 'PARIWISATA' ? 'Pariwisata' : 'Bisnis & Manajemen',
+                        kasirPj: kel === 'PARIWISATA' ? 'Umi' : 'Hana',
+                        warna: kel === 'PARIWISATA' ? 'rose' : 'blue'
+                      });
+                    }}
+                    className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs font-bold text-slate-800 focus:ring-2 focus:ring-purple-500"
+                  >
+                    <option value="BISNIS_MANAJEMEN">💼 Bisnis & Manajemen</option>
+                    <option value="PARIWISATA">🏖️ Pariwisata</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">
+                    Kasir Penanggung Jawab
+                  </label>
+                  <select
+                    value={formData.kasirPj}
+                    onChange={(e) => setFormData({ ...formData, kasirPj: e.target.value })}
+                    className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs font-bold text-slate-800 focus:ring-2 focus:ring-purple-500"
+                  >
+                    <option value="Hana">👩‍💼 Hana (Kasir BisMan)</option>
+                    <option value="Umi">👩‍💼 Umi (Kasir Pariwisata)</option>
+                  </select>
+                </div>
               </div>
 
               <div>

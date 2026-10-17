@@ -103,6 +103,37 @@ export const dataService = {
           return k;
         });
 
+        // Migrasi ke 5 Jurusan Baru (Bisnis Manajemen: AKL, MPLB, PM & Pariwisata: KSP, HTL)
+        const punyaJurusanLama = (parsed.jurusan || []).some(j => j.kode === 'TKRO' || j.kode === 'PAR') || (parsed.jurusan || []).length !== 5;
+        if (punyaJurusanLama) {
+          parsed.jurusan = INITIAL_DATA.jurusan;
+          parsed.kelas = INITIAL_DATA.kelas;
+          parsed.posBiaya = INITIAL_DATA.posBiaya;
+          
+          // Migrasikan siswa lama yang jurusannya PAR atau TKRO
+          parsed.siswa = (parsed.siswa || []).map(s => {
+            if (s.jurusanKode === 'PAR') {
+              return { ...s, jurusanKode: 'KSP', kelasId: 4 };
+            }
+            if (s.jurusanKode === 'TKRO') {
+              return { ...s, jurusanKode: 'HTL', kelasId: 5 };
+            }
+            return s;
+          });
+
+          // Pastikan siswa baru (MPLB & HTL) ada jika belum ada
+          if (!parsed.siswa.some(s => s.nis === '12560')) {
+            const siswaMplb = INITIAL_DATA.siswa.find(s => s.nis === '12560');
+            if (siswaMplb) parsed.siswa.push(siswaMplb);
+          }
+          if (!parsed.siswa.some(s => s.nis === '12670')) {
+            const siswaHtl = INITIAL_DATA.siswa.find(s => s.nis === '12670');
+            if (siswaHtl) parsed.siswa.push(siswaHtl);
+          }
+
+          dataPerluUpdate = true;
+        }
+
         // Sinkronkan posBiaya baru jika belum ada
         if (!parsed.posBiaya || parsed.posBiaya.length < INITIAL_DATA.posBiaya.length) {
           parsed.posBiaya = INITIAL_DATA.posBiaya;
@@ -427,14 +458,18 @@ export const dataService = {
   },
 
   // 10. CRUD Master Jurusan
-  tambahJurusan({ kode, nama, warna }) {
+  tambahJurusan({ kode, nama, warna, kelompok, namaKelompok, kasirPj }) {
     const data = this.getData();
     const newId = data.jurusan.length > 0 ? Math.max(...data.jurusan.map((j) => j.id)) + 1 : 1;
+    const isPariwisata = kelompok === 'PARIWISATA' || kode.toUpperCase().trim() === 'KSP' || kode.toUpperCase().trim() === 'HTL';
     const baru = {
       id: newId,
       kode: kode.toUpperCase().trim(),
       nama: nama.trim(),
-      warna: warna || 'blue'
+      warna: warna || (isPariwisata ? 'rose' : 'blue'),
+      kelompok: kelompok || (isPariwisata ? 'PARIWISATA' : 'BISNIS_MANAJEMEN'),
+      namaKelompok: namaKelompok || (isPariwisata ? 'Pariwisata' : 'Bisnis & Manajemen'),
+      kasirPj: kasirPj || (isPariwisata ? 'Umi' : 'Hana')
     };
     data.jurusan.push(baru);
     this.saveData(data);

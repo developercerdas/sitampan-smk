@@ -192,6 +192,7 @@ export default function App() {
           {activeTab === 'kasir' && (role === 'ADMIN' || role === 'BENDAHARA') && (
             <KasirView
               data={data}
+              currentUser={currentUser}
               onUpdateData={handleUpdateData}
               onShowKuitansi={(kwt) => setActiveKuitansi(kwt)}
             />

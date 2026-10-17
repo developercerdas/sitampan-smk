@@ -16,17 +16,59 @@ export const INITIAL_DATA = {
   },
 
   jurusan: [
-    { id: 1, kode: 'AKL', nama: 'Akuntansi dan Keuangan Lembaga', warna: 'blue' },
-    { id: 2, kode: 'PM', nama: 'Pemasaran / Bisnis Daring', warna: 'emerald' },
-    { id: 3, kode: 'PAR', nama: 'Perhotelan & Jasa Pariwisata', warna: 'purple' },
-    { id: 4, kode: 'TKRO', nama: 'Teknik Kendaraan Ringan Otomotif', warna: 'orange' }
+    { 
+      id: 1, 
+      kode: 'AKL', 
+      nama: 'Akuntansi dan Keuangan Lembaga', 
+      kelompok: 'BISNIS_MANAJEMEN', 
+      namaKelompok: 'Bisnis & Manajemen', 
+      kasirPj: 'Hana', 
+      warna: 'blue' 
+    },
+    { 
+      id: 2, 
+      kode: 'MPLB', 
+      nama: 'Manajemen Perkantoran dan Layanan Bisnis', 
+      kelompok: 'BISNIS_MANAJEMEN', 
+      namaKelompok: 'Bisnis & Manajemen', 
+      kasirPj: 'Hana', 
+      warna: 'indigo' 
+    },
+    { 
+      id: 3, 
+      kode: 'PM', 
+      nama: 'Pemasaran', 
+      kelompok: 'BISNIS_MANAJEMEN', 
+      namaKelompok: 'Bisnis & Manajemen', 
+      kasirPj: 'Hana', 
+      warna: 'emerald' 
+    },
+    { 
+      id: 4, 
+      kode: 'KSP', 
+      nama: 'Kecantikan & Spa', 
+      kelompok: 'PARIWISATA', 
+      namaKelompok: 'Pariwisata', 
+      kasirPj: 'Umi', 
+      warna: 'rose' 
+    },
+    { 
+      id: 5, 
+      kode: 'HTL', 
+      nama: 'Perhotelan', 
+      kelompok: 'PARIWISATA', 
+      namaKelompok: 'Pariwisata', 
+      kasirPj: 'Umi', 
+      warna: 'amber' 
+    }
   ],
 
   kelas: [
-    { id: 1, nama: 'XII PM 1', tingkat: 'XII', jurusanKode: 'PM', rombel: '1', waliKelas: 'Dra. Hj. Sri Lestari, M.Pd' },
-    { id: 2, nama: 'XII AKL', tingkat: 'XII', jurusanKode: 'AKL', rombel: '1', waliKelas: 'Ahmad Junaidi, S.Pd' },
-    { id: 3, nama: 'XI CS 3', tingkat: 'XI', jurusanKode: 'PAR', rombel: '3', waliKelas: 'Hendra Gunawan, S.Pd' },
-    { id: 4, nama: 'X AKL 1', tingkat: 'X', jurusanKode: 'AKL', rombel: '1', waliKelas: 'Ratna Dewi, S.Pd' }
+    { id: 1, nama: 'XII PM 1', tingkat: 'XII', jurusanKode: 'PM', rombel: '1', kelompok: 'BISNIS_MANAJEMEN', waliKelas: 'Dra. Hj. Sri Lestari, M.Pd' },
+    { id: 2, nama: 'XII AKL 1', tingkat: 'XII', jurusanKode: 'AKL', rombel: '1', kelompok: 'BISNIS_MANAJEMEN', waliKelas: 'Ahmad Junaidi, S.Pd' },
+    { id: 3, nama: 'XI MPLB 1', tingkat: 'XI', jurusanKode: 'MPLB', rombel: '1', kelompok: 'BISNIS_MANAJEMEN', waliKelas: 'Hendra Gunawan, S.Pd' },
+    { id: 4, nama: 'XI KSP 1', tingkat: 'XI', jurusanKode: 'KSP', rombel: '1', kelompok: 'PARIWISATA', waliKelas: 'Ratna Dewi, S.Pd' },
+    { id: 5, nama: 'X HTL 1', tingkat: 'X', jurusanKode: 'HTL', rombel: '1', kelompok: 'PARIWISATA', waliKelas: 'Siti Nurjanah, S.Pd' }
   ],
 
   posBiaya: [
@@ -39,11 +81,12 @@ export const INITIAL_DATA = {
       targetTingkat: 'SEMUA',
       tarifJurusan: {
         AKL: 325000,
+        MPLB: 325000,
         PM: 325000,
-        PAR: 350000,
-        TKRO: 375000
+        KSP: 375000,
+        HTL: 360000
       },
-      keterangan: 'Tarif SPP disesuaikan dengan kebutuhan modul & praktek bengkel kejuruan'
+      keterangan: 'Tarif SPP disesuaikan dengan kebutuhan modul & praktek kejuruan'
     },
     { 
       id: 'TABUNGAN', 
@@ -63,9 +106,10 @@ export const INITIAL_DATA = {
       targetTingkat: 'SEMUA',
       tarifJurusan: {
         AKL: 905000,
+        MPLB: 905000,
         PM: 905000,
-        PAR: 950000,
-        TKRO: 975000
+        KSP: 965000,
+        HTL: 950000
       },
       keterangan: 'Daftar ulang tahunan dan SPP bulan Juli'
     },
@@ -79,22 +123,31 @@ export const INITIAL_DATA = {
       keterangan: 'Uang pangkal gedung sarana prasarana awal masuk'
     },
     { 
-      id: 'PRAKTIK_TKRO', 
-      nama: 'Biaya Bahan Praktik Bengkel & Alat Otomotif', 
+      id: 'PRAKTIK_KSP', 
+      nama: 'Biaya Bahan Praktik Kecantikan, Facial & Spa', 
       tipe: 'SEKALI_BAYAR', 
       nominalDefault: 350000,
-      targetJurusan: 'TKRO',
+      targetJurusan: 'KSP',
       targetTingkat: 'SEMUA',
-      keterangan: 'Khusus siswa Jurusan TKRO (Bahan pelumas, sparepart latih bengkel)'
+      keterangan: 'Khusus siswa Jurusan Kecantikan & Spa (Bahan kosmetik, facial, nail art & spa)'
     },
     { 
-      id: 'PRAKTIK_PAR', 
+      id: 'PRAKTIK_HTL', 
       nama: 'Biaya Bahan Praktik Dapur & Tata Hidang Perhotelan', 
       tipe: 'SEKALI_BAYAR', 
-      nominalDefault: 300000,
-      targetJurusan: 'PAR',
+      nominalDefault: 325000,
+      targetJurusan: 'HTL',
       targetTingkat: 'SEMUA',
-      keterangan: 'Khusus siswa Jurusan Perhotelan (Bahan cooking, table manner & linen)'
+      keterangan: 'Khusus siswa Jurusan Perhotelan (Table manner, cooking & linen laundry)'
+    },
+    { 
+      id: 'PRAKTIK_BISMAN', 
+      nama: 'Biaya Praktik Lab Komputer Akuntansi & Kasir Ritel', 
+      tipe: 'SEKALI_BAYAR', 
+      nominalDefault: 250000,
+      targetJurusan: 'SEMUA',
+      targetTingkat: 'SEMUA',
+      keterangan: 'Khusus siswa Kelompok Bisnis Manajemen (AKL, MPLB, PM)'
     },
     { 
       id: 'UKK', 
@@ -105,9 +158,10 @@ export const INITIAL_DATA = {
       targetTingkat: 'XII',
       tarifJurusan: {
         AKL: 400000,
+        MPLB: 400000,
         PM: 400000,
-        PAR: 450000,
-        TKRO: 500000
+        KSP: 475000,
+        HTL: 450000
       },
       keterangan: 'Uji sertifikasi kejuruan BNSP tingkat akhir'
     },
@@ -700,14 +754,14 @@ export const INITIAL_DATA = {
         'Desember': 0
       }
     },
-    // Siswa Foto 2: Kuitansi (Samaran: Dewi Anggraini - XII AKL)
+    // Siswa Foto 2: Kuitansi (Dewi Anggraini - XII AKL 1)
     {
       id: 24,
       nis: '12640',
       nisn: '0061234584',
       nama: 'Dewi Anggraini',
       tanggalLahir: '2008-08-17',
-      kelasId: 2, // XII AKL
+      kelasId: 2, // XII AKL 1
       jurusanKode: 'AKL',
       tingkat: 'XII',
       va: '880812640024',
@@ -724,26 +778,74 @@ export const INITIAL_DATA = {
         'Desember': 0
       }
     },
-    // Siswa Foto 3: Kartu Kuning (Samaran: Anisa Larasati Putri - XI PAR)
+    // Siswa Foto 3: Kartu Kuning (Anisa Larasati Putri - XI KSP 1 Kecantikan & Spa)
     {
       id: 25,
       nis: '12553',
       nisn: '0071234585',
       nama: 'Anisa Larasati Putri',
       tanggalLahir: '2009-02-20',
-      kelasId: 3, // XI CS 3
-      jurusanKode: 'PAR',
+      kelasId: 4, // XI KSP 1
+      jurusanKode: 'KSP',
       tingkat: 'XI',
       va: '880812553025',
       telepon: '08123456725',
       status: 'AKTIF',
       spi: 500000,
       tunggakanLalu: 0,
-      duJuli: 905000,
+      duJuli: 965000,
       bayarBulanan: {
         'Agustus': 375000,
         'September': 375000,
         'Oktober': 375000,
+        'November': 0,
+        'Desember': 0
+      }
+    },
+    // Siswa Jurusan MPLB: Rizki Maulana (XI MPLB 1)
+    {
+      id: 26,
+      nis: '12560',
+      nisn: '0071234586',
+      nama: 'Rizki Maulana',
+      tanggalLahir: '2009-03-10',
+      kelasId: 3, // XI MPLB 1
+      jurusanKode: 'MPLB',
+      tingkat: 'XI',
+      va: '880812560026',
+      telepon: '08123456726',
+      status: 'AKTIF',
+      spi: 0,
+      tunggakanLalu: 0,
+      duJuli: 905000,
+      bayarBulanan: {
+        'Agustus': 325000,
+        'September': 325000,
+        'Oktober': 325000,
+        'November': 325000,
+        'Desember': 0
+      }
+    },
+    // Siswa Jurusan Perhotelan: Kevin Pratama (X HTL 1)
+    {
+      id: 27,
+      nis: '12670',
+      nisn: '0081234587',
+      nama: 'Kevin Pratama',
+      tanggalLahir: '2010-01-15',
+      kelasId: 5, // X HTL 1
+      jurusanKode: 'HTL',
+      tingkat: 'X',
+      va: '880812670027',
+      telepon: '08123456727',
+      status: 'AKTIF',
+      spi: 1500000,
+      tunggakanLalu: 0,
+      duJuli: 950000,
+      bayarBulanan: {
+        'Agustus': 360000,
+        'September': 360000,
+        'Oktober': 0,
         'November': 0,
         'Desember': 0
       }

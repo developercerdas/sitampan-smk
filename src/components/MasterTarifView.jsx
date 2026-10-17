@@ -303,7 +303,7 @@ export default function MasterTarifView({ data, onUpdateData, setActiveTab }) {
             <div>
               <p className="font-bold text-sm">Kemudahan Pengaturan Tarif SMK:</p>
               <p className="mt-0.5 leading-relaxed">
-                Tiap jurusan dapat memiliki nominal SPP atau iuran yang berbeda (misal TKRO & PAR memiliki biaya praktek bengkel/kitchen lebih tinggi). Klik tombol <strong>"Atur Tarif Jurusan"</strong> pada baris pos biaya untuk menyesuaikan nominal tiap jurusan.
+                Tiap jurusan dapat memiliki nominal SPP atau iuran yang berbeda (misal KSP & HTL memiliki biaya praktek spa/kitchen & hotel lebih tinggi). Klik tombol <strong>"Atur Tarif Jurusan"</strong> pada baris pos biaya untuk menyesuaikan nominal tiap jurusan.
               </p>
             </div>
           </div>

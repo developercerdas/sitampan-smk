@@ -24,11 +24,20 @@ export default function BukuPagerView({
   onShowKuitansi 
 }) {
   const isWaliKelas = currentRole === 'WALI_KELAS';
+  const isKasirHana = currentUser?.kasirKelompok === 'BISNIS_MANAJEMEN';
+  const isKasirUmi = currentUser?.kasirKelompok === 'PARIWISATA';
 
-  // Jika wali kelas, default ke kelas bimbingan miliknya
-  const defaultKelas = isWaliKelas && currentUser?.kelasId 
-    ? currentUser.kelasId 
-    : (data.kelas[0]?.id || 1);
+  // Jika wali kelas, default ke kelas bimbingan miliknya. Jika kasir spesifik, default ke rombel kelompoknya
+  let defaultKelas = data.kelas[0]?.id || 1;
+  if (isWaliKelas && currentUser?.kelasId) {
+    defaultKelas = currentUser.kelasId;
+  } else if (isKasirHana) {
+    const kBis = data.kelas.find(k => k.kelompok === 'BISNIS_MANAJEMEN' || ['AKL', 'MPLB', 'PM'].includes(k.jurusanKode));
+    if (kBis) defaultKelas = kBis.id;
+  } else if (isKasirUmi) {
+    const kPar = data.kelas.find(k => k.kelompok === 'PARIWISATA' || ['KSP', 'HTL'].includes(k.jurusanKode));
+    if (kPar) defaultKelas = kPar.id;
+  }
 
   const [selectedKelasId, setSelectedKelasId] = useState(defaultKelas);
   const [tanggalCutOff, setTanggalCutOff] = useState('10 - 10 - 2026');
@@ -38,6 +47,11 @@ export default function BukuPagerView({
   const siswaList = data.siswa.filter(
     (s) => s.kelasId === Number(selectedKelasId) && s.status === 'AKTIF'
   );
+
+  // Pisahkan kelas berdasarkan kelompok
+  const kelasBisMan = data.kelas.filter(k => k.kelompok === 'BISNIS_MANAJEMEN' || ['AKL', 'MPLB', 'PM'].includes(k.jurusanKode));
+  const kelasPariwisata = data.kelas.filter(k => k.kelompok === 'PARIWISATA' || ['KSP', 'HTL'].includes(k.jurusanKode));
+  const kelasLain = data.kelas.filter(k => !kelasBisMan.some(b => b.id === k.id) && !kelasPariwisata.some(p => p.id === k.id));
 
   // Hitung total kolom bawah & statistik kelas
   let totalSpi = 0;
@@ -88,11 +102,29 @@ export default function BukuPagerView({
               onChange={(e) => setSelectedKelasId(Number(e.target.value))}
               className="bg-slate-50 border border-slate-300 font-bold text-slate-800 text-xs sm:text-sm rounded-xl px-3.5 py-2 focus:ring-2 focus:ring-blue-500"
             >
-              {data.kelas.map((k) => (
-                <option key={k.id} value={k.id}>
-                  {k.nama} • Wali: {k.waliKelas} {isWaliKelas && k.id === currentUser?.kelasId ? '★ (Kelas Anda)' : ''}
-                </option>
-              ))}
+              <optgroup label="💼 Kelompok Bisnis & Manajemen (Kasir: Hana)">
+                {kelasBisMan.map((k) => (
+                  <option key={k.id} value={k.id}>
+                    {k.nama} • Wali: {k.waliKelas} {isWaliKelas && k.id === currentUser?.kelasId ? '★ (Kelas Anda)' : ''}
+                  </option>
+                ))}
+              </optgroup>
+              <optgroup label="🏖️ Kelompok Pariwisata (Kasir: Umi)">
+                {kelasPariwisata.map((k) => (
+                  <option key={k.id} value={k.id}>
+                    {k.nama} • Wali: {k.waliKelas} {isWaliKelas && k.id === currentUser?.kelasId ? '★ (Kelas Anda)' : ''}
+                  </option>
+                ))}
+              </optgroup>
+              {kelasLain.length > 0 && (
+                <optgroup label="Lainnya">
+                  {kelasLain.map((k) => (
+                    <option key={k.id} value={k.id}>
+                      {k.nama} • Wali: {k.waliKelas}
+                    </option>
+                  ))}
+                </optgroup>
+              )}
             </select>
           </div>
 

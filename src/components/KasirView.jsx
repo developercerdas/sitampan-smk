@@ -12,17 +12,57 @@ import {
   Calendar,
   Sparkles,
   PieChart,
-  Coins
+  Coins,
+  Users,
+  ShieldCheck,
+  CheckCircle2
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { dataService } from '../services/dataService';
 
-export default function KasirView({ data, onUpdateData, onShowKuitansi }) {
+export default function KasirView({ data, onUpdateData, onShowKuitansi, currentUser }) {
+  const [kelompokFilter, setKelompokFilter] = useState(() => {
+    if (currentUser?.kasirKelompok) return currentUser.kasirKelompok;
+    return 'ALL';
+  });
+
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedSiswaId, setSelectedSiswaId] = useState(data.siswa[0]?.id || null);
   const [metodeBayar, setMetodeBayar] = useState('TUNAI');
-  const [petugasNama, setPetugasNama] = useState('Kasir TU (Ibu Rini)');
   const [catatan, setCatatan] = useState('');
+
+  const [petugasNama, setPetugasNama] = useState(() => {
+    if (currentUser?.petugasLabel) return currentUser.petugasLabel;
+    if (currentUser?.kasirKelompok === 'BISNIS_MANAJEMEN') return 'Kasir TU - Hana (Bisnis Manajemen)';
+    if (currentUser?.kasirKelompok === 'PARIWISATA') return 'Kasir TU - Umi (Pariwisata)';
+    if (currentUser?.nama) return currentUser.nama;
+    return 'Kasir Loket TU';
+  });
+
+  // Tentukan siswa default sesuai kelompok kasir aktif
+  const [selectedSiswaId, setSelectedSiswaId] = useState(() => {
+    const initKelompok = currentUser?.kasirKelompok || 'ALL';
+    const match = data.siswa.find((s) => {
+      if (initKelompok === 'BISNIS_MANAJEMEN') return ['AKL', 'MPLB', 'PM'].includes(s.jurusanKode);
+      if (initKelompok === 'PARIWISATA') return ['KSP', 'HTL'].includes(s.jurusanKode);
+      return true;
+    });
+    return match?.id || data.siswa[0]?.id || null;
+  });
+
+  const handleGantiKelompok = (newKelompok, namaPetugas) => {
+    setKelompokFilter(newKelompok);
+    if (namaPetugas) setPetugasNama(namaPetugas);
+
+    const matchSiswa = data.siswa.find((s) => {
+      if (newKelompok === 'BISNIS_MANAJEMEN') return ['AKL', 'MPLB', 'PM'].includes(s.jurusanKode);
+      if (newKelompok === 'PARIWISATA') return ['KSP', 'HTL'].includes(s.jurusanKode);
+      return true;
+    });
+    if (matchSiswa) {
+      setSelectedSiswaId(matchSiswa.id);
+      setSelectedItems({});
+    }
+  };
 
   // Bulan SPP
   const bulanList = ['Agustus', 'September', 'Oktober', 'November', 'Desember', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni'];
@@ -120,14 +160,23 @@ export default function KasirView({ data, onUpdateData, onShowKuitansi }) {
     }
   };
 
-  // Filter siswa
+  // Filter siswa berdasarkan Kelompok Kasir dan Kata Kunci Pencarian
   const filteredSiswa = data.siswa.filter((s) => {
+    // 1. Filter Kelompok Kasir
+    if (kelompokFilter === 'BISNIS_MANAJEMEN') {
+      if (!['AKL', 'MPLB', 'PM'].includes(s.jurusanKode)) return false;
+    } else if (kelompokFilter === 'PARIWISATA') {
+      if (!['KSP', 'HTL'].includes(s.jurusanKode)) return false;
+    }
+
+    // 2. Filter Pencarian
     const q = searchQuery.toLowerCase();
     const k = data.kelas.find((k) => k.id === s.kelasId);
     return (
       s.nama.toLowerCase().includes(q) ||
       s.nis.includes(q) ||
-      k?.nama.toLowerCase().includes(q)
+      k?.nama.toLowerCase().includes(q) ||
+      (s.jurusanKode && s.jurusanKode.toLowerCase().includes(q))
     );
   });
 
@@ -158,6 +207,82 @@ export default function KasirView({ data, onUpdateData, onShowKuitansi }) {
             <p className="text-xl font-bold font-mono">{data.sekolah.tahunAjaranAktif}</p>
             <p className="text-xs text-blue-200 mt-1">Bank Mitra: {data.sekolah.bankMitra}</p>
           </div>
+        </div>
+      </div>
+
+      {/* Panel Pembagian Loket Kasir 2 Kelompok Jurusan */}
+      <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="flex items-center gap-3.5 w-full md:w-auto">
+          <div className={`p-3 rounded-2xl border flex items-center justify-center flex-shrink-0 ${
+            kelompokFilter === 'BISNIS_MANAJEMEN'
+              ? 'bg-blue-50 text-blue-700 border-blue-200'
+              : kelompokFilter === 'PARIWISATA'
+              ? 'bg-rose-50 text-rose-700 border-rose-200'
+              : 'bg-indigo-50 text-indigo-700 border-indigo-200'
+          }`}>
+            <Receipt className="w-6 h-6" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
+                Pembagian Loket TU
+              </span>
+              <span className="text-[11px] font-bold text-slate-500">
+                Petugas Kasir: <strong className="text-slate-800">{petugasNama}</strong>
+              </span>
+            </div>
+            <h3 className="text-base font-black text-slate-900 mt-0.5">
+              {kelompokFilter === 'BISNIS_MANAJEMEN'
+                ? '💼 Loket 1: Kelompok Bisnis & Manajemen (AKL, MPLB, PM)'
+                : kelompokFilter === 'PARIWISATA'
+                ? '🏖️ Loket 2: Kelompok Pariwisata (Kecantikan & Spa, Perhotelan)'
+                : '🏢 Semua Loket Pusat (Melayani 5 Jurusan)'}
+            </h3>
+            <p className="text-xs text-slate-500 mt-0.5">
+              {kelompokFilter === 'BISNIS_MANAJEMEN'
+                ? 'Penanggung jawab: Kasir Hana — Melayani siswa AKL, MPLB, dan PM.'
+                : kelompokFilter === 'PARIWISATA'
+                ? 'Penanggung jawab: Kasir Umi — Melayani siswa Kecantikan & Spa dan Perhotelan.'
+                : 'Pusat Manajemen: Memantau dan melayani seluruh 5 jurusan sekolah.'}
+            </p>
+          </div>
+        </div>
+
+        {/* Tab Switcher Pembagian Kelompok Kasir */}
+        <div className="flex items-center p-1 bg-slate-100 rounded-xl border border-slate-200 text-xs font-bold w-full md:w-auto">
+          <button
+            type="button"
+            onClick={() => handleGantiKelompok('ALL', 'Admin Pusat TU')}
+            className={`flex-1 md:flex-none px-3.5 py-2 rounded-lg transition cursor-pointer ${
+              kelompokFilter === 'ALL'
+                ? 'bg-white text-slate-900 shadow-xs font-black'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            🏢 Semua Pusat
+          </button>
+          <button
+            type="button"
+            onClick={() => handleGantiKelompok('BISNIS_MANAJEMEN', 'Kasir TU - Hana (Bisnis Manajemen)')}
+            className={`flex-1 md:flex-none px-3.5 py-2 rounded-lg transition flex items-center justify-center gap-1.5 cursor-pointer ${
+              kelompokFilter === 'BISNIS_MANAJEMEN'
+                ? 'bg-blue-600 text-white shadow-xs font-black'
+                : 'text-blue-900 hover:bg-blue-100/60'
+            }`}
+          >
+            💼 BisMan (Hana)
+          </button>
+          <button
+            type="button"
+            onClick={() => handleGantiKelompok('PARIWISATA', 'Kasir TU - Umi (Pariwisata)')}
+            className={`flex-1 md:flex-none px-3.5 py-2 rounded-lg transition flex items-center justify-center gap-1.5 cursor-pointer ${
+              kelompokFilter === 'PARIWISATA'
+                ? 'bg-rose-600 text-white shadow-xs font-black'
+                : 'text-rose-900 hover:bg-rose-100/60'
+            }`}
+          >
+            🏖️ Pariwisata (Umi)
+          </button>
         </div>
       </div>
 

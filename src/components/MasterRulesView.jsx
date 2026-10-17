@@ -55,14 +55,15 @@ export default function MasterRulesView({ data }) {
       ]
     },
     ADMIN: {
-      nama: 'Administrator Keuangan & Kasir TU',
+      nama: 'Administrator Pusat & Koordinator TU',
       subjudul: 'Ahmad Junaidi, S.Kom.',
-      deskripsi: 'Memiliki hak akses penuh untuk transaksi tunai, mutasi VA, promosi siswa, master biaya, dan pergantian KOP.',
+      deskripsi: 'Memiliki hak akses penuh untuk transaksi tunai semua jurusan, pembagian loket kasir, mutasi VA, promosi siswa, master biaya, dan pergantian KOP.',
       badge: 'Full Akses',
-      badgeColor: 'bg-blue-100 text-blue-800',
-      activeClass: 'bg-blue-50 border-blue-500 shadow-xs ring-1 ring-blue-500',
+      badgeColor: 'bg-slate-100 text-slate-800',
+      activeClass: 'bg-slate-100 border-slate-500 shadow-xs ring-1 ring-slate-500',
       permissions: [
-        { nama: 'Loket Pembayaran Kasir (Tunai & VA)', status: true },
+        { nama: 'Loket Pembayaran Kasir (Semua 5 Jurusan)', status: true },
+        { nama: 'Pembagian & Supervisi Kasir (Hana & Umi)', status: true },
         { nama: 'Cetak Kuitansi Resmi & Stempel Lunas', status: true },
         { nama: 'Akses Rekapitulasi Buku Pager Semua Kelas', status: true },
         { nama: 'Ekspor Data Setoran ke Excel (.xlsx)', status: true },
@@ -70,6 +71,42 @@ export default function MasterRulesView({ data }) {
         { nama: 'Manajemen Master Tarif Multi-Jurusan', status: true },
         { nama: 'Ubah Profil & KOP Surat / Kuitansi Sekolah', status: true },
         { nama: 'Konfigurasi Hak Akses & Role Pengguna', status: true }
+      ]
+    },
+    KASIR_HANA: {
+      nama: 'Kasir 1: Hana (Kelompok Bisnis & Manajemen)',
+      subjudul: 'Hana Pratiwi, A.Md.',
+      deskripsi: 'Bertanggung jawab melayani pembayaran, mutasi VA, dan kartu SPP siswa khusus jurusan AKL, MPLB, dan PM.',
+      badge: 'Kasir BisMan',
+      badgeColor: 'bg-blue-100 text-blue-800',
+      activeClass: 'bg-blue-50 border-blue-500 shadow-xs ring-1 ring-blue-500',
+      permissions: [
+        { nama: 'Loket Kasir Siswa AKL, MPLB, & PM', status: true },
+        { nama: 'Cetak Kuitansi Resmi Stempel Kasir Hana', status: true },
+        { nama: 'Buku Pager Setoran Rombel Bisnis Manajemen', status: true },
+        { nama: 'Ekspor Setoran Kasir BisMan ke Excel', status: true },
+        { nama: 'Monitoring Kartu SPP Siswa AKL, MPLB, PM', status: true },
+        { nama: 'Akses Siswa Kelompok Pariwisata', status: false },
+        { nama: 'Ubah Struktur Master Tarif & Pos Biaya', status: false },
+        { nama: 'Ubah KOP Surat & Hak Akses Pengguna', status: false }
+      ]
+    },
+    KASIR_UMI: {
+      nama: 'Kasir 2: Umi (Kelompok Pariwisata)',
+      subjudul: 'Umi Kalsum, S.E.',
+      deskripsi: 'Bertanggung jawab melayani pembayaran, mutasi VA, dan kartu SPP siswa khusus jurusan Kecantikan & Spa dan Perhotelan.',
+      badge: 'Kasir Pariwisata',
+      badgeColor: 'bg-rose-100 text-rose-800',
+      activeClass: 'bg-rose-50 border-rose-500 shadow-xs ring-1 ring-rose-500',
+      permissions: [
+        { nama: 'Loket Kasir Siswa Kecantikan & Perhotelan', status: true },
+        { nama: 'Cetak Kuitansi Resmi Stempel Kasir Umi', status: true },
+        { nama: 'Buku Pager Setoran Rombel Pariwisata', status: true },
+        { nama: 'Ekspor Setoran Kasir Pariwisata ke Excel', status: true },
+        { nama: 'Monitoring Kartu SPP Siswa KSP & HTL', status: true },
+        { nama: 'Akses Siswa Kelompok Bisnis Manajemen', status: false },
+        { nama: 'Ubah Struktur Master Tarif & Pos Biaya', status: false },
+        { nama: 'Ubah KOP Surat & Hak Akses Pengguna', status: false }
       ]
     },
     WALI_KELAS: {
@@ -180,11 +217,45 @@ export default function MasterRulesView({ data }) {
               }`}
             >
               <div>
-                <p className="font-bold text-sm text-slate-900">💼 Kasir & Admin TU</p>
+                <p className="font-bold text-sm text-slate-900">🏢 Admin Pusat TU</p>
                 <p className="text-xs text-slate-500">{roleRules.ADMIN.subjudul}</p>
               </div>
               <span className={`text-xs font-bold px-2 py-0.5 rounded ${roleRules.ADMIN.badgeColor}`}>
                 {roleRules.ADMIN.badge}
+              </span>
+            </button>
+
+            <button
+              onClick={() => setSelectedRole('KASIR_HANA')}
+              className={`w-full text-left p-3.5 rounded-xl border transition flex items-center justify-between ${
+                selectedRole === 'KASIR_HANA'
+                  ? roleRules.KASIR_HANA.activeClass
+                  : 'bg-white border-slate-200 hover:bg-slate-50'
+              }`}
+            >
+              <div>
+                <p className="font-bold text-sm text-slate-900">💼 Kasir Hana (BisMan)</p>
+                <p className="text-xs text-slate-500">{roleRules.KASIR_HANA.subjudul}</p>
+              </div>
+              <span className={`text-xs font-bold px-2 py-0.5 rounded ${roleRules.KASIR_HANA.badgeColor}`}>
+                {roleRules.KASIR_HANA.badge}
+              </span>
+            </button>
+
+            <button
+              onClick={() => setSelectedRole('KASIR_UMI')}
+              className={`w-full text-left p-3.5 rounded-xl border transition flex items-center justify-between ${
+                selectedRole === 'KASIR_UMI'
+                  ? roleRules.KASIR_UMI.activeClass
+                  : 'bg-white border-slate-200 hover:bg-slate-50'
+              }`}
+            >
+              <div>
+                <p className="font-bold text-sm text-slate-900">🏖️ Kasir Umi (Pariwisata)</p>
+                <p className="text-xs text-slate-500">{roleRules.KASIR_UMI.subjudul}</p>
+              </div>
+              <span className={`text-xs font-bold px-2 py-0.5 rounded ${roleRules.KASIR_UMI.badgeColor}`}>
+                {roleRules.KASIR_UMI.badge}
               </span>
             </button>
 
