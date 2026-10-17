@@ -28,6 +28,9 @@ export default function LoginView({ data, onLogin }) {
   const [tglLahir, setTglLahir] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
 
+  // State Khusus Login Wali Kelas
+  const [selectedWaliKelasId, setSelectedWaliKelasId] = useState(data.kelas[0]?.id || 1);
+
   // Cari data siswa secara otomatis saat NIS diketik
   const matchedSiswa = data.siswa.find(
     (s) => s.nis.trim() === inputNis.trim()
@@ -57,12 +60,13 @@ export default function LoginView({ data, onLogin }) {
         username: 'admin_tu'
       });
     } else if (role === 'WALI_KELAS') {
+      const kls = data.kelas.find((k) => k.id === Number(selectedWaliKelasId)) || data.kelas[0];
       onLogin({
         role: 'WALI_KELAS',
-        nama: 'Dra. Hj. Siti Aminah, M.Pd',
-        kelasId: 1,
-        namaKelas: 'XII PM 1',
-        username: 'wali_pm1'
+        nama: kls?.waliKelas || 'Dra. Hj. Sri Lestari, M.Pd',
+        kelasId: kls?.id || 1,
+        namaKelas: kls?.nama || 'XII PM 1',
+        username: `wali_${kls?.jurusanKode?.toLowerCase() || 'guru'}`
       });
     } else if (role === 'SISWA') {
       const s = extra.siswa || matchedSiswa || data.siswa[0];
@@ -396,17 +400,35 @@ export default function LoginView({ data, onLogin }) {
             {activeTab === 'WALI_KELAS' && (
               <div className="space-y-3">
                 <label className="block text-xs font-bold text-slate-600 uppercase mb-1">
-                  Pilih Guru / Wali Kelas
+                  Pilih Guru / Wali Kelas Binaan:
                 </label>
-                <div className="p-3.5 bg-indigo-50 border border-indigo-200 rounded-xl text-xs text-indigo-900 space-y-1">
-                  <p className="font-bold flex items-center gap-1.5 text-sm">
-                    <ShieldCheck className="w-4 h-4 text-indigo-600" />
-                    Hj. Khofifah, S.Pd
-                  </p>
-                  <p className="text-indigo-700">Wali Kelas: <strong>XII PM 1 (Sesuai Dokumen Rekap Asli)</strong></p>
-                </div>
+                <select
+                  value={selectedWaliKelasId}
+                  onChange={(e) => setSelectedWaliKelasId(Number(e.target.value))}
+                  className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-800 focus:ring-2 focus:ring-indigo-500"
+                >
+                  {data.kelas.map((k) => (
+                    <option key={k.id} value={k.id}>
+                      {k.nama} — {k.waliKelas}
+                    </option>
+                  ))}
+                </select>
+
+                {(() => {
+                  const kls = data.kelas.find((k) => k.id === Number(selectedWaliKelasId)) || data.kelas[0];
+                  return (
+                    <div className="p-3.5 bg-indigo-50 border border-indigo-200 rounded-xl text-xs text-indigo-900 space-y-1">
+                      <p className="font-bold flex items-center gap-1.5 text-sm">
+                        <ShieldCheck className="w-4 h-4 text-indigo-600" />
+                        {kls?.waliKelas || 'Dra. Hj. Sri Lestari, M.Pd'}
+                      </p>
+                      <p className="text-indigo-700">Wali Kelas: <strong>{kls?.nama} ({kls?.jurusanKode})</strong></p>
+                    </div>
+                  );
+                })()}
+
                 <p className="text-[11px] text-slate-500">
-                  Wali kelas dapat langsung memantau buku pager setoran uang SPP kelasnya dan verifikasi syarat pengambilan rapor siswa.
+                  Wali kelas dapat langsung memantau buku pager setoran uang SPP kelas binaannya dan verifikasi syarat kelayakan pengambilan rapor siswa.
                 </p>
               </div>
             )}

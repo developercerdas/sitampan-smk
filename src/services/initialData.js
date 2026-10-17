@@ -23,10 +23,10 @@ export const INITIAL_DATA = {
   ],
 
   kelas: [
-    { id: 1, nama: 'XII PM 1', tingkat: 'XII', jurusanKode: 'PM', rombel: '1', waliKelas: 'Dra. Hj. Siti Handayani, M.Pd' },
-    { id: 2, nama: 'XII AKL', tingkat: 'XII', jurusanKode: 'AKL', rombel: '1', waliKelas: 'Nurul Aini, S.Pd' },
-    { id: 3, nama: 'XI CS 3', tingkat: 'XI', jurusanKode: 'PAR', rombel: '3', waliKelas: 'Bambang Pamungkas, S.Pd' },
-    { id: 4, nama: 'X AKL 1', tingkat: 'X', jurusanKode: 'AKL', rombel: '1', waliKelas: 'Tri Wahyuni, S.Pd' }
+    { id: 1, nama: 'XII PM 1', tingkat: 'XII', jurusanKode: 'PM', rombel: '1', waliKelas: 'Dra. Hj. Sri Lestari, M.Pd' },
+    { id: 2, nama: 'XII AKL', tingkat: 'XII', jurusanKode: 'AKL', rombel: '1', waliKelas: 'Ahmad Junaidi, S.Pd' },
+    { id: 3, nama: 'XI CS 3', tingkat: 'XI', jurusanKode: 'PAR', rombel: '3', waliKelas: 'Hendra Gunawan, S.Pd' },
+    { id: 4, nama: 'X AKL 1', tingkat: 'X', jurusanKode: 'AKL', rombel: '1', waliKelas: 'Ratna Dewi, S.Pd' }
   ],
 
   posBiaya: [

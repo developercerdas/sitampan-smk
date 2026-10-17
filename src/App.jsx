@@ -14,12 +14,32 @@ import ProfilKopView from './components/ProfilKopView';
 import MasterRulesView from './components/MasterRulesView';
 import KuitansiModal from './components/KuitansiModal';
 import { dataService } from './services/dataService';
-import { Database, GitBranch, Bell } from 'lucide-react';
+import { Database, GitBranch, Bell, Menu } from 'lucide-react';
 
 const USER_STORAGE_KEY = 'SITAMPAN_CURRENT_USER';
 
 export default function App() {
   const [data, setData] = useState(() => dataService.getData());
+
+  // State Sidebar Responsif & Ciut/Melebar (Icon-only mode)
+  const [isCollapsed, setIsCollapsed] = useState(() => {
+    try {
+      return localStorage.getItem('SITAMPAN_SIDEBAR_COLLAPSED') === 'true';
+    } catch {
+      return false;
+    }
+  });
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
+
+  const toggleCollapse = () => {
+    setIsCollapsed((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem('SITAMPAN_SIDEBAR_COLLAPSED', String(next));
+      } catch {}
+      return next;
+    });
+  };
 
   // Sinkronkan judul browser tab secara dinamis sesuai profil sekolah aktif
   useEffect(() => {
@@ -85,7 +105,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-100 flex">
-      {/* 1. SIDEBAR KIRI (Navigasi Sesuai Role Pengguna) */}
+      {/* 1. SIDEBAR KIRI (Navigasi Sesuai Role Pengguna: Full / Mini Icon-Only / Mobile Drawer) */}
       <Sidebar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
@@ -93,29 +113,50 @@ export default function App() {
         data={data}
         onLogout={handleLogout}
         onResetData={handleResetData}
+        isCollapsed={isCollapsed}
+        toggleCollapse={toggleCollapse}
+        isMobileOpen={isMobileOpen}
+        setIsMobileOpen={setIsMobileOpen}
       />
 
       {/* 2. AREA KONTEN UTAMA */}
       <div className="flex-1 flex flex-col min-w-0 overflow-y-auto h-screen">
         {/* Top Bar Informasi */}
-        <header className="bg-white border-b border-slate-200 px-6 py-3 flex items-center justify-between no-print sticky top-0 z-30 shadow-2xs">
-          <div className="flex items-center gap-3">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-            <div>
-              <p className="text-xs font-bold text-slate-900 leading-tight">
+        <header className="bg-white border-b border-slate-200 px-3 sm:px-6 py-2.5 sm:py-3 flex items-center justify-between no-print sticky top-0 z-30 shadow-2xs">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            {/* Tombol Hamburger / Collapse */}
+            <button
+              type="button"
+              onClick={() => {
+                if (window.innerWidth < 768) {
+                  setIsMobileOpen((prev) => !prev);
+                } else {
+                  toggleCollapse();
+                }
+              }}
+              className="p-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition flex-shrink-0 cursor-pointer"
+              title={isCollapsed ? 'Perluas Menu Sidebar' : 'Ciutkan Sidebar ke Logo Kecil'}
+            >
+              <Menu className="w-5 h-5 text-slate-700" />
+            </button>
+
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse flex-shrink-0 hidden xs:inline-block"></span>
+            
+            <div className="min-w-0">
+              <p className="text-xs font-bold text-slate-900 leading-tight truncate max-w-[130px] sm:max-w-xs md:max-w-md">
                 {data.sekolah.nama}
               </p>
-              <p className="text-[10px] text-slate-500">
+              <p className="text-[10px] text-slate-500 truncate">
                 {currentUser.nama} ({role === 'ADMIN' ? 'Kasir TU' : role === 'WALI_KELAS' ? 'Wali Kelas' : 'Siswa/Ortu'})
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3 text-xs">
-            <span className="bg-blue-50 text-blue-700 font-bold px-2.5 py-1 rounded-lg border border-blue-200 hidden sm:inline-block">
-              Mitra VA: {data.sekolah.bankMitra}
+          <div className="flex items-center gap-2 sm:gap-3 text-xs flex-shrink-0">
+            <span className="bg-blue-50 text-blue-700 font-bold px-2.5 py-1 rounded-lg border border-blue-200 hidden md:inline-block text-[11px]">
+              Mitra: {data.sekolah.bankMitra}
             </span>
-            <span className="bg-slate-100 text-slate-700 font-bold px-2.5 py-1 rounded-lg border border-slate-200">
+            <span className="bg-slate-100 text-slate-700 font-bold px-2 py-1 rounded-lg border border-slate-200 text-[11px]">
               TA {data.sekolah.tahunAjaranAktif}
             </span>
           </div>

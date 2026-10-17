@@ -76,6 +76,43 @@ export const dataService = {
           this.saveData(parsed);
         }
 
+        // Sanitasi nama guru wali kelas agar tidak menggunakan nama dokumen fisik asli
+        const ANONYMIZED_WALI = {
+          1: 'Dra. Hj. Sri Lestari, M.Pd',
+          2: 'Ahmad Junaidi, S.Pd',
+          3: 'Hendra Gunawan, S.Pd',
+          4: 'Ratna Dewi, S.Pd'
+        };
+
+        let dataPerluUpdate = false;
+        parsed.kelas = (parsed.kelas || []).map((k) => {
+          if (
+            k.waliKelas?.includes('Khofifah') ||
+            k.waliKelas?.includes('Aminah') ||
+            k.waliKelas?.includes('Hariyanto') ||
+            k.waliKelas?.includes('Wahyuningrum') ||
+            k.waliKelas?.includes('Nurul Hidayati') ||
+            k.waliKelas?.includes('Siti Handayani')
+          ) {
+            dataPerluUpdate = true;
+            return {
+              ...k,
+              waliKelas: ANONYMIZED_WALI[k.id] || 'Guru Pendamping, S.Pd'
+            };
+          }
+          return k;
+        });
+
+        // Sinkronkan posBiaya baru jika belum ada
+        if (!parsed.posBiaya || parsed.posBiaya.length < INITIAL_DATA.posBiaya.length) {
+          parsed.posBiaya = INITIAL_DATA.posBiaya;
+          dataPerluUpdate = true;
+        }
+
+        if (dataPerluUpdate) {
+          this.saveData(parsed);
+        }
+
         // Pastikan setiap siswa memiliki field tanggalLahir
         parsed.siswa = (parsed.siswa || []).map((s) => ({
           ...s,

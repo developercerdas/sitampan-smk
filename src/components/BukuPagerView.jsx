@@ -247,7 +247,7 @@ export default function BukuPagerView({ data, currentRole }) {
           </div>
 
           <div className="text-center w-48">
-            <p>Kudus, {tanggalCutOff}</p>
+            <p>{data.sekolah?.alamat?.includes(',') ? data.sekolah.alamat.split(',').slice(-1)[0].replace(/\d+/g, '').trim() : 'Kota'}, {tanggalCutOff}</p>
             <p className="font-semibold">Wali Kelas {selectedKelas?.nama}</p>
             <div className="h-16"></div>
             <p className="font-bold underline">{selectedKelas?.waliKelas}</p>

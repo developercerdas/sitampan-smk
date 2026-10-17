@@ -1,3 +1,4 @@
+import React from 'react';
 import { 
   LayoutDashboard,
   CreditCard, 
@@ -13,7 +14,12 @@ import {
   Users,
   UserCheck,
   ChevronRight,
-  Sparkles
+  ChevronLeft,
+  Menu,
+  X,
+  Sparkles,
+  PanelLeftClose,
+  PanelLeftOpen
 } from 'lucide-react';
 import SchoolLogo from './SchoolLogo';
 
@@ -23,7 +29,11 @@ export default function Sidebar({
   currentUser,
   data,
   onLogout,
-  onResetData
+  onResetData,
+  isCollapsed,
+  toggleCollapse,
+  isMobileOpen,
+  setIsMobileOpen
 }) {
   const role = currentUser?.role || 'ADMIN';
 
@@ -88,101 +98,188 @@ export default function Sidebar({
 
   const menuGroups = getMenuItems();
 
+  const handleItemClick = (id) => {
+    setActiveTab(id);
+    if (setIsMobileOpen) {
+      setIsMobileOpen(false);
+    }
+  };
+
   return (
-    <aside className="w-64 lg:w-72 bg-slate-900 text-slate-300 flex flex-col justify-between flex-shrink-0 h-screen sticky top-0 border-r border-slate-800 no-print select-none shadow-xl">
-      {/* 1. Header Identitas Sekolah & Logo */}
-      <div>
-        <div className="p-5 border-b border-slate-800/80 flex items-center gap-3.5 bg-slate-950/40">
-          <SchoolLogo logoUrl={data.sekolah.logoUrl} className="w-11 h-11" />
-          <div className="overflow-hidden">
-            <h1 className="text-base font-extrabold tracking-tight text-white leading-tight flex items-center gap-1.5">
-              SITAMPAN <span className="text-amber-400">SMK</span>
-            </h1>
-            <p className="text-[11px] font-semibold text-slate-400 truncate mt-0.5">
-              {data.sekolah.nama}
-            </p>
-            <span className="inline-block text-[9px] font-bold uppercase tracking-wider text-emerald-400 bg-emerald-950/80 border border-emerald-800/50 px-1.5 py-0.2 rounded mt-1">
-              TA {data.sekolah.tahunAjaranAktif}
-            </span>
+    <>
+      {/* 1. Backdrop Overlay saat Mobile Drawer Terbuka */}
+      {isMobileOpen && (
+        <div 
+          onClick={() => setIsMobileOpen(false)}
+          className="fixed inset-0 bg-slate-950/70 z-40 backdrop-blur-xs md:hidden animate-fadeIn"
+          aria-hidden="true"
+        />
+      )}
+
+      {/* 2. Container Sidebar (Mendukung Full / Mini Icon-Only / Mobile Drawer) */}
+      <aside 
+        className={`fixed md:sticky top-0 left-0 z-50 h-screen bg-slate-900 text-slate-300 flex flex-col justify-between flex-shrink-0 border-r border-slate-800 no-print select-none shadow-2xl transition-all duration-300 ease-in-out ${
+          // Lebar responsive: Mini (w-20) vs Penuh (w-64 lg:w-72)
+          isCollapsed ? 'md:w-20' : 'md:w-64 lg:w-72'
+        } ${
+          // Posisi drawer pada mobile
+          isMobileOpen ? 'translate-x-0 w-72' : '-translate-x-full md:translate-x-0'
+        }`}
+      >
+        {/* Header Identitas & Tombol Collapse */}
+        <div>
+          <div className={`p-4 border-b border-slate-800/80 flex items-center justify-between bg-slate-950/60 ${isCollapsed ? 'md:justify-center md:p-3' : ''}`}>
+            <div className="flex items-center gap-3 overflow-hidden">
+              <SchoolLogo logoUrl={data.sekolah.logoUrl} className={`${isCollapsed ? 'w-10 h-10' : 'w-10 h-10'} flex-shrink-0`} />
+              
+              {(!isCollapsed || isMobileOpen) && (
+                <div className="overflow-hidden min-w-0">
+                  <h1 className="text-base font-extrabold tracking-tight text-white leading-tight flex items-center gap-1.5">
+                    SITAMPAN <span className="text-amber-400">SMK</span>
+                  </h1>
+                  <p className="text-[11px] font-semibold text-slate-400 truncate mt-0.5" title={data.sekolah.nama}>
+                    {data.sekolah.nama}
+                  </p>
+                  <span className="inline-block text-[9px] font-bold uppercase tracking-wider text-emerald-400 bg-emerald-950/80 border border-emerald-800/50 px-1.5 py-0.2 rounded mt-0.5">
+                    TA {data.sekolah.tahunAjaranAktif}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Tombol Tutup (Di HP) */}
+            <button
+              onClick={() => setIsMobileOpen(false)}
+              className="p-1.5 text-slate-400 hover:text-white rounded-lg md:hidden"
+              title="Tutup Menu"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            {/* Tombol Collapse Icon-Only (Di Desktop/Tablet) */}
+            <button
+              onClick={toggleCollapse}
+              className={`hidden md:flex p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition ${isCollapsed ? 'mt-2' : ''}`}
+              title={isCollapsed ? 'Perluas Sidebar' : 'Ciutkan Sidebar Jadi Logo Kecil'}
+            >
+              {isCollapsed ? <PanelLeftOpen className="w-5 h-5 text-amber-400" /> : <PanelLeftClose className="w-4 h-4" />}
+            </button>
           </div>
-        </div>
 
-        {/* 2. Daftar Menu Sesuai Role Pengguna */}
-        <div className="px-3 py-4 space-y-6 overflow-y-auto max-h-[calc(100vh-230px)]">
-          {menuGroups.map((grp, idx) => (
-            <div key={idx} className="space-y-1">
-              <p className="px-3 text-[10px] font-extrabold uppercase tracking-widest text-slate-500">
-                {grp.group}
-              </p>
-              <div className="space-y-0.5">
-                {grp.items.map((item) => {
-                  const Icon = item.icon;
-                  const isActive = activeTab === item.id;
+          {/* 3. Daftar Menu Sesuai Role Pengguna */}
+          <div className={`py-4 space-y-6 overflow-y-auto max-h-[calc(100vh-210px)] ${isCollapsed ? 'px-2' : 'px-3'}`}>
+            {menuGroups.map((grp, idx) => (
+              <div key={idx} className="space-y-1">
+                {(!isCollapsed || isMobileOpen) ? (
+                  <p className="px-3 text-[10px] font-extrabold uppercase tracking-widest text-slate-500">
+                    {grp.group}
+                  </p>
+                ) : (
+                  <div className="border-t border-slate-800 my-2" />
+                )}
 
-                  return (
-                    <button
-                      key={item.id}
-                      onClick={() => setActiveTab(item.id)}
-                      className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                        isActive
-                          ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30 font-extrabold'
-                          : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <Icon className={`w-4 h-4 ${isActive ? 'text-white' : item.color}`} />
-                        <span className="truncate">{item.label}</span>
-                      </div>
-                      {isActive && <ChevronRight className="w-3.5 h-3.5 text-blue-200" />}
-                    </button>
-                  );
-                })}
+                <div className="space-y-1">
+                  {grp.items.map((item) => {
+                    const Icon = item.icon;
+                    const isActive = activeTab === item.id;
+
+                    return (
+                      <button
+                        key={item.id}
+                        onClick={() => handleItemClick(item.id)}
+                        title={item.label}
+                        className={`w-full flex items-center rounded-xl transition-all cursor-pointer group ${
+                          isCollapsed && !isMobileOpen
+                            ? 'justify-center p-3'
+                            : 'justify-between px-3 py-2.5 text-xs font-bold'
+                        } ${
+                          isActive
+                            ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30 font-extrabold ring-1 ring-blue-400/30'
+                            : 'text-slate-400 hover:text-white hover:bg-slate-800/70'
+                        }`}
+                      >
+                        <div className={`flex items-center gap-3 ${isCollapsed && !isMobileOpen ? 'justify-center' : ''}`}>
+                          <Icon className={`w-4 h-4 flex-shrink-0 ${isActive ? 'text-white' : item.color}`} />
+                          
+                          {(!isCollapsed || isMobileOpen) && (
+                            <span className="truncate">{item.label}</span>
+                          )}
+                        </div>
+
+                        {(!isCollapsed || isMobileOpen) && isActive && (
+                          <ChevronRight className="w-3.5 h-3.5 text-blue-200" />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
 
-      {/* 3. Footer: User Profile Card & Logout */}
-      <div className="p-3 border-t border-slate-800/80 bg-slate-950/60 space-y-2">
-        {/* User Card */}
-        <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-8 h-8 rounded-lg bg-blue-600/20 text-blue-400 flex items-center justify-center font-bold text-xs flex-shrink-0 border border-blue-500/30">
-              <User className="w-4 h-4" />
+        {/* 4. Footer: User Profile Card & Logout */}
+        <div className={`border-t border-slate-800/80 bg-slate-950/60 ${isCollapsed && !isMobileOpen ? 'p-2' : 'p-3'} space-y-2`}>
+          {/* User Card */}
+          <div className={`rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between ${isCollapsed && !isMobileOpen ? 'p-2 justify-center' : 'p-2.5'}`}>
+            <div className={`flex items-center gap-2.5 min-w-0 ${isCollapsed && !isMobileOpen ? 'justify-center' : ''}`}>
+              <div 
+                className="w-8 h-8 rounded-lg bg-blue-600/20 text-blue-400 flex items-center justify-center font-bold text-xs flex-shrink-0 border border-blue-500/30"
+                title={`${currentUser?.nama} (${role})`}
+              >
+                <User className="w-4 h-4" />
+              </div>
+
+              {(!isCollapsed || isMobileOpen) && (
+                <div className="min-w-0">
+                  <p className="text-xs font-bold text-white truncate">
+                    {currentUser?.nama || 'Pengguna'}
+                  </p>
+                  <p className="text-[10px] text-slate-400 truncate">
+                    {role === 'ADMIN'
+                      ? 'Administrator TU'
+                      : role === 'WALI_KELAS'
+                      ? `Wali Kelas ${currentUser?.namaKelas || 'XII PM 1'}`
+                      : `Siswa (${currentUser?.nis})`}
+                  </p>
+                </div>
+              )}
             </div>
-            <div className="min-w-0">
-              <p className="text-xs font-bold text-white truncate">
-                {currentUser?.nama || 'Pengguna'}
-              </p>
-              <p className="text-[10px] text-slate-400 truncate">
-                {role === 'ADMIN'
-                  ? 'Administrator TU'
-                  : role === 'WALI_KELAS'
-                  ? `Wali Kelas ${currentUser?.namaKelas || 'XII PM 1'}`
-                  : `Siswa (${currentUser?.nis})`}
-              </p>
-            </div>
+
+            {(!isCollapsed || isMobileOpen) && (
+              <button
+                onClick={onLogout}
+                title="Keluar / Ganti Akun"
+                className="p-1.5 text-rose-400 hover:text-white hover:bg-rose-600/80 rounded-lg transition"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            )}
           </div>
 
-          <button
-            onClick={onLogout}
-            title="Keluar / Ganti Akun"
-            className="p-1.5 text-rose-400 hover:text-white hover:bg-rose-600/80 rounded-lg transition"
-          >
-            <LogOut className="w-4 h-4" />
-          </button>
-        </div>
+          {/* Jika mini mode, tombol logout diletakkan di bawah */}
+          {isCollapsed && !isMobileOpen && (
+            <button
+              onClick={onLogout}
+              title="Keluar / Ganti Akun"
+              className="w-full flex items-center justify-center p-2 text-rose-400 hover:text-white hover:bg-rose-600/80 rounded-xl transition"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
+          )}
 
-        {/* Action Button: Reset Data */}
-        <button
-          onClick={onResetData}
-          className="w-full flex items-center justify-center gap-1.5 py-1 text-[11px] text-slate-500 hover:text-rose-400 transition"
-        >
-          <RotateCcw className="w-3 h-3" />
-          <span>Reset Data ke Standar Sekolah</span>
-        </button>
-      </div>
-    </aside>
+          {/* Action Button: Reset Data */}
+          {(!isCollapsed || isMobileOpen) && (
+            <button
+              onClick={onResetData}
+              className="w-full flex items-center justify-center gap-1.5 py-1 text-[11px] text-slate-500 hover:text-rose-400 transition"
+            >
+              <RotateCcw className="w-3 h-3" />
+              <span>Reset Data Standar</span>
+            </button>
+          )}
+        </div>
+      </aside>
+    </>
   );
 }
