@@ -73,6 +73,62 @@ export default function Sidebar({
           ]
         }
       ];
+    } else if (role === 'BENDAHARA') {
+      return [
+        {
+          group: 'KEUANGAN & TRANSAKSI',
+          items: [
+            { id: 'dashboard', label: 'Dashboard Real-Time Keuangan', icon: LayoutDashboard, color: 'text-amber-400' },
+            { id: 'kasir', label: 'Loket Kasir & Kuitansi', icon: CreditCard, color: 'text-blue-500' },
+            { id: 'buku-pager', label: 'Buku Pager (Rekap Setoran)', icon: BookOpen, color: 'text-indigo-500' },
+            { id: 'kartu-spp', label: 'Kartu SPP Digital Siswa', icon: Smartphone, color: 'text-emerald-500' }
+          ]
+        },
+        {
+          group: 'PENETAPAN TARIF & MASTER',
+          items: [
+            { id: 'master-tarif', label: 'Master Tarif Pos Biaya', icon: Settings, color: 'text-amber-400' },
+            { id: 'master-siswa', label: 'Master Siswa & VA', icon: Users, color: 'text-blue-400' },
+            { id: 'master-kelas', label: 'Master Kelas & Rombel', icon: UserCheck, color: 'text-emerald-400' },
+            { id: 'master-jurusan', label: 'Master Jurusan', icon: GraduationCap, color: 'text-purple-400' }
+          ]
+        },
+        {
+          group: 'AKADEMIK & PENGATURAN',
+          items: [
+            { id: 'kenaikan-kelas', label: 'Kenaikan Kelas & Alumni', icon: GraduationCap, color: 'text-cyan-400' },
+            { id: 'profil-kop', label: 'Profil & KOP Sekolah', icon: School, color: 'text-rose-400' },
+            { id: 'master-rules', label: 'Master Hak Akses & Rule', icon: ShieldCheck, color: 'text-teal-400' }
+          ]
+        }
+      ];
+    } else if (role === 'KEPALA_SEKOLAH') {
+      return [
+        {
+          group: 'MONITORING EKSEKUTIF',
+          items: [
+            { id: 'dashboard', label: 'Dashboard Eksekutif Sekolah', icon: LayoutDashboard, color: 'text-amber-400' },
+            { id: 'buku-pager', label: 'Laporan Setoran Seluruh Kelas', icon: BookOpen, color: 'text-indigo-500' },
+            { id: 'kartu-spp', label: 'Monitoring Kartu SPP Siswa', icon: Smartphone, color: 'text-emerald-500' }
+          ]
+        },
+        {
+          group: 'DATA & BIAYA',
+          items: [
+            { id: 'master-siswa', label: 'Data Induk Siswa', icon: Users, color: 'text-blue-400' },
+            { id: 'master-kelas', label: 'Daftar Kelas & Wali Kelas', icon: UserCheck, color: 'text-emerald-400' },
+            { id: 'master-jurusan', label: 'Program Keahlian (Jurusan)', icon: GraduationCap, color: 'text-purple-400' },
+            { id: 'master-tarif', label: 'Struktur Tarif & Pos Biaya', icon: Settings, color: 'text-amber-400' }
+          ]
+        },
+        {
+          group: 'LEGALITAS & PROFIL',
+          items: [
+            { id: 'profil-kop', label: 'Profil & Legalitas Sekolah', icon: School, color: 'text-rose-400' },
+            { id: 'master-rules', label: 'Master Hak Akses & Rule', icon: ShieldCheck, color: 'text-teal-400' }
+          ]
+        }
+      ];
     } else if (role === 'WALI_KELAS') {
       return [
         {
@@ -253,7 +309,11 @@ export default function Sidebar({
                   </p>
                   <p className="text-[10px] text-slate-400 truncate">
                     {role === 'ADMIN'
-                      ? 'Administrator TU'
+                      ? 'Kasir Loket TU'
+                      : role === 'BENDAHARA'
+                      ? 'Bendahara Sekolah'
+                      : role === 'KEPALA_SEKOLAH'
+                      ? 'Kepala Sekolah'
                       : role === 'WALI_KELAS'
                       ? `Wali Kelas ${currentUser?.namaKelas || 'XII PM 1'}`
                       : `Siswa (${currentUser?.nis})`}

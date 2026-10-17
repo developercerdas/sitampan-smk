@@ -16,9 +16,51 @@ export default function MasterRulesView({ data }) {
   const [selectedRole, setSelectedRole] = useState('ADMIN');
 
   const roleRules = {
+    KEPALA_SEKOLAH: {
+      nama: 'Kepala Sekolah (Supervisi Eksekutif)',
+      subjudul: 'Drs. H. Mulyadi, M.Pd.',
+      deskripsi: 'Akses supervisi dan audit eksekutif untuk memantau performa keuangan, persentase setoran semua rombel, kartu SPP siswa, dan data induk sekolah.',
+      badge: 'Eksekutif',
+      badgeColor: 'bg-purple-100 text-purple-800',
+      activeClass: 'bg-purple-50 border-purple-500 shadow-xs ring-1 ring-purple-500',
+      permissions: [
+        { nama: 'Dashboard Eksekutif & Real-Time KPI Keuangan', status: true },
+        { nama: 'Laporan Setoran Seluruh Kelas (Folio Pager)', status: true },
+        { nama: 'Monitoring & Audit Kartu SPP Siswa', status: true },
+        { nama: 'Ekspor Rekapitulasi Laporan ke Excel (.xlsx)', status: true },
+        { nama: 'Supervisi Data Induk Siswa & Daftar Kelas', status: true },
+        { nama: 'Supervisi Struktur Tarif & Pos Biaya', status: true },
+        { nama: 'Tinjau Profil & Legalitas Sekolah', status: true },
+        { nama: 'Input Transaksi Kasir / Terima Uang Tunai', status: false },
+        { nama: 'Ubah Data Tarif & Konfigurasi Sistem', status: false }
+      ]
+    },
+    BENDAHARA: {
+      nama: 'Bendahara Sekolah (Finance & Treasury Officer)',
+      subjudul: 'Hj. Siti Nurhaliza, S.E.',
+      deskripsi: 'Pengelolaan kas masuk, rekonsiliasi pembayaran tunai & VA, monitoring buku pager, verifikasi penerimaan SPP, dan konfigurasi master tarif.',
+      badge: 'Treasury',
+      badgeColor: 'bg-emerald-100 text-emerald-800',
+      activeClass: 'bg-emerald-50 border-emerald-500 shadow-xs ring-1 ring-emerald-500',
+      permissions: [
+        { nama: 'Dashboard Real-Time Kas & Penerimaan', status: true },
+        { nama: 'Loket Pembayaran Kasir (Tunai & VA)', status: true },
+        { nama: 'Cetak Kuitansi Resmi & Stempel Lunas', status: true },
+        { nama: 'Rekapitulasi Buku Pager Semua Rombel', status: true },
+        { nama: 'Manajemen Master Tarif Multi-Jurusan & DSP', status: true },
+        { nama: 'Supervisi Master Siswa, Kelas & Jurusan', status: true },
+        { nama: 'Ekspor Data Setoran ke Excel (.xlsx)', status: true },
+        { nama: 'Wizard Kenaikan Kelas & Kelulusan Alumni', status: false },
+        { nama: 'Ubah Profil Sekolah & Hak Akses Pengguna', status: false }
+      ]
+    },
     ADMIN: {
       nama: 'Administrator Keuangan & Kasir TU',
+      subjudul: 'Ahmad Junaidi, S.Kom.',
       deskripsi: 'Memiliki hak akses penuh untuk transaksi tunai, mutasi VA, promosi siswa, master biaya, dan pergantian KOP.',
+      badge: 'Full Akses',
+      badgeColor: 'bg-blue-100 text-blue-800',
+      activeClass: 'bg-blue-50 border-blue-500 shadow-xs ring-1 ring-blue-500',
       permissions: [
         { nama: 'Loket Pembayaran Kasir (Tunai & VA)', status: true },
         { nama: 'Cetak Kuitansi Resmi & Stempel Lunas', status: true },
@@ -32,7 +74,11 @@ export default function MasterRulesView({ data }) {
     },
     WALI_KELAS: {
       nama: 'Wali Kelas (Guru Pendamping)',
+      subjudul: 'Ibu Rini / Dra. Hj. Sri Lestari',
       deskripsi: 'Dibatasi hanya dapat melihat dan memantau siswa pada rombel kelas binaannya sendiri.',
+      badge: 'Terbatas',
+      badgeColor: 'bg-indigo-100 text-indigo-800',
+      activeClass: 'bg-indigo-50 border-indigo-500 shadow-xs ring-1 ring-indigo-500',
       permissions: [
         { nama: 'Monitoring Lembar Setoran Kelas Bimbingan', status: true },
         { nama: 'Ceklis Syarat Pengambilan Rapor Siswa', status: true },
@@ -45,7 +91,11 @@ export default function MasterRulesView({ data }) {
     },
     ORTU: {
       nama: 'Siswa & Orang Tua Murid',
+      subjudul: 'Abi Priyanto / Dian Verawati',
       deskripsi: 'Hanya dapat melihat data pribadi siswa yang bersangkutan menggunakan verifikasi NIS dan Tanggal Lahir.',
+      badge: 'Personal',
+      badgeColor: 'bg-amber-100 text-amber-800',
+      activeClass: 'bg-amber-50 border-amber-500 shadow-xs ring-1 ring-amber-500',
       permissions: [
         { nama: 'Kartu SPP Digital 12 Bulan (Juli–Juni)', status: true },
         { nama: 'Cek Rincian Sisa Tunggakan Berjalan', status: true },
@@ -58,7 +108,7 @@ export default function MasterRulesView({ data }) {
     }
   };
 
-  const currentRoleConfig = roleRules[selectedRole];
+  const currentRoleConfig = roleRules[selectedRole] || roleRules.ADMIN;
 
   return (
     <div className="space-y-6">
@@ -73,7 +123,7 @@ export default function MasterRulesView({ data }) {
               Master Hak Akses & Penentuan Rule Pengguna
             </h2>
             <p className="text-teal-100 text-sm mt-0.5">
-              Menentukan hak akses sistem dan membatasi menu yang tampil di sidebar sesuai peran (Kasir TU, Wali Kelas, atau Siswa/Ortu).
+              Menentukan hak akses sistem dan membatasi menu yang tampil di sidebar sesuai peran (Kepala Sekolah, Bendahara, Kasir TU, Wali Kelas, atau Siswa/Ortu).
             </p>
           </div>
         </div>
@@ -88,19 +138,53 @@ export default function MasterRulesView({ data }) {
             </p>
 
             <button
-              onClick={() => setSelectedRole('ADMIN')}
+              onClick={() => setSelectedRole('KEPALA_SEKOLAH')}
               className={`w-full text-left p-3.5 rounded-xl border transition flex items-center justify-between ${
-                selectedRole === 'ADMIN'
-                  ? 'bg-blue-50 border-blue-500 shadow-xs ring-1 ring-blue-500'
+                selectedRole === 'KEPALA_SEKOLAH'
+                  ? roleRules.KEPALA_SEKOLAH.activeClass
                   : 'bg-white border-slate-200 hover:bg-slate-50'
               }`}
             >
               <div>
-                <p className="font-bold text-sm text-slate-900">Kasir & Admin TU</p>
-                <p className="text-xs text-slate-500">Akses Penuh Seluruh Modul</p>
+                <p className="font-bold text-sm text-slate-900">🏛️ Kepala Sekolah</p>
+                <p className="text-xs text-slate-500">{roleRules.KEPALA_SEKOLAH.subjudul}</p>
               </div>
-              <span className="text-xs font-bold bg-blue-100 text-blue-800 px-2 py-0.5 rounded">
-                Full Akses
+              <span className={`text-xs font-bold px-2 py-0.5 rounded ${roleRules.KEPALA_SEKOLAH.badgeColor}`}>
+                {roleRules.KEPALA_SEKOLAH.badge}
+              </span>
+            </button>
+
+            <button
+              onClick={() => setSelectedRole('BENDAHARA')}
+              className={`w-full text-left p-3.5 rounded-xl border transition flex items-center justify-between ${
+                selectedRole === 'BENDAHARA'
+                  ? roleRules.BENDAHARA.activeClass
+                  : 'bg-white border-slate-200 hover:bg-slate-50'
+              }`}
+            >
+              <div>
+                <p className="font-bold text-sm text-slate-900">💰 Bendahara Sekolah</p>
+                <p className="text-xs text-slate-500">{roleRules.BENDAHARA.subjudul}</p>
+              </div>
+              <span className={`text-xs font-bold px-2 py-0.5 rounded ${roleRules.BENDAHARA.badgeColor}`}>
+                {roleRules.BENDAHARA.badge}
+              </span>
+            </button>
+
+            <button
+              onClick={() => setSelectedRole('ADMIN')}
+              className={`w-full text-left p-3.5 rounded-xl border transition flex items-center justify-between ${
+                selectedRole === 'ADMIN'
+                  ? roleRules.ADMIN.activeClass
+                  : 'bg-white border-slate-200 hover:bg-slate-50'
+              }`}
+            >
+              <div>
+                <p className="font-bold text-sm text-slate-900">💼 Kasir & Admin TU</p>
+                <p className="text-xs text-slate-500">{roleRules.ADMIN.subjudul}</p>
+              </div>
+              <span className={`text-xs font-bold px-2 py-0.5 rounded ${roleRules.ADMIN.badgeColor}`}>
+                {roleRules.ADMIN.badge}
               </span>
             </button>
 
@@ -108,16 +192,16 @@ export default function MasterRulesView({ data }) {
               onClick={() => setSelectedRole('WALI_KELAS')}
               className={`w-full text-left p-3.5 rounded-xl border transition flex items-center justify-between ${
                 selectedRole === 'WALI_KELAS'
-                  ? 'bg-indigo-50 border-indigo-500 shadow-xs ring-1 ring-indigo-500'
+                  ? roleRules.WALI_KELAS.activeClass
                   : 'bg-white border-slate-200 hover:bg-slate-50'
               }`}
             >
               <div>
-                <p className="font-bold text-sm text-slate-900">Wali Kelas</p>
-                <p className="text-xs text-slate-500">Monitoring Kelas Bimbingan</p>
+                <p className="font-bold text-sm text-slate-900">👨‍🏫 Wali Kelas</p>
+                <p className="text-xs text-slate-500">{roleRules.WALI_KELAS.subjudul}</p>
               </div>
-              <span className="text-xs font-bold bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded">
-                Terbatas
+              <span className={`text-xs font-bold px-2 py-0.5 rounded ${roleRules.WALI_KELAS.badgeColor}`}>
+                {roleRules.WALI_KELAS.badge}
               </span>
             </button>
 
@@ -125,16 +209,16 @@ export default function MasterRulesView({ data }) {
               onClick={() => setSelectedRole('ORTU')}
               className={`w-full text-left p-3.5 rounded-xl border transition flex items-center justify-between ${
                 selectedRole === 'ORTU'
-                  ? 'bg-emerald-50 border-emerald-500 shadow-xs ring-1 ring-emerald-500'
+                  ? roleRules.ORTU.activeClass
                   : 'bg-white border-slate-200 hover:bg-slate-50'
               }`}
             >
               <div>
-                <p className="font-bold text-sm text-slate-900">Siswa & Orang Tua</p>
-                <p className="text-xs text-slate-500">Verifikasi NIS & Tgl Lahir</p>
+                <p className="font-bold text-sm text-slate-900">🎓 Siswa & Orang Tua</p>
+                <p className="text-xs text-slate-500">{roleRules.ORTU.subjudul}</p>
               </div>
-              <span className="text-xs font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded">
-                Personal
+              <span className={`text-xs font-bold px-2 py-0.5 rounded ${roleRules.ORTU.badgeColor}`}>
+                {roleRules.ORTU.badge}
               </span>
             </button>
           </div>

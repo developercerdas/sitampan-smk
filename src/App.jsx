@@ -147,7 +147,17 @@ export default function App() {
                 {data.sekolah.nama}
               </p>
               <p className="text-[10px] text-slate-500 truncate">
-                {currentUser.nama} ({role === 'ADMIN' ? 'Kasir TU' : role === 'WALI_KELAS' ? 'Wali Kelas' : 'Siswa/Ortu'})
+                {currentUser.nama} ({
+                  role === 'ADMIN'
+                    ? 'Kasir TU'
+                    : role === 'BENDAHARA'
+                    ? 'Bendahara Sekolah'
+                    : role === 'KEPALA_SEKOLAH'
+                    ? 'Kepala Sekolah'
+                    : role === 'WALI_KELAS'
+                    ? 'Wali Kelas'
+                    : 'Siswa/Ortu'
+                })
               </p>
             </div>
           </div>
@@ -173,13 +183,13 @@ export default function App() {
 
         {/* Content Body (Safe area bottom padding untuk Android address bar) */}
         <main className="flex-1 p-3 sm:p-5 lg:p-7 max-w-7xl w-full mx-auto space-y-6 pb-28 md:pb-12">
-          {/* Dashboard Real-Time (Khusus Admin) */}
-          {activeTab === 'dashboard' && role === 'ADMIN' && (
+          {/* Dashboard Real-Time (Khusus Admin, Bendahara, & Kepala Sekolah) */}
+          {activeTab === 'dashboard' && (role === 'ADMIN' || role === 'BENDAHARA' || role === 'KEPALA_SEKOLAH') && (
             <DashboardView data={data} onNavigate={setActiveTab} />
           )}
 
-          {/* Menu Khusus Admin: Loket Kasir */}
-          {activeTab === 'kasir' && role === 'ADMIN' && (
+          {/* Menu Loket Kasir (Admin & Bendahara) */}
+          {activeTab === 'kasir' && (role === 'ADMIN' || role === 'BENDAHARA') && (
             <KasirView
               data={data}
               onUpdateData={handleUpdateData}
@@ -187,7 +197,7 @@ export default function App() {
             />
           )}
 
-          {/* Buku Pager (Bisa diakses Admin & Wali Kelas) */}
+          {/* Buku Pager (Bisa diakses Admin, Bendahara, Kepala Sekolah, & Wali Kelas) */}
           {activeTab === 'buku-pager' && (
             <BukuPagerView
               data={data}
@@ -197,7 +207,7 @@ export default function App() {
             />
           )}
 
-          {/* Kartu SPP (Bisa diakses Siswa/Ortu & Admin & Wali Kelas) */}
+          {/* Kartu SPP (Bisa diakses Siswa/Ortu, Admin, Bendahara, Kepala Sekolah, & Wali Kelas) */}
           {activeTab === 'kartu-spp' && (
             <KartuSppView
               data={data}
@@ -207,13 +217,13 @@ export default function App() {
             />
           )}
 
-          {/* Kenaikan Kelas (Khusus Admin) */}
-          {activeTab === 'kenaikan-kelas' && role === 'ADMIN' && (
+          {/* Kenaikan Kelas (Admin & Bendahara) */}
+          {activeTab === 'kenaikan-kelas' && (role === 'ADMIN' || role === 'BENDAHARA') && (
             <KenaikanKelasView data={data} onUpdateData={handleUpdateData} />
           )}
 
-          {/* Master Siswa (Khusus Admin) */}
-          {activeTab === 'master-siswa' && role === 'ADMIN' && (
+          {/* Master Siswa (Admin, Bendahara, & Kepala Sekolah) */}
+          {activeTab === 'master-siswa' && (role === 'ADMIN' || role === 'BENDAHARA' || role === 'KEPALA_SEKOLAH') && (
             <MasterSiswaView
               data={data}
               onUpdateData={handleUpdateData}
@@ -221,8 +231,8 @@ export default function App() {
             />
           )}
 
-          {/* Master Kelas & Wali Kelas (Khusus Admin) */}
-          {activeTab === 'master-kelas' && role === 'ADMIN' && (
+          {/* Master Kelas & Wali Kelas (Admin, Bendahara, & Kepala Sekolah) */}
+          {activeTab === 'master-kelas' && (role === 'ADMIN' || role === 'BENDAHARA' || role === 'KEPALA_SEKOLAH') && (
             <MasterKelasView
               data={data}
               onUpdateData={handleUpdateData}
@@ -230,8 +240,8 @@ export default function App() {
             />
           )}
 
-          {/* Master Jurusan (Khusus Admin) */}
-          {activeTab === 'master-jurusan' && role === 'ADMIN' && (
+          {/* Master Jurusan (Admin, Bendahara, & Kepala Sekolah) */}
+          {activeTab === 'master-jurusan' && (role === 'ADMIN' || role === 'BENDAHARA' || role === 'KEPALA_SEKOLAH') && (
             <MasterJurusanView
               data={data}
               onUpdateData={handleUpdateData}
@@ -239,8 +249,8 @@ export default function App() {
             />
           )}
 
-          {/* Master Tarif & Pos Biaya (Khusus Admin) */}
-          {activeTab === 'master-tarif' && role === 'ADMIN' && (
+          {/* Master Tarif & Pos Biaya (Admin, Bendahara, & Kepala Sekolah) */}
+          {activeTab === 'master-tarif' && (role === 'ADMIN' || role === 'BENDAHARA' || role === 'KEPALA_SEKOLAH') && (
             <MasterTarifView
               data={data}
               onUpdateData={handleUpdateData}
@@ -248,13 +258,13 @@ export default function App() {
             />
           )}
 
-          {/* Master Profil & KOP Sekolah (Khusus Admin) */}
-          {activeTab === 'profil-kop' && role === 'ADMIN' && (
+          {/* Master Profil & KOP Sekolah (Admin, Bendahara, & Kepala Sekolah) */}
+          {activeTab === 'profil-kop' && (role === 'ADMIN' || role === 'BENDAHARA' || role === 'KEPALA_SEKOLAH') && (
             <ProfilKopView data={data} onUpdateData={handleUpdateData} />
           )}
 
-          {/* Master Hak Akses & Rule (Khusus Admin) */}
-          {activeTab === 'master-rules' && role === 'ADMIN' && (
+          {/* Master Hak Akses & Rule (Admin, Bendahara, & Kepala Sekolah) */}
+          {activeTab === 'master-rules' && (role === 'ADMIN' || role === 'BENDAHARA' || role === 'KEPALA_SEKOLAH') && (
             <MasterRulesView data={data} />
           )}
         </main>

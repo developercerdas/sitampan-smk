@@ -20,6 +20,7 @@ import SchoolLogo from './SchoolLogo';
 
 export default function LoginView({ data, onLogin }) {
   const [activeTab, setActiveTab] = useState('SISWA'); // Default langsung ke Siswa agar user bisa langsung coba
+  const [staffRole, setStaffRole] = useState('ADMIN'); // 'ADMIN' | 'BENDAHARA' | 'KEPALA_SEKOLAH'
   const [username, setUsername] = useState('admin');
   const [password, setPassword] = useState('admin123');
   
@@ -56,8 +57,20 @@ export default function LoginView({ data, onLogin }) {
     if (role === 'ADMIN') {
       onLogin({
         role: 'ADMIN',
-        nama: 'Ibu Rini (Kasir TU & Bendahara)',
+        nama: 'Ibu Rini (Kasir Loket TU)',
         username: 'admin_tu'
+      });
+    } else if (role === 'BENDAHARA') {
+      onLogin({
+        role: 'BENDAHARA',
+        nama: 'Hj. Siti Nurhaliza, S.E. (Bendahara Sekolah)',
+        username: 'bendahara_keu'
+      });
+    } else if (role === 'KEPALA_SEKOLAH') {
+      onLogin({
+        role: 'KEPALA_SEKOLAH',
+        nama: data.sekolah.kepalaSekolah || 'Drs. H. Mulyadi, M.Pd.',
+        username: 'kepsek_smk'
       });
     } else if (role === 'WALI_KELAS') {
       const kls = data.kelas.find((k) => k.id === Number(selectedWaliKelasId)) || data.kelas[0];
@@ -89,11 +102,24 @@ export default function LoginView({ data, onLogin }) {
     e.preventDefault();
     setErrorMsg('');
 
-    if (activeTab === 'ADMIN') {
-      if (username === 'admin' && (password === 'admin123' || password === 'admin')) {
+    if (activeTab === 'ADMIN' || activeTab === 'STAFF') {
+      const u = username.trim().toLowerCase();
+      const p = password.trim();
+
+      if (u === 'admin' && (p === 'admin123' || p === 'admin')) {
+        handleQuickLogin('ADMIN');
+      } else if (u === 'bendahara' && (p === 'bendahara123' || p === 'bendahara' || p === 'admin123' || p === 'admin')) {
+        handleQuickLogin('BENDAHARA');
+      } else if (u === 'kepsek' && (p === 'kepsek123' || p === 'kepsek' || p === 'admin123' || p === 'admin')) {
+        handleQuickLogin('KEPALA_SEKOLAH');
+      } else if (staffRole === 'BENDAHARA' && (p === 'bendahara123' || p === 'admin123' || p === 'admin')) {
+        handleQuickLogin('BENDAHARA');
+      } else if (staffRole === 'KEPALA_SEKOLAH' && (p === 'kepsek123' || p === 'admin123' || p === 'admin')) {
+        handleQuickLogin('KEPALA_SEKOLAH');
+      } else if (staffRole === 'ADMIN' && (p === 'admin123' || p === 'admin')) {
         handleQuickLogin('ADMIN');
       } else {
-        setErrorMsg('Username atau password admin salah! (Demo: admin / admin123)');
+        setErrorMsg('Username atau password tidak sesuai! (Demo: admin/admin123, bendahara/bendahara123, kepsek/kepsek123)');
       }
     } else if (activeTab === 'WALI_KELAS') {
       handleQuickLogin('WALI_KELAS');
@@ -169,22 +195,6 @@ export default function LoginView({ data, onLogin }) {
           <button
             type="button"
             onClick={() => {
-              setActiveTab('ADMIN');
-              setErrorMsg('');
-            }}
-            className={`flex-1 py-2 rounded-xl transition flex items-center justify-center gap-1.5 ${
-              activeTab === 'ADMIN'
-                ? 'bg-white text-blue-700 shadow-xs border border-slate-200 font-extrabold'
-                : 'hover:text-slate-900'
-            }`}
-          >
-            <CreditCard className="w-3.5 h-3.5" />
-            Kasir / TU
-          </button>
-
-          <button
-            type="button"
-            onClick={() => {
               setActiveTab('WALI_KELAS');
               setErrorMsg('');
             }}
@@ -196,6 +206,22 @@ export default function LoginView({ data, onLogin }) {
           >
             <GraduationCap className="w-3.5 h-3.5" />
             Wali Kelas
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setActiveTab('STAFF');
+              setErrorMsg('');
+            }}
+            className={`flex-1 py-2 rounded-xl transition flex items-center justify-center gap-1.5 ${
+              activeTab === 'STAFF' || activeTab === 'ADMIN'
+                ? 'bg-white text-blue-700 shadow-xs border border-slate-200 font-extrabold'
+                : 'hover:text-slate-900'
+            }`}
+          >
+            <Building2 className="w-3.5 h-3.5" />
+            Pimpinan & TU
           </button>
         </div>
 
@@ -357,13 +383,95 @@ export default function LoginView({ data, onLogin }) {
             )}
 
             {/* ========================================================= */}
-            {/* FORM ROLE 2: ADMIN / KASIR TU */}
+            {/* FORM ROLE 2: PIMPINAN & STAF TU (KEPSEK, BENDAHARA, KASIR TU) */}
             {/* ========================================================= */}
-            {activeTab === 'ADMIN' && (
+            {(activeTab === 'ADMIN' || activeTab === 'STAFF') && (
               <div className="space-y-3.5">
+                {/* Selector 3 Peran: Kepsek, Bendahara, Kasir TU */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase mb-1.5">
+                    Pilih Peran Akun Manajemen:
+                  </label>
+                  <div className="grid grid-cols-3 gap-1.5 p-1 bg-slate-100 rounded-xl border border-slate-200 text-xs font-bold">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setStaffRole('KEPALA_SEKOLAH');
+                        setUsername('kepsek');
+                        setPassword('kepsek123');
+                        setErrorMsg('');
+                      }}
+                      className={`py-2 px-1 rounded-lg transition text-center cursor-pointer ${
+                        staffRole === 'KEPALA_SEKOLAH'
+                          ? 'bg-amber-400 text-slate-900 shadow-xs font-black'
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+                      }`}
+                    >
+                      🏛️ Kepsek
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setStaffRole('BENDAHARA');
+                        setUsername('bendahara');
+                        setPassword('bendahara123');
+                        setErrorMsg('');
+                      }}
+                      className={`py-2 px-1 rounded-lg transition text-center cursor-pointer ${
+                        staffRole === 'BENDAHARA'
+                          ? 'bg-purple-600 text-white shadow-xs font-black'
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+                      }`}
+                    >
+                      💰 Bendahara
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setStaffRole('ADMIN');
+                        setUsername('admin');
+                        setPassword('admin123');
+                        setErrorMsg('');
+                      }}
+                      className={`py-2 px-1 rounded-lg transition text-center cursor-pointer ${
+                        staffRole === 'ADMIN'
+                          ? 'bg-blue-600 text-white shadow-xs font-black'
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+                      }`}
+                    >
+                      💼 Kasir TU
+                    </button>
+                  </div>
+                </div>
+
+                {/* Badge Info Nama Petugas Sesuai Peran Terpilih */}
+                <div className={`p-3 rounded-xl border text-xs space-y-0.5 transition ${
+                  staffRole === 'KEPALA_SEKOLAH'
+                    ? 'bg-amber-50 border-amber-200 text-amber-950'
+                    : staffRole === 'BENDAHARA'
+                    ? 'bg-purple-50 border-purple-200 text-purple-950'
+                    : 'bg-blue-50 border-blue-200 text-blue-950'
+                }`}>
+                  <p className="font-bold flex items-center gap-1.5 text-xs">
+                    <ShieldCheck className="w-4 h-4 flex-shrink-0" />
+                    {staffRole === 'KEPALA_SEKOLAH'
+                      ? data.sekolah.kepalaSekolah || 'Drs. H. Mulyadi, M.Pd.'
+                      : staffRole === 'BENDAHARA'
+                      ? 'Hj. Siti Nurhaliza, S.E. (Bendahara Sekolah)'
+                      : 'Ibu Rini (Kasir Loket TU)'}
+                  </p>
+                  <p className="text-[11px] opacity-80 leading-tight">
+                    {staffRole === 'KEPALA_SEKOLAH'
+                      ? 'Monitoring Eksekutif Keuangan & Laporan Seluruh Kelas'
+                      : staffRole === 'BENDAHARA'
+                      ? 'Manajemen Keuangan, Tarif Multi-Jurusan & Validasi Setoran'
+                      : 'Loket Penerimaan Pembayaran Tunai Siswa & Cetak Kuitansi'}
+                  </p>
+                </div>
+
                 <div>
                   <label className="block text-xs font-bold text-slate-600 uppercase mb-1.5">
-                    Username Petugas
+                    Username
                   </label>
                   <div className="relative">
                     <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
@@ -371,7 +479,7 @@ export default function LoginView({ data, onLogin }) {
                       type="text"
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
-                      placeholder="admin"
+                      placeholder="Username"
                       className="w-full pl-10 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-blue-500 focus:bg-white outline-hidden transition"
                       required
                     />
@@ -455,27 +563,54 @@ export default function LoginView({ data, onLogin }) {
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center justify-center gap-1">
               <KeyRound className="w-3.5 h-3.5" /> Akses Sekali Klik (Demo Cepat)
             </p>
-            <div className="flex flex-wrap gap-2 justify-center">
+            <div className="flex flex-wrap gap-1.5 justify-center">
+              <button
+                type="button"
+                onClick={() => handleQuickLogin('KEPALA_SEKOLAH')}
+                className="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-900 rounded-lg text-xs font-bold border border-amber-300 transition cursor-pointer"
+                title="Login sebagai Kepala Sekolah"
+              >
+                🏛️ Kepala Sekolah
+              </button>
+              <button
+                type="button"
+                onClick={() => handleQuickLogin('BENDAHARA')}
+                className="px-2.5 py-1 bg-purple-50 hover:bg-purple-100 text-purple-900 rounded-lg text-xs font-bold border border-purple-300 transition cursor-pointer"
+                title="Login sebagai Bendahara Sekolah"
+              >
+                💰 Bendahara
+              </button>
               <button
                 type="button"
                 onClick={() => handleQuickLogin('ADMIN')}
-                className="px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg text-xs font-semibold border border-blue-200 transition"
+                className="px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg text-xs font-semibold border border-blue-200 transition cursor-pointer"
+                title="Login sebagai Kasir Loket TU"
               >
-                ⚡ Kasir TU
+                💼 Kasir TU
               </button>
               <button
                 type="button"
                 onClick={() => handleQuickLogin('WALI_KELAS')}
-                className="px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg text-xs font-semibold border border-indigo-200 transition"
+                className="px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg text-xs font-semibold border border-indigo-200 transition cursor-pointer"
+                title="Login sebagai Wali Kelas"
               >
-                ⚡ Wali Kelas
+                👨‍🏫 Wali Kelas
               </button>
               <button
                 type="button"
                 onClick={() => handleQuickLogin('SISWA', { siswa: data.siswa[0] })}
-                className="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-lg text-xs font-semibold border border-emerald-200 transition"
+                className="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-lg text-xs font-semibold border border-emerald-200 transition cursor-pointer"
+                title="Login sebagai Siswa PM (Abi)"
               >
-                ⚡ Siswa PM (Abi)
+                🎓 Siswa PM (Abi)
+              </button>
+              <button
+                type="button"
+                onClick={() => handleQuickLogin('SISWA', { siswa: data.siswa[1] || data.siswa[0] })}
+                className="px-2.5 py-1 bg-teal-50 hover:bg-teal-100 text-teal-800 rounded-lg text-xs font-semibold border border-teal-200 transition cursor-pointer"
+                title="Login sebagai Siswa AKL (Dian)"
+              >
+                🎓 Siswa AKL (Dian)
               </button>
             </div>
           </div>
