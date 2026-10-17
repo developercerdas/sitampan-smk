@@ -40,7 +40,7 @@ export default function Navbar({
               </span>
             </div>
             <p className="text-xs text-slate-500 font-medium">
-              SMK PGRI 1 Mejobo Kudus • Terakreditasi A • TA 2026/2027
+              {data?.sekolah?.nama || 'SMK BINA KARYA NUSANTARA'} • Terakreditasi {data?.sekolah?.akreditasi || 'A'} • TA {data?.sekolah?.tahunAjaranAktif || '2026/2027'}
             </p>
           </div>
         </div>
@@ -69,7 +69,7 @@ export default function Navbar({
           {/* Tombol Reset Data */}
           <button
             onClick={onResetData}
-            title="Reset ke data awal dokumen asli SMK PGRI 1 Mejobo"
+            title="Reset ke data awal default"
             className="flex items-center gap-1 text-xs text-slate-500 hover:text-red-600 bg-white hover:bg-red-50 border border-slate-200 hover:border-red-200 px-2.5 py-1.5 rounded-xl transition"
           >
             <RotateCcw className="w-3.5 h-3.5" />

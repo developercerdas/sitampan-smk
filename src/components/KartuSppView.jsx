@@ -118,7 +118,7 @@ export default function KartuSppView({ data, currentRole }) {
           <SchoolLogo logoUrl={data.sekolah.logoUrl} className="w-16 h-16" />
           <div className="text-center flex-1">
             <p className="text-xs uppercase font-bold text-slate-700 leading-tight">
-              {data.sekolah.yayasan || 'Yayasan Pembina Lembaga Pendidikan Dasar dan Menengah PGRI Jawa Tengah (YPLP DM PGRI JT)'}
+              {data.sekolah.yayasan || 'Yayasan Lembaga Pendidikan Kejuruan Nusantara (YLPKN)'}
             </p>
             <h2 className="text-2xl font-black tracking-tight text-slate-900 uppercase">
               {data.sekolah.nama}

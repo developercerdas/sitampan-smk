@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Sidebar from './components/Sidebar';
 import LoginView from './components/LoginView';
 import DashboardView from './components/DashboardView';
@@ -17,6 +17,13 @@ const USER_STORAGE_KEY = 'SITAMPAN_CURRENT_USER';
 
 export default function App() {
   const [data, setData] = useState(() => dataService.getData());
+
+  // Sinkronkan judul browser tab secara dinamis sesuai profil sekolah aktif
+  useEffect(() => {
+    if (data?.sekolah?.nama) {
+      document.title = `${data.sekolah.nama} - SITAMPAN SMK`;
+    }
+  }, [data?.sekolah?.nama]);
   
   // Auth state
   const [currentUser, setCurrentUser] = useState(() => {
@@ -57,7 +64,7 @@ export default function App() {
   const handleResetData = () => {
     if (
       confirm(
-        'Apakah Anda ingin mereset data aplikasi kembali ke data awal acuan SMK PGRI 1 Mejobo Kudus?'
+        'Apakah Anda ingin mereset data aplikasi kembali ke data profil & tarif awal default?'
       )
     ) {
       const fresh = dataService.resetToDefault();

@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function SchoolLogo({ logoUrl, className = "w-12 h-12" }) {
+export default function SchoolLogo({ logoUrl, nama, className = "w-12 h-12" }) {
   // Jika sekolah sudah mengunggah logo kustom sendiri
   if (logoUrl) {
     return (
@@ -71,7 +71,7 @@ export default function SchoolLogo({ logoUrl, className = "w-12 h-12" }) {
         <path id="curve" d="M25 80 A 30 30 0 0 0 75 80" fill="none" />
         <text className="text-[7px] font-black tracking-widest fill-amber-300">
           <textPath href="#curve" startOffset="50%" textAnchor="middle">
-            SMK PGRI 1
+            {nama ? nama.slice(0, 15).toUpperCase() : 'SITAMPAN SMK'}
           </textPath>
         </text>
       </svg>

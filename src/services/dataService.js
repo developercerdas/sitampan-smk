@@ -4,12 +4,78 @@ import * as XLSX from 'xlsx';
 const STORAGE_KEY = 'SITAMPAN_SMK_DATA_V1';
 
 export const dataService = {
-  // 1. Ambil data saat ini (LocalStorage atau Fallback ke Initial)
+  // Cek parameter dari URL untuk sinkronisasi profil sekolah saat link dibagikan
+  checkUrlProfileSync() {
+    try {
+      if (typeof window === 'undefined') return null;
+      const params = new URLSearchParams(window.location.search);
+      const nama = params.get('nama') || params.get('sekolah');
+      const yayasan = params.get('yayasan');
+      const alamat = params.get('alamat');
+      const profilEncoded = params.get('profil');
+
+      let customProfile = null;
+      if (profilEncoded) {
+        try {
+          customProfile = JSON.parse(decodeURIComponent(escape(atob(profilEncoded))));
+        } catch (e) {
+          console.warn('Gagal membaca profil dari token URL:', e);
+        }
+      }
+
+      if (!customProfile && nama) {
+        customProfile = {
+          nama: decodeURIComponent(nama),
+          ...(yayasan ? { yayasan: decodeURIComponent(yayasan) } : {}),
+          ...(alamat ? { alamat: decodeURIComponent(alamat) } : {})
+        };
+      }
+
+      return customProfile;
+    } catch {
+      return null;
+    }
+  },
+
+  // Helper untuk membuat Link Share yang membawa data profil sekolah
+  getShareableLink(sekolahObj) {
+    if (typeof window === 'undefined') return '';
+    const origin = window.location.origin + window.location.pathname;
+    try {
+      const dataToEncode = {
+        nama: sekolahObj.nama,
+        yayasan: sekolahObj.yayasan || '',
+        alamat: sekolahObj.alamat || '',
+        telp: sekolahObj.telp || '',
+        email: sekolahObj.email || '',
+        akreditasi: sekolahObj.akreditasi || ''
+      };
+      const token = btoa(unescape(encodeURIComponent(JSON.stringify(dataToEncode))));
+      return `${origin}?profil=${token}`;
+    } catch (e) {
+      return `${origin}?sekolah=${encodeURIComponent(sekolahObj.nama || 'SMK BINA KARYA NUSANTARA')}`;
+    }
+  },
+
+  // 1. Ambil data saat ini (LocalStorage, Fallback ke Initial, atau Sinkron dari Link)
   getData() {
     try {
+      const urlProfile = this.checkUrlProfileSync();
       const stored = localStorage.getItem(STORAGE_KEY);
+      let parsed = null;
+
       if (stored) {
-        const parsed = JSON.parse(stored);
+        parsed = JSON.parse(stored);
+
+        // Migrasi data lama jika masih mengandung 'PGRI 1' atau 'Mejobo'
+        if (parsed.sekolah?.nama?.includes('PGRI 1') || parsed.sekolah?.alamat?.includes('Mejobo')) {
+          parsed.sekolah = {
+            ...INITIAL_DATA.sekolah,
+            logoUrl: parsed.sekolah?.logoUrl || null
+          };
+          this.saveData(parsed);
+        }
+
         // Pastikan setiap siswa memiliki field tanggalLahir
         parsed.siswa = (parsed.siswa || []).map((s) => ({
           ...s,
@@ -22,14 +88,26 @@ export const dataService = {
             '2008-07-15'
           )
         }));
-        return parsed;
+      } else {
+        parsed = JSON.parse(JSON.stringify(INITIAL_DATA));
       }
+
+      // Jika ada profil dari URL link yang di-share, prioritaskan dan simpan
+      if (urlProfile && urlProfile.nama) {
+        parsed.sekolah = {
+          ...parsed.sekolah,
+          ...urlProfile
+        };
+        this.saveData(parsed);
+      } else if (!stored) {
+        this.saveData(parsed);
+      }
+
+      return parsed;
     } catch (e) {
       console.warn('Gagal membaca LocalStorage, memuat data awal default:', e);
+      return INITIAL_DATA;
     }
-    // Jika belum ada data, simpan data awal
-    this.saveData(INITIAL_DATA);
-    return INITIAL_DATA;
   },
 
   // 2. Simpan perubahan ke LocalStorage
@@ -41,7 +119,7 @@ export const dataService = {
     }
   },
 
-  // 3. Reset data ke kondisi awal dokumen SMK PGRI 1 Mejobo
+  // 3. Reset data ke kondisi awal default
   resetToDefault() {
     this.saveData(INITIAL_DATA);
     return INITIAL_DATA;

@@ -168,7 +168,7 @@ export default function MasterTarifView({ data, onUpdateData }) {
         <div className="lg:col-span-8 space-y-4">
           <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs">
             <h3 className="font-bold text-slate-800 text-base mb-4 flex items-center justify-between">
-              <span>Daftar Pos Biaya yang Berlaku (Dokumen Asli SMK PGRI 1 Mejobo)</span>
+              <span>Daftar Pos Biaya yang Berlaku (Sesuai Konfigurasi Sekolah)</span>
               <span className="text-xs font-normal text-slate-500">
                 Total: {posBiayaList.length} Pos
               </span>

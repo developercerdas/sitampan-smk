@@ -4,7 +4,36 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232563eb' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z'/><path d='M6 6h10'/><path d='M6 10h10'/><line x1='12' x2='12' y1='14' y2='18'/><line x1='10' x2='14' y1='16' y2='16'/></svg>" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SITAMPAN SMK - Sistem Informasi Tagihan & Pembayaran SMK PGRI 1 Mejobo Kudus</title>
+    
+    <!-- Title & SEO Meta Tags (Preview saat share link di WA / Telegram) -->
+    <title>SITAMPAN SMK - Sistem Informasi Tagihan & Pembayaran SPP Sekolah</title>
+    <meta name="description" content="SITAMPAN SMK - Aplikasi Manajemen Pembayaran SPP & Keuangan Sekolah Terpadu (Hybrid Tunai di Loket & Virtual Account Otomatis)." />
+    
+    <!-- Open Graph Meta Tags untuk WhatsApp / Media Sosial -->
+    <meta property="og:site_name" content="SITAMPAN SMK" />
+    <meta property="og:title" content="SITAMPAN SMK - Sistem Keuangan & Pembayaran SPP Sekolah" />
+    <meta property="og:description" content="Aplikasi Pembayaran SPP Sekolah Terpadu (Hybrid Tunai di Loket & Virtual Account Otomatis). Menggantikan Buku Pager dan Kuitansi Sobek Kertas." />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="https://raw.githubusercontent.com/developercerdas/sitampan-smk/main/public/favicon.svg" />
+
+    <!-- Script instan untuk membaca kustomisasi profil sekolah dari link yang dibagikan -->
+    <script>
+      (function() {
+        try {
+          var params = new URLSearchParams(window.location.search);
+          var customName = params.get('nama') || params.get('sekolah');
+          var profilEncoded = params.get('profil');
+          if (profilEncoded) {
+            var parsed = JSON.parse(decodeURIComponent(escape(atob(profilEncoded))));
+            if (parsed && parsed.nama) {
+              document.title = parsed.nama + ' - SITAMPAN SMK';
+            }
+          } else if (customName) {
+            document.title = decodeURIComponent(customName) + ' - SITAMPAN SMK';
+          }
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body class="bg-slate-50 text-slate-800 antialiased font-sans">
     <div id="root"></div>

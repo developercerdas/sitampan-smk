@@ -16,6 +16,7 @@ import {
   Search,
   Sparkles
 } from 'lucide-react';
+import SchoolLogo from './SchoolLogo';
 
 export default function LoginView({ data, onLogin }) {
   const [activeTab, setActiveTab] = useState('SISWA'); // Default langsung ke Siswa agar user bisa langsung coba
@@ -124,10 +125,10 @@ export default function LoginView({ data, onLogin }) {
       </div>
 
       <div className="relative max-w-md w-full bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl border border-white/20 overflow-hidden">
-        {/* Header Logo & Identitas Sekolah */}
+        {/* Header Logo & Identitas Sekolah Dinamis Sesuai Profil */}
         <div className="bg-gradient-to-r from-blue-700 via-indigo-700 to-blue-800 text-white p-6 sm:p-7 text-center relative">
-          <div className="w-14 h-14 mx-auto bg-white rounded-2xl flex items-center justify-center text-blue-700 font-black text-2xl shadow-lg shadow-black/20 mb-3 border-2 border-white/60">
-            S
+          <div className="flex justify-center mb-2.5">
+            <SchoolLogo logoUrl={data.sekolah.logoUrl} className="w-16 h-16 drop-shadow-lg" />
           </div>
           <span className="bg-blue-500/30 text-blue-100 text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full border border-blue-400/30">
             Sistem Informasi Keuangan Siswa
@@ -136,7 +137,7 @@ export default function LoginView({ data, onLogin }) {
             SITAMPAN <span className="text-amber-300">SMK</span>
           </h1>
           <p className="text-xs text-blue-100 mt-1 font-medium">
-            SMK PGRI 1 Mejobo Kudus • Terakreditasi A
+            {data.sekolah.nama} • Terakreditasi {data.sekolah.akreditasi}
           </p>
         </div>
 
@@ -457,7 +458,7 @@ export default function LoginView({ data, onLogin }) {
 
         {/* Footer Card */}
         <div className="bg-slate-50 border-t border-slate-200 px-6 py-2.5 text-center text-[11px] text-slate-500">
-          SITAMPAN SMK • Keuangan Digital SMK PGRI 1 Mejobo Kudus
+          SITAMPAN SMK • Keuangan Digital {data.sekolah.nama}
         </div>
       </div>
     </div>

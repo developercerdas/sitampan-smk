@@ -2,16 +2,16 @@
 
 export const INITIAL_DATA = {
   sekolah: {
-    nama: 'SMK PGRI 1 MEJOBO KUDUS',
-    yayasan: 'Yayasan Pembina Lembaga Pendidikan Dasar & Menengah PGRI Jawa Tengah (YPLP DM PGRI JT)',
-    alamat: 'Jln. Jend. Sudirman Golantepus Mejobo, Kudus 59381',
-    akreditasi: 'A',
-    telp: '0291 435273 / Fax: 0291 435273',
-    email: 'smkpgri1kds@yahoo.com',
-    web: 'http://www.smkpgri1kudus.sch.id',
-    kepalaSekolah: 'Harry Susilo Kurniawan, M.M., M.Pd',
+    nama: 'SMK BINA KARYA NUSANTARA',
+    yayasan: 'Yayasan Lembaga Pendidikan Kejuruan Nusantara (YLPKN)',
+    alamat: 'Jalan Pendidikan Vokasi No. 45, Kompleks Pendidikan Nasional',
+    akreditasi: 'A (Unggul)',
+    telp: '(021) 7891234 / Fax: (021) 7891235',
+    email: 'info@smkbinakarya.sch.id',
+    web: 'https://smkbinakarya.sch.id',
+    kepalaSekolah: 'Drs. H. Mulyadi, M.Pd.',
     tahunAjaranAktif: '2026/2027',
-    bankMitra: 'Bank Jateng / BNI Virtual Account',
+    bankMitra: 'Bank BNI / Jateng / Mandiri Virtual Account',
     logoUrl: null
   },
 
@@ -23,10 +23,10 @@ export const INITIAL_DATA = {
   ],
 
   kelas: [
-    { id: 1, nama: 'XII PM 1', tingkat: 'XII', jurusanKode: 'PM', rombel: '1', waliKelas: 'Dra. Hj. Siti Aminah, M.Pd' },
-    { id: 2, nama: 'XII AKL', tingkat: 'XII', jurusanKode: 'AKL', rombel: '1', waliKelas: 'Nurul Hidayati, S.Pd' },
-    { id: 3, nama: 'XI CS 3', tingkat: 'XI', jurusanKode: 'PAR', rombel: '3', waliKelas: 'Bambang Hariyanto, S.Pd' },
-    { id: 4, nama: 'X AKL 1', tingkat: 'X', jurusanKode: 'AKL', rombel: '1', waliKelas: 'Tri Wahyuningrum, S.Pd' }
+    { id: 1, nama: 'XII PM 1', tingkat: 'XII', jurusanKode: 'PM', rombel: '1', waliKelas: 'Dra. Hj. Siti Handayani, M.Pd' },
+    { id: 2, nama: 'XII AKL', tingkat: 'XII', jurusanKode: 'AKL', rombel: '1', waliKelas: 'Nurul Aini, S.Pd' },
+    { id: 3, nama: 'XI CS 3', tingkat: 'XI', jurusanKode: 'PAR', rombel: '3', waliKelas: 'Bambang Pamungkas, S.Pd' },
+    { id: 4, nama: 'X AKL 1', tingkat: 'X', jurusanKode: 'AKL', rombel: '1', waliKelas: 'Tri Wahyuni, S.Pd' }
   ],
 
   posBiaya: [
@@ -35,7 +35,7 @@ export const INITIAL_DATA = {
     { id: 'DU', nama: 'Daftar Ulang (DU + Juli)', tipe: 'SEKALI_BAYAR', nominalDefault: 905000 },
     { id: 'SPI', nama: 'Sumbangan Pengembangan Institusi (SPI)', tipe: 'SEKALI_BAYAR', nominalDefault: 2000000 },
     { id: 'OSIS', nama: 'Iuran OSIS (1 Tahun)', tipe: 'SEKALI_BAYAR', nominalDefault: 220000 },
-    { id: 'PGRI', nama: 'Iuran PGRI (1 Tahun)', tipe: 'SEKALI_BAYAR', nominalDefault: 20000 },
+    { id: 'LEMBAGA', nama: 'Iuran Pembinaan Lembaga (1 Tahun)', tipe: 'SEKALI_BAYAR', nominalDefault: 20000 },
     { id: 'MAJALAH', nama: 'Majalah, Pentas Seni & Pelepasan', tipe: 'SEKALI_BAYAR', nominalDefault: 225000 },
     { id: 'SARPRAS', nama: 'Perawatan Sarana Prasarana', tipe: 'SEKALI_BAYAR', nominalDefault: 100000 },
     { id: 'MPLS', nama: 'Kegiatan MPLS', tipe: 'SEKALI_BAYAR', nominalDefault: 25000 },
@@ -640,7 +640,7 @@ export const INITIAL_DATA = {
         { item: 'Uang Sekolah bl. Juli 2026', nominal: 300000 },
         { item: 'Tabungan Wajib Biaya Ujian', nominal: 25000 },
         { item: 'Iuran OSIS Th. 2026/2027', nominal: 235000 },
-        { item: 'Iuran PGRI', nominal: 20000 },
+        { item: 'Iuran Pembinaan Lembaga', nominal: 20000 },
         { item: 'Majalah, Pentas Seni & Perpisahan Kls XII', nominal: 225000 },
         { item: 'Perawatan Sarana Prasarana', nominal: 100000 }
       ]

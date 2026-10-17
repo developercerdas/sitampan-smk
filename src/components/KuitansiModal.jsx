@@ -9,10 +9,10 @@ export default function KuitansiModal({ transaksi, sekolah, onClose }) {
     window.print();
   };
 
-  const yayasanText = sekolah?.yayasan || 'Yayasan Pembina Lembaga Pendidikan Dasar & Menengah PGRI Jawa Tengah';
-  const namaSekolah = sekolah?.nama || 'SMK PGRI 1 MEJOBO KUDUS';
-  const alamatSekolah = sekolah?.alamat || 'Jln. Jend. Sudirman Golantepus Mejobo Kudus';
-  const telpSekolah = sekolah?.telp || '(0291) 435273';
+  const yayasanText = sekolah?.yayasan || 'Yayasan Lembaga Pendidikan Kejuruan Nusantara (YLPKN)';
+  const namaSekolah = sekolah?.nama || 'SMK BINA KARYA NUSANTARA';
+  const alamatSekolah = sekolah?.alamat || 'Jalan Pendidikan Vokasi No. 45, Kompleks Pendidikan Nasional';
+  const telpSekolah = sekolah?.telp || '(021) 7891234';
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
@@ -137,11 +137,11 @@ export default function KuitansiModal({ transaksi, sekolah, onClose }) {
               <p className="text-slate-500">Kudus, {transaksi.tanggal}</p>
               <p className="font-semibold text-slate-800">Petugas Penerima,</p>
               
-              {/* Tampilan Stempel Lunas Khas SMK */}
+              {/* Tampilan Stempel Lunas Khas SMK Dinamis */}
               <div className="my-1 inline-block border-2 border-indigo-700 text-indigo-700 font-black px-3 py-1 rounded text-center rotate-[-6deg] opacity-80">
-                <span className="text-[10px] block leading-none">SMK PGRI 1 MEJOBO</span>
+                <span className="text-[10px] block leading-none uppercase">{namaSekolah}</span>
                 <span className="text-sm font-black tracking-widest block leading-tight">★ LUNAS ★</span>
-                <span className="text-[9px] block leading-none">KEU. PARIWISATA / TU</span>
+                <span className="text-[9px] block leading-none">BAGIAN KEUANGAN / TU</span>
               </div>
 
               <p className="font-bold text-slate-900 underline">{transaksi.petugas || 'Kasir Keuangan TU'}</p>
