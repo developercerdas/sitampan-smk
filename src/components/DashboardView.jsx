@@ -20,15 +20,18 @@ export default function DashboardView({
   data, 
   onNavigate, 
   activeKelompok = 'ALL', 
-  onSelectKelompok 
+  onSelectKelompok,
+  currentUser 
 }) {
+  const effectiveKelompok = currentUser?.isKasirTetap ? currentUser.kasirKelompok : activeKelompok;
+
   // Filter siswa sesuai sudut pandang aktif jika dipilih
   const filteredSiswa = data.siswa.filter((s) => {
     if (s.status !== 'AKTIF') return false;
-    if (activeKelompok === 'BISNIS_MANAJEMEN') {
+    if (effectiveKelompok === 'BISNIS_MANAJEMEN') {
       return ['AKL', 'MPLB', 'PM'].includes(s.jurusanKode);
     }
-    if (activeKelompok === 'PARIWISATA') {
+    if (effectiveKelompok === 'PARIWISATA') {
       return ['KSP', 'HTL'].includes(s.jurusanKode);
     }
     return true;
@@ -52,7 +55,7 @@ export default function DashboardView({
   let totalTunai = 0;
   let totalVa = 0;
   data.riwayatPembayaran.forEach((p) => {
-    if (activeKelompok !== 'ALL' && !filteredSiswaIds.has(p.siswaId)) return;
+    if (effectiveKelompok !== 'ALL' && !filteredSiswaIds.has(p.siswaId)) return;
     if (p.metode === 'VA_TRANSFER') {
       totalVa += Number(p.total);
     } else {
@@ -62,8 +65,8 @@ export default function DashboardView({
 
   // 2. Kalkulasi Per Jurusan Sesuai Filter
   const displayJurusan = data.jurusan.filter(j => {
-    if (activeKelompok === 'BISNIS_MANAJEMEN') return ['AKL', 'MPLB', 'PM'].includes(j.kode);
-    if (activeKelompok === 'PARIWISATA') return ['KSP', 'HTL'].includes(j.kode);
+    if (effectiveKelompok === 'BISNIS_MANAJEMEN') return ['AKL', 'MPLB', 'PM'].includes(j.kode);
+    if (effectiveKelompok === 'PARIWISATA') return ['KSP', 'HTL'].includes(j.kode);
     return true;
   });
 
@@ -97,8 +100,8 @@ export default function DashboardView({
 
   // 3. Kalkulasi Per Kelas Sesuai Filter
   const displayKelas = data.kelas.filter(k => {
-    if (activeKelompok === 'BISNIS_MANAJEMEN') return ['AKL', 'MPLB', 'PM'].includes(k.jurusanKode);
-    if (activeKelompok === 'PARIWISATA') return ['KSP', 'HTL'].includes(k.jurusanKode);
+    if (effectiveKelompok === 'BISNIS_MANAJEMEN') return ['AKL', 'MPLB', 'PM'].includes(k.jurusanKode);
+    if (effectiveKelompok === 'PARIWISATA') return ['KSP', 'HTL'].includes(k.jurusanKode);
     return true;
   });
 
@@ -177,9 +180,9 @@ export default function DashboardView({
       <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-col md:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-3.5 w-full md:w-auto">
           <div className={`p-3 rounded-2xl border flex items-center justify-center flex-shrink-0 ${
-            activeKelompok === 'BISNIS_MANAJEMEN'
+            effectiveKelompok === 'BISNIS_MANAJEMEN'
               ? 'bg-blue-50 text-blue-700 border-blue-200'
-              : activeKelompok === 'PARIWISATA'
+              : effectiveKelompok === 'PARIWISATA'
               ? 'bg-rose-50 text-rose-700 border-rose-200'
               : 'bg-indigo-50 text-indigo-700 border-indigo-200'
           }`}>
@@ -188,69 +191,76 @@ export default function DashboardView({
           <div>
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
-                Mode Sudut Pandang Admin
+                Mode Sudut Pandang Kasir
               </span>
               <span className="text-[11px] font-bold text-slate-500">
-                {activeKelompok === 'BISNIS_MANAJEMEN'
+                {effectiveKelompok === 'BISNIS_MANAJEMEN'
                   ? 'Penanggung Jawab: Kasir Hana'
-                  : activeKelompok === 'PARIWISATA'
+                  : effectiveKelompok === 'PARIWISATA'
                   ? 'Penanggung Jawab: Kasir Umi'
                   : 'Manajemen Pusat (Seluruh 5 Jurusan)'}
               </span>
             </div>
             <h3 className="text-base font-black text-slate-900 mt-0.5">
-              {activeKelompok === 'BISNIS_MANAJEMEN'
+              {effectiveKelompok === 'BISNIS_MANAJEMEN'
                 ? '💼 Kelompok BisMan (Loket Hana)'
-                : activeKelompok === 'PARIWISATA'
+                : effectiveKelompok === 'PARIWISATA'
                 ? '🏖️ Kelompok Pariwisata (Loket Umi)'
                 : '🏢 Semua Rombel (5 Jurusan Pusat)'}
             </h3>
             <p className="text-xs text-slate-500 mt-0.5">
-              {activeKelompok === 'BISNIS_MANAJEMEN'
+              {effectiveKelompok === 'BISNIS_MANAJEMEN'
                 ? 'Menampilkan rekapitulasi data keuangan jurusan AKL, MPLB, dan PM.'
-                : activeKelompok === 'PARIWISATA'
+                : effectiveKelompok === 'PARIWISATA'
                 ? 'Menampilkan rekapitulasi data keuangan jurusan Kecantikan & Spa dan Perhotelan.'
                 : 'Menampilkan seluruh rekapitulasi data keuangan 5 jurusan secara terpusat.'}
             </p>
           </div>
         </div>
 
-        {/* 1-Klik Switcher Buttons */}
-        <div className="flex items-center p-1 bg-slate-100 rounded-xl border border-slate-200 text-xs font-bold w-full md:w-auto overflow-x-auto">
-          <button
-            type="button"
-            onClick={() => onSelectKelompok && onSelectKelompok('ALL')}
-            className={`flex-1 md:flex-none px-3.5 py-2 rounded-lg transition cursor-pointer whitespace-nowrap ${
-              activeKelompok === 'ALL'
-                ? 'bg-white text-slate-900 shadow-xs font-black'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            🏢 Semua Rombel (5 Jurusan Pusat)
-          </button>
-          <button
-            type="button"
-            onClick={() => onSelectKelompok && onSelectKelompok('BISNIS_MANAJEMEN')}
-            className={`flex-1 md:flex-none px-3.5 py-2 rounded-lg transition flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap ${
-              activeKelompok === 'BISNIS_MANAJEMEN'
-                ? 'bg-blue-600 text-white shadow-xs font-black'
-                : 'text-blue-900 hover:bg-blue-100/60'
-            }`}
-          >
-            💼 Kelompok BisMan (Loket Hana)
-          </button>
-          <button
-            type="button"
-            onClick={() => onSelectKelompok && onSelectKelompok('PARIWISATA')}
-            className={`flex-1 md:flex-none px-3.5 py-2 rounded-lg transition flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap ${
-              activeKelompok === 'PARIWISATA'
-                ? 'bg-rose-600 text-white shadow-xs font-black'
-                : 'text-rose-900 hover:bg-rose-100/60'
-            }`}
-          >
-            🏖️ Kelompok Pariwisata (Loket Umi)
-          </button>
-        </div>
+        {/* 1-Klik Switcher Buttons (Hanya untuk Admin & Bendahara) */}
+        {!currentUser?.isKasirTetap ? (
+          <div className="flex items-center p-1 bg-slate-100 rounded-xl border border-slate-200 text-xs font-bold w-full md:w-auto overflow-x-auto">
+            <button
+              type="button"
+              onClick={() => onSelectKelompok && onSelectKelompok('ALL')}
+              className={`flex-1 md:flex-none px-3.5 py-2 rounded-lg transition cursor-pointer whitespace-nowrap ${
+                effectiveKelompok === 'ALL'
+                  ? 'bg-white text-slate-900 shadow-xs font-black'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              🏢 Semua Rombel (5 Jurusan Pusat)
+            </button>
+            <button
+              type="button"
+              onClick={() => onSelectKelompok && onSelectKelompok('BISNIS_MANAJEMEN')}
+              className={`flex-1 md:flex-none px-3.5 py-2 rounded-lg transition flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap ${
+                effectiveKelompok === 'BISNIS_MANAJEMEN'
+                  ? 'bg-blue-600 text-white shadow-xs font-black'
+                  : 'text-blue-900 hover:bg-blue-100/60'
+              }`}
+            >
+              💼 Kelompok BisMan (Loket Hana)
+            </button>
+            <button
+              type="button"
+              onClick={() => onSelectKelompok && onSelectKelompok('PARIWISATA')}
+              className={`flex-1 md:flex-none px-3.5 py-2 rounded-lg transition flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap ${
+                effectiveKelompok === 'PARIWISATA'
+                  ? 'bg-rose-600 text-white shadow-xs font-black'
+                  : 'text-rose-900 hover:bg-rose-100/60'
+              }`}
+            >
+              🏖️ Kelompok Pariwisata (Loket Umi)
+            </button>
+          </div>
+        ) : (
+          <div className="px-3.5 py-2 bg-slate-100 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span>Kasir Resmi: {currentUser?.nama}</span>
+          </div>
+        )}
       </div>
 
       {/* 1. KARTU STATISTIK GLOBAL (4 KARTU) */}

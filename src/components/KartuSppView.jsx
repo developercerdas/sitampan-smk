@@ -42,6 +42,12 @@ export default function KartuSppView({
     if (isWaliKelas && currentUser?.kelasId) {
       return data.siswa.filter((s) => s.kelasId === currentUser.kelasId && s.status === 'AKTIF');
     }
+    if (currentUser?.kasirKelompok === 'BISNIS_MANAJEMEN') {
+      return data.siswa.filter((s) => ['AKL', 'MPLB', 'PM'].includes(s.jurusanKode) && s.status === 'AKTIF');
+    }
+    if (currentUser?.kasirKelompok === 'PARIWISATA') {
+      return data.siswa.filter((s) => ['KSP', 'HTL'].includes(s.jurusanKode) && s.status === 'AKTIF');
+    }
     return data.siswa.filter((s) => s.status === 'AKTIF');
   };
 

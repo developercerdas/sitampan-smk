@@ -83,6 +83,8 @@ export default function App() {
       setActiveTab('buku-pager');
     } else if (userObj.role === 'ORTU') {
       setActiveTab('kartu-spp');
+    } else if (userObj.role === 'KASIR_HANA' || userObj.role === 'KASIR_UMI') {
+      setActiveTab('kasir');
     } else {
       setActiveTab('dashboard');
     }
@@ -161,8 +163,12 @@ export default function App() {
               </p>
               <p className="text-[10px] text-slate-500 truncate">
                 {currentUser.nama} ({
-                  role === 'ADMIN'
-                    ? 'Kasir TU'
+                  role === 'KASIR_HANA'
+                    ? 'Kasir 1 - Bisnis Manajemen'
+                    : role === 'KASIR_UMI'
+                    ? 'Kasir 2 - Pariwisata'
+                    : role === 'ADMIN'
+                    ? 'Admin Pusat TU'
                     : role === 'BENDAHARA'
                     ? 'Bendahara Sekolah'
                     : role === 'KEPALA_SEKOLAH'
@@ -252,18 +258,19 @@ export default function App() {
 
         {/* Content Body (Safe area bottom padding untuk Android address bar) */}
         <main className="flex-1 p-3 sm:p-5 lg:p-7 max-w-7xl w-full mx-auto space-y-6 pb-28 md:pb-12">
-          {/* Dashboard Real-Time (Khusus Admin, Bendahara, & Kepala Sekolah) */}
-          {activeTab === 'dashboard' && (role === 'ADMIN' || role === 'BENDAHARA' || role === 'KEPALA_SEKOLAH') && (
+          {/* Dashboard Real-Time (Admin, Bendahara, Kepala Sekolah, Kasir Hana, Kasir Umi) */}
+          {activeTab === 'dashboard' && (role === 'ADMIN' || role === 'BENDAHARA' || role === 'KEPALA_SEKOLAH' || role === 'KASIR_HANA' || role === 'KASIR_UMI') && (
             <DashboardView 
               data={data} 
+              currentUser={currentUser}
               onNavigate={setActiveTab} 
               activeKelompok={activeKelompok}
               onSelectKelompok={setActiveKelompok}
             />
           )}
 
-          {/* Menu Loket Kasir (Admin & Bendahara) */}
-          {activeTab === 'kasir' && (role === 'ADMIN' || role === 'BENDAHARA') && (
+          {/* Menu Loket Kasir (Admin, Bendahara, Kasir Hana, Kasir Umi) */}
+          {activeTab === 'kasir' && (role === 'ADMIN' || role === 'BENDAHARA' || role === 'KASIR_HANA' || role === 'KASIR_UMI') && (
             <KasirView
               data={data}
               currentUser={currentUser}
@@ -274,8 +281,8 @@ export default function App() {
             />
           )}
 
-          {/* Buku Pager (Bisa diakses Admin, Bendahara, Kepala Sekolah, & Wali Kelas) */}
-          {activeTab === 'buku-pager' && (
+          {/* Buku Pager (Bisa diakses Admin, Bendahara, Kepala Sekolah, Wali Kelas, Kasir Hana, Kasir Umi) */}
+          {activeTab === 'buku-pager' && (role === 'ADMIN' || role === 'BENDAHARA' || role === 'KEPALA_SEKOLAH' || role === 'WALI_KELAS' || role === 'KASIR_HANA' || role === 'KASIR_UMI') && (
             <BukuPagerView
               data={data}
               currentRole={role}
@@ -285,7 +292,7 @@ export default function App() {
             />
           )}
 
-          {/* Kartu SPP (Bisa diakses Siswa/Ortu, Admin, Bendahara, Kepala Sekolah, & Wali Kelas) */}
+          {/* Kartu SPP (Bisa diakses Siswa/Ortu, Admin, Bendahara, Kepala Sekolah, Wali Kelas, Kasir Hana, Kasir Umi) */}
           {activeTab === 'kartu-spp' && (
             <KartuSppView
               data={data}

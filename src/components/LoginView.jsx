@@ -63,7 +63,8 @@ export default function LoginView({ data, onLogin }) {
   const handleQuickLogin = (role, extra = {}) => {
     if (role === 'KASIR_HANA') {
       onLogin({
-        role: 'ADMIN',
+        role: 'KASIR_HANA',
+        isKasirTetap: true,
         nama: 'Hana Pratiwi, A.Md. (Kasir Bisnis Manajemen)',
         username: 'hana',
         kasirKelompok: 'BISNIS_MANAJEMEN',
@@ -73,7 +74,8 @@ export default function LoginView({ data, onLogin }) {
       });
     } else if (role === 'KASIR_UMI') {
       onLogin({
-        role: 'ADMIN',
+        role: 'KASIR_UMI',
+        isKasirTetap: true,
         nama: 'Umi Kalsum, S.E. (Kasir Pariwisata)',
         username: 'umi',
         kasirKelompok: 'PARIWISATA',

@@ -115,21 +115,25 @@ export default function BukuPagerView({
               onChange={(e) => setSelectedKelasId(Number(e.target.value))}
               className="bg-slate-50 border border-slate-300 font-bold text-slate-800 text-xs sm:text-sm rounded-xl px-3.5 py-2 focus:ring-2 focus:ring-blue-500"
             >
-              <optgroup label="💼 Kelompok Bisnis & Manajemen (Kasir: Hana)">
-                {kelasBisMan.map((k) => (
-                  <option key={k.id} value={k.id}>
-                    {k.nama} • Wali: {k.waliKelas} {isWaliKelas && k.id === currentUser?.kelasId ? '★ (Kelas Anda)' : ''}
-                  </option>
-                ))}
-              </optgroup>
-              <optgroup label="🏖️ Kelompok Pariwisata (Kasir: Umi)">
-                {kelasPariwisata.map((k) => (
-                  <option key={k.id} value={k.id}>
-                    {k.nama} • Wali: {k.waliKelas} {isWaliKelas && k.id === currentUser?.kelasId ? '★ (Kelas Anda)' : ''}
-                  </option>
-                ))}
-              </optgroup>
-              {kelasLain.length > 0 && (
+              {(!currentUser?.isKasirTetap || isKasirHana) && (
+                <optgroup label="💼 Kelompok Bisnis & Manajemen (Kasir: Hana)">
+                  {kelasBisMan.map((k) => (
+                    <option key={k.id} value={k.id}>
+                      {k.nama} • Wali: {k.waliKelas} {isWaliKelas && k.id === currentUser?.kelasId ? '★ (Kelas Anda)' : ''}
+                    </option>
+                  ))}
+                </optgroup>
+              )}
+              {(!currentUser?.isKasirTetap || isKasirUmi) && (
+                <optgroup label="🏖️ Kelompok Pariwisata (Kasir: Umi)">
+                  {kelasPariwisata.map((k) => (
+                    <option key={k.id} value={k.id}>
+                      {k.nama} • Wali: {k.waliKelas} {isWaliKelas && k.id === currentUser?.kelasId ? '★ (Kelas Anda)' : ''}
+                    </option>
+                  ))}
+                </optgroup>
+              )}
+              {!currentUser?.isKasirTetap && kelasLain.length > 0 && (
                 <optgroup label="Lainnya">
                   {kelasLain.map((k) => (
                     <option key={k.id} value={k.id}>

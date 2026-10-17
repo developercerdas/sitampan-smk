@@ -130,6 +130,30 @@ export default function Sidebar({
           ]
         }
       ];
+    } else if (role === 'KASIR_HANA') {
+      return [
+        {
+          group: 'LOKET KASIR BISNIS MANAJEMEN',
+          items: [
+            { id: 'kasir', label: 'Loket Kasir & Kuitansi (AKL, MPLB, PM)', icon: CreditCard, color: 'text-blue-500' },
+            { id: 'buku-pager', label: 'Buku Pager Rombel BisMan', icon: BookOpen, color: 'text-indigo-500' },
+            { id: 'kartu-spp', label: 'Kartu SPP Siswa BisMan', icon: Smartphone, color: 'text-emerald-500' },
+            { id: 'dashboard', label: 'Dashboard Kasir Hana', icon: LayoutDashboard, color: 'text-amber-400' }
+          ]
+        }
+      ];
+    } else if (role === 'KASIR_UMI') {
+      return [
+        {
+          group: 'LOKET KASIR PARIWISATA',
+          items: [
+            { id: 'kasir', label: 'Loket Kasir & Kuitansi (KSP, HTL)', icon: CreditCard, color: 'text-rose-500' },
+            { id: 'buku-pager', label: 'Buku Pager Rombel Pariwisata', icon: BookOpen, color: 'text-indigo-500' },
+            { id: 'kartu-spp', label: 'Kartu SPP Siswa Pariwisata', icon: Smartphone, color: 'text-emerald-500' },
+            { id: 'dashboard', label: 'Dashboard Kasir Umi', icon: LayoutDashboard, color: 'text-amber-400' }
+          ]
+        }
+      ];
     } else if (role === 'WALI_KELAS') {
       return [
         {

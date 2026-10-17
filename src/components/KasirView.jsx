@@ -255,42 +255,49 @@ export default function KasirView({
           </div>
         </div>
 
-        {/* Tab Switcher Pembagian Kelompok Kasir */}
-        <div className="flex items-center p-1 bg-slate-100 rounded-xl border border-slate-200 text-xs font-bold w-full md:w-auto overflow-x-auto">
-          <button
-            type="button"
-            onClick={() => handleGantiKelompok('ALL', 'Admin Pusat TU')}
-            className={`flex-1 md:flex-none px-3.5 py-2 rounded-lg transition cursor-pointer whitespace-nowrap ${
-              kelompokFilter === 'ALL'
-                ? 'bg-white text-slate-900 shadow-xs font-black'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            🏢 Semua Rombel (5 Jurusan Pusat)
-          </button>
-          <button
-            type="button"
-            onClick={() => handleGantiKelompok('BISNIS_MANAJEMEN', 'Kasir TU - Hana (Bisnis Manajemen)')}
-            className={`flex-1 md:flex-none px-3.5 py-2 rounded-lg transition flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap ${
-              kelompokFilter === 'BISNIS_MANAJEMEN'
-                ? 'bg-blue-600 text-white shadow-xs font-black'
-                : 'text-blue-900 hover:bg-blue-100/60'
-            }`}
-          >
-            💼 Kelompok BisMan (Loket Hana)
-          </button>
-          <button
-            type="button"
-            onClick={() => handleGantiKelompok('PARIWISATA', 'Kasir TU - Umi (Pariwisata)')}
-            className={`flex-1 md:flex-none px-3.5 py-2 rounded-lg transition flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap ${
-              kelompokFilter === 'PARIWISATA'
-                ? 'bg-rose-600 text-white shadow-xs font-black'
-                : 'text-rose-900 hover:bg-rose-100/60'
-            }`}
-          >
-            🏖️ Kelompok Pariwisata (Loket Umi)
-          </button>
-        </div>
+        {/* Tab Switcher Pembagian Kelompok Kasir (Hanya bisa diubah oleh Admin & Bendahara Pusat) */}
+        {!currentUser?.isKasirTetap ? (
+          <div className="flex items-center p-1 bg-slate-100 rounded-xl border border-slate-200 text-xs font-bold w-full md:w-auto overflow-x-auto">
+            <button
+              type="button"
+              onClick={() => handleGantiKelompok('ALL', 'Admin Pusat TU')}
+              className={`flex-1 md:flex-none px-3.5 py-2 rounded-lg transition cursor-pointer whitespace-nowrap ${
+                kelompokFilter === 'ALL'
+                  ? 'bg-white text-slate-900 shadow-xs font-black'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              🏢 Semua Rombel (5 Jurusan Pusat)
+            </button>
+            <button
+              type="button"
+              onClick={() => handleGantiKelompok('BISNIS_MANAJEMEN', 'Kasir TU - Hana (Bisnis Manajemen)')}
+              className={`flex-1 md:flex-none px-3.5 py-2 rounded-lg transition flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap ${
+                kelompokFilter === 'BISNIS_MANAJEMEN'
+                  ? 'bg-blue-600 text-white shadow-xs font-black'
+                  : 'text-blue-900 hover:bg-blue-100/60'
+              }`}
+            >
+              💼 Kelompok BisMan (Loket Hana)
+            </button>
+            <button
+              type="button"
+              onClick={() => handleGantiKelompok('PARIWISATA', 'Kasir TU - Umi (Pariwisata)')}
+              className={`flex-1 md:flex-none px-3.5 py-2 rounded-lg transition flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap ${
+                kelompokFilter === 'PARIWISATA'
+                  ? 'bg-rose-600 text-white shadow-xs font-black'
+                  : 'text-rose-900 hover:bg-rose-100/60'
+              }`}
+            >
+              🏖️ Kelompok Pariwisata (Loket Umi)
+            </button>
+          </div>
+        ) : (
+          <div className="px-3.5 py-2 bg-slate-100 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span>Loket Resmi: {currentUser?.kelompokNama || 'Kelompok Khusus'}</span>
+          </div>
+        )}
       </div>
 
       {/* 2. Banner Ringkasan Kasir */}
