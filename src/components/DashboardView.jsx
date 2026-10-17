@@ -16,27 +16,43 @@ import {
 } from 'lucide-react';
 import { dataService } from '../services/dataService';
 
-export default function DashboardView({ data, onNavigate }) {
-  // 1. Kalkulasi Global Real-Time
+export default function DashboardView({ 
+  data, 
+  onNavigate, 
+  activeKelompok = 'ALL', 
+  onSelectKelompok 
+}) {
+  // Filter siswa sesuai sudut pandang aktif jika dipilih
+  const filteredSiswa = data.siswa.filter((s) => {
+    if (s.status !== 'AKTIF') return false;
+    if (activeKelompok === 'BISNIS_MANAJEMEN') {
+      return ['AKL', 'MPLB', 'PM'].includes(s.jurusanKode);
+    }
+    if (activeKelompok === 'PARIWISATA') {
+      return ['KSP', 'HTL'].includes(s.jurusanKode);
+    }
+    return true;
+  });
+
+  // 1. Kalkulasi Sesuai Filter Sudut Pandang
   let totalPenerimaan = 0;
   let totalTunggakan = 0;
-  let totalSiswaAktif = 0;
+  let totalSiswaAktif = filteredSiswa.length;
   let totalSiswaLunas = 0;
 
-  data.siswa.forEach((s) => {
-    if (s.status === 'AKTIF') {
-      totalSiswaAktif++;
-      const calc = dataService.getKalkulasiSiswa(s);
-      totalPenerimaan += calc.totalSudahBayar;
-      totalTunggakan += calc.totalTunggakanAktif;
-      if (calc.isLunasSmt1) totalSiswaLunas++;
-    }
+  filteredSiswa.forEach((s) => {
+    const calc = dataService.getKalkulasiSiswa(s);
+    totalPenerimaan += calc.totalSudahBayar;
+    totalTunggakan += calc.totalTunggakanAktif;
+    if (calc.isLunasSmt1) totalSiswaLunas++;
   });
 
   // Hitung Berdasarkan Metode Pembayaran dari Riwayat
+  const filteredSiswaIds = new Set(filteredSiswa.map(s => s.id));
   let totalTunai = 0;
   let totalVa = 0;
   data.riwayatPembayaran.forEach((p) => {
+    if (activeKelompok !== 'ALL' && !filteredSiswaIds.has(p.siswaId)) return;
     if (p.metode === 'VA_TRANSFER') {
       totalVa += Number(p.total);
     } else {
@@ -44,8 +60,14 @@ export default function DashboardView({ data, onNavigate }) {
     }
   });
 
-  // 2. Kalkulasi Per Jurusan
-  const rekapJurusan = data.jurusan.map((j) => {
+  // 2. Kalkulasi Per Jurusan Sesuai Filter
+  const displayJurusan = data.jurusan.filter(j => {
+    if (activeKelompok === 'BISNIS_MANAJEMEN') return ['AKL', 'MPLB', 'PM'].includes(j.kode);
+    if (activeKelompok === 'PARIWISATA') return ['KSP', 'HTL'].includes(j.kode);
+    return true;
+  });
+
+  const rekapJurusan = displayJurusan.map((j) => {
     const siswaJurusan = data.siswa.filter(
       (s) => s.jurusanKode === j.kode && s.status === 'AKTIF'
     );
@@ -73,8 +95,14 @@ export default function DashboardView({ data, onNavigate }) {
     };
   });
 
-  // 3. Kalkulasi Per Kelas
-  const rekapKelas = data.kelas.map((k) => {
+  // 3. Kalkulasi Per Kelas Sesuai Filter
+  const displayKelas = data.kelas.filter(k => {
+    if (activeKelompok === 'BISNIS_MANAJEMEN') return ['AKL', 'MPLB', 'PM'].includes(k.jurusanKode);
+    if (activeKelompok === 'PARIWISATA') return ['KSP', 'HTL'].includes(k.jurusanKode);
+    return true;
+  });
+
+  const rekapKelas = displayKelas.map((k) => {
     const siswaKelas = data.siswa.filter(
       (s) => s.kelasId === k.id && s.status === 'AKTIF'
     );
@@ -131,17 +159,97 @@ export default function DashboardView({ data, onNavigate }) {
           <div className="flex gap-2">
             <button
               onClick={() => onNavigate('kasir')}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold shadow-md transition flex items-center gap-1.5"
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold shadow-md transition flex items-center gap-1.5 cursor-pointer"
             >
               <CreditCard className="w-3.5 h-3.5" /> Buka Loket Kasir
             </button>
             <button
               onClick={() => onNavigate('buku-pager')}
-              className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold border border-white/20 transition flex items-center gap-1.5"
+              className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold border border-white/20 transition flex items-center gap-1.5 cursor-pointer"
             >
               Buku Pager
             </button>
           </div>
+        </div>
+      </div>
+
+      {/* Switcher Cepat Sudut Pandang Loket Kasir di Dashboard */}
+      <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="flex items-center gap-3.5 w-full md:w-auto">
+          <div className={`p-3 rounded-2xl border flex items-center justify-center flex-shrink-0 ${
+            activeKelompok === 'BISNIS_MANAJEMEN'
+              ? 'bg-blue-50 text-blue-700 border-blue-200'
+              : activeKelompok === 'PARIWISATA'
+              ? 'bg-rose-50 text-rose-700 border-rose-200'
+              : 'bg-indigo-50 text-indigo-700 border-indigo-200'
+          }`}>
+            <Building className="w-6 h-6" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
+                Mode Sudut Pandang Admin
+              </span>
+              <span className="text-[11px] font-bold text-slate-500">
+                {activeKelompok === 'BISNIS_MANAJEMEN'
+                  ? 'Penanggung Jawab: Kasir Hana'
+                  : activeKelompok === 'PARIWISATA'
+                  ? 'Penanggung Jawab: Kasir Umi'
+                  : 'Manajemen Pusat (Seluruh 5 Jurusan)'}
+              </span>
+            </div>
+            <h3 className="text-base font-black text-slate-900 mt-0.5">
+              {activeKelompok === 'BISNIS_MANAJEMEN'
+                ? '💼 Kelompok BisMan (Loket Hana)'
+                : activeKelompok === 'PARIWISATA'
+                ? '🏖️ Kelompok Pariwisata (Loket Umi)'
+                : '🏢 Semua Rombel (5 Jurusan Pusat)'}
+            </h3>
+            <p className="text-xs text-slate-500 mt-0.5">
+              {activeKelompok === 'BISNIS_MANAJEMEN'
+                ? 'Menampilkan rekapitulasi data keuangan jurusan AKL, MPLB, dan PM.'
+                : activeKelompok === 'PARIWISATA'
+                ? 'Menampilkan rekapitulasi data keuangan jurusan Kecantikan & Spa dan Perhotelan.'
+                : 'Menampilkan seluruh rekapitulasi data keuangan 5 jurusan secara terpusat.'}
+            </p>
+          </div>
+        </div>
+
+        {/* 1-Klik Switcher Buttons */}
+        <div className="flex items-center p-1 bg-slate-100 rounded-xl border border-slate-200 text-xs font-bold w-full md:w-auto overflow-x-auto">
+          <button
+            type="button"
+            onClick={() => onSelectKelompok && onSelectKelompok('ALL')}
+            className={`flex-1 md:flex-none px-3.5 py-2 rounded-lg transition cursor-pointer whitespace-nowrap ${
+              activeKelompok === 'ALL'
+                ? 'bg-white text-slate-900 shadow-xs font-black'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            🏢 Semua Rombel (5 Jurusan Pusat)
+          </button>
+          <button
+            type="button"
+            onClick={() => onSelectKelompok && onSelectKelompok('BISNIS_MANAJEMEN')}
+            className={`flex-1 md:flex-none px-3.5 py-2 rounded-lg transition flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap ${
+              activeKelompok === 'BISNIS_MANAJEMEN'
+                ? 'bg-blue-600 text-white shadow-xs font-black'
+                : 'text-blue-900 hover:bg-blue-100/60'
+            }`}
+          >
+            💼 Kelompok BisMan (Loket Hana)
+          </button>
+          <button
+            type="button"
+            onClick={() => onSelectKelompok && onSelectKelompok('PARIWISATA')}
+            className={`flex-1 md:flex-none px-3.5 py-2 rounded-lg transition flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap ${
+              activeKelompok === 'PARIWISATA'
+                ? 'bg-rose-600 text-white shadow-xs font-black'
+                : 'text-rose-900 hover:bg-rose-100/60'
+            }`}
+          >
+            🏖️ Kelompok Pariwisata (Loket Umi)
+          </button>
         </div>
       </div>
 

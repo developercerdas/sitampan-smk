@@ -21,11 +21,13 @@ export default function BukuPagerView({
   data, 
   currentRole, 
   currentUser, 
+  activeKelompok,
   onShowKuitansi 
 }) {
   const isWaliKelas = currentRole === 'WALI_KELAS';
-  const isKasirHana = currentUser?.kasirKelompok === 'BISNIS_MANAJEMEN';
-  const isKasirUmi = currentUser?.kasirKelompok === 'PARIWISATA';
+  const effectiveKelompok = activeKelompok || currentUser?.kasirKelompok || 'ALL';
+  const isKasirHana = effectiveKelompok === 'BISNIS_MANAJEMEN';
+  const isKasirUmi = effectiveKelompok === 'PARIWISATA';
 
   // Jika wali kelas, default ke kelas bimbingan miliknya. Jika kasir spesifik, default ke rombel kelompoknya
   let defaultKelas = data.kelas[0]?.id || 1;
@@ -42,6 +44,17 @@ export default function BukuPagerView({
   const [selectedKelasId, setSelectedKelasId] = useState(defaultKelas);
   const [tanggalCutOff, setTanggalCutOff] = useState('10 - 10 - 2026');
   const [subTab, setSubTab] = useState('tabel-folio'); // 'tabel-folio' | 'kartu-siswa'
+
+  // Sinkronkan kelas pilihan saat activeKelompok diganti dari global switcher
+  React.useEffect(() => {
+    if (activeKelompok === 'BISNIS_MANAJEMEN') {
+      const kBis = data.kelas.find(k => k.kelompok === 'BISNIS_MANAJEMEN' || ['AKL', 'MPLB', 'PM'].includes(k.jurusanKode));
+      if (kBis) setSelectedKelasId(kBis.id);
+    } else if (activeKelompok === 'PARIWISATA') {
+      const kPar = data.kelas.find(k => k.kelompok === 'PARIWISATA' || ['KSP', 'HTL'].includes(k.jurusanKode));
+      if (kPar) setSelectedKelasId(kPar.id);
+    }
+  }, [activeKelompok, data.kelas]);
 
   const selectedKelas = data.kelas.find((k) => k.id === Number(selectedKelasId)) || data.kelas[0];
   const siswaList = data.siswa.filter(

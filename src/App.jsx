@@ -58,6 +58,18 @@ export default function App() {
     }
   });
 
+  const [activeKelompok, setActiveKelompok] = useState(() => {
+    return currentUser?.kasirKelompok || 'ALL';
+  });
+
+  useEffect(() => {
+    if (currentUser?.kasirKelompok) {
+      setActiveKelompok(currentUser.kasirKelompok);
+    } else {
+      setActiveKelompok('ALL');
+    }
+  }, [currentUser]);
+
   const [activeTab, setActiveTab] = useState(currentUser?.role === 'ADMIN' ? 'dashboard' : 'kartu-spp');
   const [activeKuitansi, setActiveKuitansi] = useState(null);
 
@@ -65,6 +77,7 @@ export default function App() {
   const handleLogin = (userObj) => {
     setCurrentUser(userObj);
     localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(userObj));
+    setActiveKelompok(userObj.kasirKelompok || 'ALL');
 
     if (userObj.role === 'WALI_KELAS') {
       setActiveTab('buku-pager');
@@ -181,11 +194,72 @@ export default function App() {
           </div>
         </header>
 
+        {/* Global Switcher Sudut Pandang Loket Kasir untuk Admin & Bendahara Pusat */}
+        {(role === 'ADMIN' || role === 'BENDAHARA') && (
+          <div className="bg-slate-900 text-white px-3 sm:px-6 py-2 border-b border-slate-800 flex flex-wrap items-center justify-between gap-2.5 no-print sticky top-[53px] sm:top-[57px] z-25 shadow-md">
+            <div className="flex items-center gap-2">
+              <span className="px-2.5 py-0.5 rounded-full bg-amber-400 text-slate-950 font-black text-[10px] uppercase tracking-wider flex items-center gap-1 shadow-xs">
+                <Sparkles className="w-3 h-3 text-slate-950" />
+                Mode Sudut Pandang Admin
+              </span>
+              <span className="text-xs text-slate-300 hidden md:inline">
+                Pilih Loket Kasir (1-Klik):
+              </span>
+            </div>
+
+            <div className="flex items-center gap-1.5 bg-slate-800 p-1 rounded-xl border border-slate-700 text-xs font-bold w-full sm:w-auto overflow-x-auto">
+              <button
+                type="button"
+                onClick={() => setActiveKelompok('ALL')}
+                className={`flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg transition flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap ${
+                  activeKelompok === 'ALL'
+                    ? 'bg-indigo-600 text-white shadow-xs font-black ring-2 ring-indigo-400'
+                    : 'text-slate-300 hover:text-white hover:bg-slate-700/60'
+                }`}
+              >
+                <span>🏢</span>
+                <span>Semua Rombel (5 Jurusan Pusat)</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveKelompok('BISNIS_MANAJEMEN')}
+                className={`flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg transition flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap ${
+                  activeKelompok === 'BISNIS_MANAJEMEN'
+                    ? 'bg-blue-600 text-white shadow-xs font-black ring-2 ring-blue-400'
+                    : 'text-blue-300 hover:text-white hover:bg-slate-700/60'
+                }`}
+              >
+                <span>💼</span>
+                <span>Kelompok BisMan (Loket Hana)</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveKelompok('PARIWISATA')}
+                className={`flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg transition flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap ${
+                  activeKelompok === 'PARIWISATA'
+                    ? 'bg-rose-600 text-white shadow-xs font-black ring-2 ring-rose-400'
+                    : 'text-rose-300 hover:text-white hover:bg-slate-700/60'
+                }`}
+              >
+                <span>🏖️</span>
+                <span>Kelompok Pariwisata (Loket Umi)</span>
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Content Body (Safe area bottom padding untuk Android address bar) */}
         <main className="flex-1 p-3 sm:p-5 lg:p-7 max-w-7xl w-full mx-auto space-y-6 pb-28 md:pb-12">
           {/* Dashboard Real-Time (Khusus Admin, Bendahara, & Kepala Sekolah) */}
           {activeTab === 'dashboard' && (role === 'ADMIN' || role === 'BENDAHARA' || role === 'KEPALA_SEKOLAH') && (
-            <DashboardView data={data} onNavigate={setActiveTab} />
+            <DashboardView 
+              data={data} 
+              onNavigate={setActiveTab} 
+              activeKelompok={activeKelompok}
+              onSelectKelompok={setActiveKelompok}
+            />
           )}
 
           {/* Menu Loket Kasir (Admin & Bendahara) */}
@@ -193,6 +267,8 @@ export default function App() {
             <KasirView
               data={data}
               currentUser={currentUser}
+              activeKelompok={activeKelompok}
+              onSelectKelompok={setActiveKelompok}
               onUpdateData={handleUpdateData}
               onShowKuitansi={(kwt) => setActiveKuitansi(kwt)}
             />
@@ -204,6 +280,7 @@ export default function App() {
               data={data}
               currentRole={role}
               currentUser={currentUser}
+              activeKelompok={activeKelompok}
               onShowKuitansi={(kwt) => setActiveKuitansi(kwt)}
             />
           )}
