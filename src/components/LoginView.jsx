@@ -14,7 +14,8 @@ import {
   KeyRound,
   Check,
   Search,
-  Sparkles
+  Sparkles,
+  ScanBarcode
 } from 'lucide-react';
 import SchoolLogo from './SchoolLogo';
 
@@ -147,7 +148,7 @@ export default function LoginView({ data, onLogin }) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-950 to-blue-950 flex items-center justify-center p-4 sm:p-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-950 to-blue-950 flex flex-col items-center justify-center p-4 sm:p-6 py-8 sm:py-12">
       {/* Background Glow Effect */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -left-40 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl"></div>
@@ -624,6 +625,31 @@ export default function LoginView({ data, onLogin }) {
           <p className="text-[10px] text-slate-400">
             Manajemen Keuangan SPP & Kasir Terpadu • {data.sekolah.nama}
           </p>
+        </div>
+      </div>
+
+      {/* Floating Glassmorphism Footer: Powered by CV. ISTANA BARCODE COMPUTER - DEVELOPER CERDAS */}
+      <div className="relative max-w-md w-full mt-4 bg-slate-900/80 backdrop-blur-md border border-white/15 rounded-2xl p-3.5 shadow-2xl text-white transition hover:border-amber-400/50">
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 bg-gradient-to-br from-amber-500/20 to-orange-500/20 border border-amber-400/30 rounded-xl flex items-center justify-center flex-shrink-0 text-amber-400 shadow-inner">
+            <ScanBarcode className="w-5 h-5" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between gap-1.5 flex-wrap">
+              <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                Powered by
+              </span>
+              <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-cyan-500/20 border border-cyan-400/30 text-cyan-300">
+                <Sparkles className="w-3 h-3 text-cyan-300" /> DEVELOPER CERDAS
+              </span>
+            </div>
+            <p className="text-xs sm:text-sm font-black tracking-tight text-white mt-0.5 truncate">
+              CV. ISTANA BARCODE COMPUTER
+            </p>
+            <p className="text-[10px] text-slate-400 font-medium leading-tight mt-0.5">
+              Official IT Solution & POS Barcode Hardware System
+            </p>
+          </div>
         </div>
       </div>
     </div>
