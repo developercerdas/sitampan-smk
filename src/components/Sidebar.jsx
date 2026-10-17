@@ -20,7 +20,7 @@ import {
   Sparkles,
   PanelLeftClose,
   PanelLeftOpen,
-  ScanBarcode
+  QrCode
 } from 'lucide-react';
 import SchoolLogo from './SchoolLogo';
 
@@ -361,7 +361,7 @@ export default function Sidebar({
             <div className="pt-2 border-t border-slate-800/80">
               <div className="p-2 rounded-xl bg-slate-950/70 border border-slate-800/90 flex items-center gap-2">
                 <div className="p-1.5 bg-amber-400/15 border border-amber-400/25 rounded-lg text-amber-400 flex-shrink-0">
-                  <ScanBarcode className="w-4 h-4" />
+                  <QrCode className="w-4 h-4" />
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-[9px] font-black uppercase tracking-wider text-slate-500">

@@ -14,7 +14,7 @@ import ProfilKopView from './components/ProfilKopView';
 import MasterRulesView from './components/MasterRulesView';
 import KuitansiModal from './components/KuitansiModal';
 import { dataService } from './services/dataService';
-import { Database, GitBranch, Bell, Menu, LogOut, ScanBarcode, Sparkles } from 'lucide-react';
+import { Database, GitBranch, Bell, Menu, LogOut, QrCode, Sparkles } from 'lucide-react';
 
 const USER_STORAGE_KEY = 'SITAMPAN_CURRENT_USER';
 
@@ -284,7 +284,7 @@ export default function App() {
             {/* Badge Developer */}
             <div className="inline-flex items-center gap-2.5 bg-slate-900 text-white px-3.5 py-1.5 rounded-xl shadow-xs border border-slate-800">
               <div className="p-1 bg-amber-400/20 text-amber-400 rounded-lg">
-                <ScanBarcode className="w-4 h-4" />
+                <QrCode className="w-4 h-4" />
               </div>
               <div className="text-left">
                 <div className="flex items-center gap-1.5">
