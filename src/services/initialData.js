@@ -30,17 +30,143 @@ export const INITIAL_DATA = {
   ],
 
   posBiaya: [
-    { id: 'SPP', nama: 'Uang Sekolah (SPP Bulanan)', tipe: 'BULANAN', nominalDefault: 325000 },
-    { id: 'TABUNGAN', nama: 'Tabungan Wajib Bulanan', tipe: 'BULANAN', nominalDefault: 25000 },
-    { id: 'DU', nama: 'Daftar Ulang (DU + Juli)', tipe: 'SEKALI_BAYAR', nominalDefault: 905000 },
-    { id: 'SPI', nama: 'Sumbangan Pengembangan Institusi (SPI)', tipe: 'SEKALI_BAYAR', nominalDefault: 2000000 },
-    { id: 'OSIS', nama: 'Iuran OSIS (1 Tahun)', tipe: 'SEKALI_BAYAR', nominalDefault: 220000 },
-    { id: 'LEMBAGA', nama: 'Iuran Pembinaan Lembaga (1 Tahun)', tipe: 'SEKALI_BAYAR', nominalDefault: 20000 },
-    { id: 'MAJALAH', nama: 'Majalah, Pentas Seni & Pelepasan', tipe: 'SEKALI_BAYAR', nominalDefault: 225000 },
-    { id: 'SARPRAS', nama: 'Perawatan Sarana Prasarana', tipe: 'SEKALI_BAYAR', nominalDefault: 100000 },
-    { id: 'MPLS', nama: 'Kegiatan MPLS', tipe: 'SEKALI_BAYAR', nominalDefault: 25000 },
-    { id: 'KARTU_FOTO', nama: 'Kartu OSIS & Foto Raport', tipe: 'SEKALI_BAYAR', nominalDefault: 20000 },
-    { id: 'TUNGGAKAN_LALU', nama: 'Tunggakan SPP Tahun Lalu (Kls XI)', tipe: 'SEKALI_BAYAR', nominalDefault: 0 }
+    { 
+      id: 'SPP', 
+      nama: 'Uang Sekolah (SPP Bulanan)', 
+      tipe: 'BULANAN', 
+      nominalDefault: 325000,
+      targetJurusan: 'SEMUA',
+      targetTingkat: 'SEMUA',
+      tarifJurusan: {
+        AKL: 325000,
+        PM: 325000,
+        PAR: 350000,
+        TKRO: 375000
+      },
+      keterangan: 'Tarif SPP disesuaikan dengan kebutuhan modul & praktek bengkel kejuruan'
+    },
+    { 
+      id: 'TABUNGAN', 
+      nama: 'Tabungan Wajib Bulanan', 
+      tipe: 'BULANAN', 
+      nominalDefault: 25000,
+      targetJurusan: 'SEMUA',
+      targetTingkat: 'SEMUA',
+      keterangan: 'Tabungan persiapan biaya uji kompetensi & ujian'
+    },
+    { 
+      id: 'DU', 
+      nama: 'Daftar Ulang (DU + Juli)', 
+      tipe: 'SEKALI_BAYAR', 
+      nominalDefault: 905000,
+      targetJurusan: 'SEMUA',
+      targetTingkat: 'SEMUA',
+      tarifJurusan: {
+        AKL: 905000,
+        PM: 905000,
+        PAR: 950000,
+        TKRO: 975000
+      },
+      keterangan: 'Daftar ulang tahunan dan SPP bulan Juli'
+    },
+    { 
+      id: 'SPI', 
+      nama: 'Sumbangan Pengembangan Institusi (SPI / Gedung)', 
+      tipe: 'SEKALI_BAYAR', 
+      nominalDefault: 2000000,
+      targetJurusan: 'SEMUA',
+      targetTingkat: 'X',
+      keterangan: 'Uang pangkal gedung sarana prasarana awal masuk'
+    },
+    { 
+      id: 'PRAKTIK_TKRO', 
+      nama: 'Biaya Bahan Praktik Bengkel & Alat Otomotif', 
+      tipe: 'SEKALI_BAYAR', 
+      nominalDefault: 350000,
+      targetJurusan: 'TKRO',
+      targetTingkat: 'SEMUA',
+      keterangan: 'Khusus siswa Jurusan TKRO (Bahan pelumas, sparepart latih bengkel)'
+    },
+    { 
+      id: 'PRAKTIK_PAR', 
+      nama: 'Biaya Bahan Praktik Dapur & Tata Hidang Perhotelan', 
+      tipe: 'SEKALI_BAYAR', 
+      nominalDefault: 300000,
+      targetJurusan: 'PAR',
+      targetTingkat: 'SEMUA',
+      keterangan: 'Khusus siswa Jurusan Perhotelan (Bahan cooking, table manner & linen)'
+    },
+    { 
+      id: 'UKK', 
+      nama: 'Uji Kompetensi Keahlian (UKK / LSP-P1)', 
+      tipe: 'SEKALI_BAYAR', 
+      nominalDefault: 450000,
+      targetJurusan: 'SEMUA',
+      targetTingkat: 'XII',
+      tarifJurusan: {
+        AKL: 400000,
+        PM: 400000,
+        PAR: 450000,
+        TKRO: 500000
+      },
+      keterangan: 'Uji sertifikasi kejuruan BNSP tingkat akhir'
+    },
+    { 
+      id: 'OSIS', 
+      nama: 'Iuran OSIS (1 Tahun)', 
+      tipe: 'SEKALI_BAYAR', 
+      nominalDefault: 220000,
+      targetJurusan: 'SEMUA',
+      targetTingkat: 'SEMUA'
+    },
+    { 
+      id: 'LEMBAGA', 
+      nama: 'Iuran Pembinaan Lembaga (1 Tahun)', 
+      tipe: 'SEKALI_BAYAR', 
+      nominalDefault: 20000,
+      targetJurusan: 'SEMUA',
+      targetTingkat: 'SEMUA'
+    },
+    { 
+      id: 'MAJALAH', 
+      nama: 'Majalah, Pentas Seni & Pelepasan', 
+      tipe: 'SEKALI_BAYAR', 
+      nominalDefault: 225000,
+      targetJurusan: 'SEMUA',
+      targetTingkat: 'XII'
+    },
+    { 
+      id: 'SARPRAS', 
+      nama: 'Perawatan Sarana Prasarana', 
+      tipe: 'SEKALI_BAYAR', 
+      nominalDefault: 100000,
+      targetJurusan: 'SEMUA',
+      targetTingkat: 'SEMUA'
+    },
+    { 
+      id: 'MPLS', 
+      nama: 'Kegiatan MPLS & Pengenalan Vokasi', 
+      tipe: 'SEKALI_BAYAR', 
+      nominalDefault: 25000,
+      targetJurusan: 'SEMUA',
+      targetTingkat: 'X'
+    },
+    { 
+      id: 'KARTU_FOTO', 
+      nama: 'Kartu Pelajar & Pasfoto Raport', 
+      tipe: 'SEKALI_BAYAR', 
+      nominalDefault: 20000,
+      targetJurusan: 'SEMUA',
+      targetTingkat: 'X'
+    },
+    { 
+      id: 'TUNGGAKAN_LALU', 
+      nama: 'Tunggakan SPP Tahun Lalu', 
+      tipe: 'SEKALI_BAYAR', 
+      nominalDefault: 0,
+      targetJurusan: 'SEMUA',
+      targetTingkat: 'XII'
+    }
   ],
 
   // Seluruh Nama Siswa Telah Disamarkan (Anonymized) untuk Menjaga Privasi Data Sekolah

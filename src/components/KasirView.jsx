@@ -26,12 +26,15 @@ export default function KasirView({ data, onUpdateData, onShowKuitansi }) {
 
   // Bulan SPP
   const bulanList = ['Agustus', 'September', 'Oktober', 'November', 'Desember', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni'];
-  const nominalSpp = 325000;
 
   // Selected Student
   const selectedSiswa = data.siswa.find((s) => s.id === Number(selectedSiswaId));
   const kelasSiswa = data.kelas.find((k) => k.id === selectedSiswa?.kelasId);
   const kalkulasi = selectedSiswa ? dataService.getKalkulasiSiswa(selectedSiswa) : null;
+
+  // Nominal SPP disesuaikan otomatis dengan Tarif Jurusan Siswa
+  const posSpp = data.posBiaya?.find((p) => p.id === 'SPP');
+  const nominalSpp = (posSpp?.tarifJurusan && selectedSiswa?.jurusanKode && posSpp.tarifJurusan[selectedSiswa.jurusanKode]) || posSpp?.nominalDefault || 325000;
 
   // Selected items to pay in current transaction
   // Structure: { [key]: { posId, posNama, targetTotal, sudahMasuk, bayar, sisa, isCicilan } }
@@ -555,6 +558,112 @@ export default function KasirView({ data, onUpdateData, onShowKuitansi }) {
                       })}
                     </div>
                   </div>
+
+                  {/* Pos Biaya Lain-Lain & Praktik Kejuruan (Custom Pos Biaya) */}
+                  {(() => {
+                    const customPosList = (data.posBiaya || []).filter((p) => {
+                      if (['SPP', 'DU', 'SPI', 'TUNGGAKAN_LALU'].includes(p.id)) return false;
+                      const matchJurusan = p.targetJurusan === 'SEMUA' || p.targetJurusan === selectedSiswa?.jurusanKode;
+                      const matchTingkat = p.targetTingkat === 'SEMUA' || p.targetTingkat === selectedSiswa?.tingkat;
+                      return matchJurusan && matchTingkat;
+                    });
+
+                    if (customPosList.length === 0) return null;
+
+                    return (
+                      <div className="pt-2">
+                        <div className="flex items-center justify-between mb-2">
+                          <h5 className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                            <span className="w-2 h-2 rounded-full bg-purple-500"></span>
+                            Pos Biaya Lain-Lain & Praktik Kejuruan ({selectedSiswa?.jurusanKode}):
+                          </h5>
+                          <span className="text-[11px] text-slate-500">
+                            Sesuai Jurusan & Tingkat Siswa
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          {customPosList.map((pos) => {
+                            const key = `POS_${pos.id}`;
+                            const targetNominal = (pos.tarifJurusan && selectedSiswa?.jurusanKode && pos.tarifJurusan[selectedSiswa.jurusanKode]) || pos.nominalDefault || 0;
+                            const isSelected = !!selectedItems[key];
+                            const currentBayar = selectedItems[key]?.bayar !== undefined ? selectedItems[key].bayar : targetNominal;
+
+                            return (
+                              <div
+                                key={pos.id}
+                                className={`p-3.5 rounded-xl border transition ${
+                                  isSelected
+                                    ? 'bg-purple-50/80 border-purple-400 shadow-xs ring-1 ring-purple-400'
+                                    : 'bg-white border-slate-200 hover:border-purple-300'
+                                }`}
+                              >
+                                <div
+                                  className="flex items-center justify-between cursor-pointer"
+                                  onClick={() => {
+                                    toggleItem(key, {
+                                      posId: pos.id,
+                                      posNama: pos.nama,
+                                      targetTotal: targetNominal,
+                                      sudahMasuk: 0,
+                                      sisaHarusBayar: targetNominal,
+                                      tipe: pos.tipe || 'SEKALI_BAYAR'
+                                    });
+                                  }}
+                                >
+                                  <div className="flex items-center gap-2.5">
+                                    {isSelected ? (
+                                      <CheckSquare className="w-4 h-4 text-purple-600 flex-shrink-0" />
+                                    ) : (
+                                      <Square className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                                    )}
+                                    <div>
+                                      <p className="text-xs font-bold text-slate-900 leading-tight">
+                                        {pos.nama}
+                                      </p>
+                                      <p className="text-[10px] text-slate-500 mt-0.5">
+                                        {pos.targetJurusan !== 'SEMUA' ? `Khusus ${pos.targetJurusan}` : 'Semua Jurusan'} • {pos.tipe === 'BULANAN' ? 'Bulanan' : 'Sekali Bayar'}
+                                      </p>
+                                    </div>
+                                  </div>
+
+                                  <div className="text-right">
+                                    <span className="text-xs font-mono font-bold text-slate-800">
+                                      Rp {targetNominal.toLocaleString('id-ID')}
+                                    </span>
+                                  </div>
+                                </div>
+
+                                {isSelected && (
+                                  <div className="mt-2.5 pt-2.5 border-t border-purple-200 flex items-center justify-between gap-2">
+                                    <div className="flex items-center gap-1.5">
+                                      <span className="text-[11px] font-bold text-slate-700">Bayar/Cicil:</span>
+                                      <div className="relative">
+                                        <span className="absolute left-1.5 top-0.5 text-[10px] font-bold text-slate-400">Rp</span>
+                                        <input
+                                          type="number"
+                                          value={currentBayar}
+                                          onChange={(e) => updateNominalCicilan(key, e.target.value, targetNominal)}
+                                          className="w-28 pl-6 pr-1.5 py-0.5 text-xs font-mono font-bold border border-slate-300 rounded bg-white"
+                                        />
+                                      </div>
+                                    </div>
+                                    <button
+                                      type="button"
+                                      onClick={() => updateNominalCicilan(key, targetNominal, targetNominal)}
+                                      className="text-[10px] font-bold text-purple-700 hover:underline"
+                                    >
+                                      Lunas (Rp {targetNominal.toLocaleString('id-ID')})
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
               </div>
 

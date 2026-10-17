@@ -11,6 +11,7 @@ import {
   RotateCcw,
   User,
   Users,
+  UserCheck,
   ChevronRight,
   Sparkles
 } from 'lucide-react';
@@ -40,17 +41,25 @@ export default function Sidebar({
           ]
         },
         {
-          group: 'AKADEMIK & PROMOSI',
+          group: 'DATA MASTER AKADEMIK',
           items: [
-            { id: 'kenaikan-kelas', label: 'Kenaikan Kelas & Alumni', icon: GraduationCap, color: 'text-purple-500' }
+            { id: 'master-siswa', label: 'Master Siswa', icon: Users, color: 'text-blue-400' },
+            { id: 'master-kelas', label: 'Master Kelas & Wali Kelas', icon: UserCheck, color: 'text-emerald-400' },
+            { id: 'master-jurusan', label: 'Master Jurusan', icon: GraduationCap, color: 'text-purple-400' }
           ]
         },
         {
-          group: 'MASTER & PENGATURAN',
+          group: 'AKADEMIK & PROMOSI',
           items: [
-            { id: 'master-tarif', label: 'Master Tarif & Jurusan', icon: Settings, color: 'text-slate-500' },
-            { id: 'profil-kop', label: 'Profil & KOP Sekolah', icon: School, color: 'text-amber-500' },
-            { id: 'master-rules', label: 'Master Hak Akses & Rule', icon: ShieldCheck, color: 'text-teal-500' }
+            { id: 'kenaikan-kelas', label: 'Kenaikan Kelas & Alumni', icon: GraduationCap, color: 'text-cyan-400' }
+          ]
+        },
+        {
+          group: 'TARIF & PENGATURAN',
+          items: [
+            { id: 'master-tarif', label: 'Master Tarif Pos Biaya', icon: Settings, color: 'text-amber-400' },
+            { id: 'profil-kop', label: 'Profil & KOP Sekolah', icon: School, color: 'text-rose-400' },
+            { id: 'master-rules', label: 'Master Hak Akses & Rule', icon: ShieldCheck, color: 'text-teal-400' }
           ]
         }
       ];

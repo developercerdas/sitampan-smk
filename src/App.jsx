@@ -7,6 +7,9 @@ import BukuPagerView from './components/BukuPagerView';
 import KartuSppView from './components/KartuSppView';
 import KenaikanKelasView from './components/KenaikanKelasView';
 import MasterTarifView from './components/MasterTarifView';
+import MasterSiswaView from './components/MasterSiswaView';
+import MasterKelasView from './components/MasterKelasView';
+import MasterJurusanView from './components/MasterJurusanView';
 import ProfilKopView from './components/ProfilKopView';
 import MasterRulesView from './components/MasterRulesView';
 import KuitansiModal from './components/KuitansiModal';
@@ -149,9 +152,40 @@ export default function App() {
             <KenaikanKelasView data={data} onUpdateData={handleUpdateData} />
           )}
 
+          {/* Master Siswa (Khusus Admin) */}
+          {activeTab === 'master-siswa' && role === 'ADMIN' && (
+            <MasterSiswaView
+              data={data}
+              onUpdateData={handleUpdateData}
+              setActiveTab={setActiveTab}
+            />
+          )}
+
+          {/* Master Kelas & Wali Kelas (Khusus Admin) */}
+          {activeTab === 'master-kelas' && role === 'ADMIN' && (
+            <MasterKelasView
+              data={data}
+              onUpdateData={handleUpdateData}
+              setActiveTab={setActiveTab}
+            />
+          )}
+
+          {/* Master Jurusan (Khusus Admin) */}
+          {activeTab === 'master-jurusan' && role === 'ADMIN' && (
+            <MasterJurusanView
+              data={data}
+              onUpdateData={handleUpdateData}
+              setActiveTab={setActiveTab}
+            />
+          )}
+
           {/* Master Tarif & Pos Biaya (Khusus Admin) */}
           {activeTab === 'master-tarif' && role === 'ADMIN' && (
-            <MasterTarifView data={data} onUpdateData={handleUpdateData} />
+            <MasterTarifView
+              data={data}
+              onUpdateData={handleUpdateData}
+              setActiveTab={setActiveTab}
+            />
           )}
 
           {/* Master Profil & KOP Sekolah (Khusus Admin) */}

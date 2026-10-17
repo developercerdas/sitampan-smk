@@ -179,7 +179,13 @@ export const dataService = {
 
   // 5. Hitung Ringkasan Keuangan Siswa (Total Tagihan, Total Bayar, Sisa Tunggakan)
   getKalkulasiSiswa(siswa) {
-    const nominalSpp = 325000;
+    const data = this.getData();
+    const posSpp = data.posBiaya?.find((p) => p.id === 'SPP');
+    const nominalSpp = (posSpp?.tarifJurusan && siswa?.jurusanKode && posSpp.tarifJurusan[siswa.jurusanKode]) || posSpp?.nominalDefault || 325000;
+    
+    const posDu = data.posBiaya?.find((p) => p.id === 'DU');
+    const nominalDu = (posDu?.tarifJurusan && siswa?.jurusanKode && posDu.tarifJurusan[siswa.jurusanKode]) || posDu?.nominalDefault || 905000;
+
     const bulanDaftar = ['Agustus', 'September', 'Oktober', 'November', 'Desember', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni'];
 
     // Hitung yang sudah dibayar
@@ -200,10 +206,12 @@ export const dataService = {
       }
     });
 
-    const duBelumLunas = (Number(siswa.duJuli) || 0) < 905000 ? 905000 - (Number(siswa.duJuli) || 0) : 0;
+    const duBelumLunas = (Number(siswa.duJuli) || 0) < nominalDu ? nominalDu - (Number(siswa.duJuli) || 0) : 0;
     const totalTunggakanAktif = tunggakanSmt1 + duBelumLunas + (Number(siswa.tunggakanLalu) || 0) + (Number(siswa.spi) || 0);
 
     return {
+      nominalSpp,
+      nominalDu,
       totalSudahBayar,
       totalTunggakanAktif,
       duBelumLunas,
@@ -279,5 +287,212 @@ export const dataService = {
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, `Rekap_${kelas?.nama || 'Kelas'}`);
     XLSX.writeFile(workbook, `DAFTAR_SETORAN_${kelas?.nama || 'SMK'}_${new Date().toISOString().split('T')[0]}.xlsx`);
+  },
+
+  // 8. CRUD Master Siswa
+  tambahSiswa(siswaData) {
+    const data = this.getData();
+    const newId = data.siswa.length > 0 ? Math.max(...data.siswa.map((s) => s.id)) + 1 : 1;
+    const kelas = data.kelas.find((k) => k.id === Number(siswaData.kelasId));
+    const vaBaru = siswaData.va || `8808${siswaData.nis}${String(newId).padStart(3, '0')}`;
+    
+    const baru = {
+      id: newId,
+      nis: String(siswaData.nis).trim(),
+      nisn: String(siswaData.nisn || '').trim(),
+      nama: String(siswaData.nama).trim(),
+      tanggalLahir: siswaData.tanggalLahir || '2008-01-01',
+      kelasId: Number(siswaData.kelasId),
+      jurusanKode: kelas?.jurusanKode || siswaData.jurusanKode || 'AKL',
+      tingkat: kelas?.tingkat || siswaData.tingkat || 'X',
+      va: vaBaru,
+      telepon: siswaData.telepon || '',
+      status: siswaData.status || 'AKTIF',
+      spi: Number(siswaData.spi) || 0,
+      tunggakanLalu: Number(siswaData.tunggakanLalu) || 0,
+      duJuli: Number(siswaData.duJuli) || 0,
+      bayarBulanan: {}
+    };
+
+    data.siswa.push(baru);
+    this.saveData(data);
+    return baru;
+  },
+
+  updateSiswa(id, updatedFields) {
+    const data = this.getData();
+    const index = data.siswa.findIndex((s) => s.id === Number(id));
+    if (index === -1) throw new Error('Siswa tidak ditemukan');
+
+    if (updatedFields.kelasId) {
+      const kelas = data.kelas.find((k) => k.id === Number(updatedFields.kelasId));
+      if (kelas) {
+        updatedFields.jurusanKode = kelas.jurusanKode;
+        updatedFields.tingkat = kelas.tingkat;
+      }
+    }
+
+    data.siswa[index] = {
+      ...data.siswa[index],
+      ...updatedFields
+    };
+
+    this.saveData(data);
+    return data.siswa[index];
+  },
+
+  hapusSiswa(id) {
+    const data = this.getData();
+    data.siswa = data.siswa.filter((s) => s.id !== Number(id));
+    this.saveData(data);
+    return true;
+  },
+
+  // 9. CRUD Master Kelas & Wali Kelas
+  tambahKelas({ nama, tingkat, jurusanKode, rombel, waliKelas }) {
+    const data = this.getData();
+    const newId = data.kelas.length > 0 ? Math.max(...data.kelas.map((k) => k.id)) + 1 : 1;
+    const baru = {
+      id: newId,
+      nama: nama || `${tingkat} ${jurusanKode} ${rombel}`,
+      tingkat: tingkat || 'X',
+      jurusanKode: jurusanKode || 'AKL',
+      rombel: rombel || '1',
+      waliKelas: waliKelas || 'Belum Ditentukan'
+    };
+    data.kelas.push(baru);
+    this.saveData(data);
+    return baru;
+  },
+
+  updateKelas(id, updatedFields) {
+    const data = this.getData();
+    const index = data.kelas.findIndex((k) => k.id === Number(id));
+    if (index === -1) throw new Error('Kelas tidak ditemukan');
+
+    data.kelas[index] = {
+      ...data.kelas[index],
+      ...updatedFields
+    };
+    this.saveData(data);
+    return data.kelas[index];
+  },
+
+  hapusKelas(id) {
+    const data = this.getData();
+    const adaSiswa = data.siswa.some((s) => s.kelasId === Number(id));
+    if (adaSiswa) {
+      throw new Error('Kelas tidak dapat dihapus karena masih memiliki siswa aktif');
+    }
+    data.kelas = data.kelas.filter((k) => k.id !== Number(id));
+    this.saveData(data);
+    return true;
+  },
+
+  // 10. CRUD Master Jurusan
+  tambahJurusan({ kode, nama, warna }) {
+    const data = this.getData();
+    const newId = data.jurusan.length > 0 ? Math.max(...data.jurusan.map((j) => j.id)) + 1 : 1;
+    const baru = {
+      id: newId,
+      kode: kode.toUpperCase().trim(),
+      nama: nama.trim(),
+      warna: warna || 'blue'
+    };
+    data.jurusan.push(baru);
+    this.saveData(data);
+    return baru;
+  },
+
+  updateJurusan(id, updatedFields) {
+    const data = this.getData();
+    const index = data.jurusan.findIndex((j) => j.id === Number(id));
+    if (index === -1) throw new Error('Jurusan tidak ditemukan');
+
+    if (updatedFields.kode) {
+      updatedFields.kode = updatedFields.kode.toUpperCase().trim();
+    }
+
+    data.jurusan[index] = {
+      ...data.jurusan[index],
+      ...updatedFields
+    };
+    this.saveData(data);
+    return data.jurusan[index];
+  },
+
+  hapusJurusan(id) {
+    const data = this.getData();
+    const jurusan = data.jurusan.find((j) => j.id === Number(id));
+    if (!jurusan) return false;
+    const adaKelas = data.kelas.some((k) => k.jurusanKode === jurusan.kode);
+    if (adaKelas) {
+      throw new Error(`Jurusan ${jurusan.kode} tidak dapat dihapus karena masih dipakai oleh rombel kelas`);
+    }
+    data.jurusan = data.jurusan.filter((j) => j.id !== Number(id));
+    this.saveData(data);
+    return true;
+  },
+
+  // 11. CRUD Master Pos Biaya & Multi-Jurusan
+  tambahPosBiaya({ id, nama, tipe, nominalDefault, targetJurusan, targetTingkat, tarifJurusan, keterangan }) {
+    const data = this.getData();
+    const posId = (id || nama.toUpperCase().replace(/\s+/g, '_').replace(/[^A-Z0-9_]/g, '')).trim();
+    
+    if (data.posBiaya.some((p) => p.id === posId)) {
+      throw new Error(`Kode pos tagihan "${posId}" sudah digunakan!`);
+    }
+
+    const baru = {
+      id: posId,
+      nama: nama.trim(),
+      tipe: tipe || 'SEKALI_BAYAR',
+      nominalDefault: Number(nominalDefault) || 0,
+      targetJurusan: targetJurusan || 'SEMUA',
+      targetTingkat: targetTingkat || 'SEMUA',
+      tarifJurusan: tarifJurusan || {},
+      keterangan: keterangan || ''
+    };
+
+    data.posBiaya.push(baru);
+    this.saveData(data);
+    return baru;
+  },
+
+  updatePosBiaya(id, updatedFields) {
+    const data = this.getData();
+    const index = data.posBiaya.findIndex((p) => p.id === id);
+    if (index === -1) throw new Error('Pos biaya tidak ditemukan');
+
+    data.posBiaya[index] = {
+      ...data.posBiaya[index],
+      ...updatedFields
+    };
+    this.saveData(data);
+    return data.posBiaya[index];
+  },
+
+  hapusPosBiaya(id) {
+    const data = this.getData();
+    if (['SPP', 'DU'].includes(id)) {
+      throw new Error(`Pos biaya utama ${id} tidak dapat dihapus karena sistem menggunakannya untuk kartu SPP.`);
+    }
+    data.posBiaya = data.posBiaya.filter((p) => p.id !== id);
+    this.saveData(data);
+    return true;
+  },
+
+  updateTarifJurusan(posId, jurusanKode, nominal) {
+    const data = this.getData();
+    const index = data.posBiaya.findIndex((p) => p.id === posId);
+    if (index === -1) throw new Error('Pos biaya tidak ditemukan');
+
+    if (!data.posBiaya[index].tarifJurusan) {
+      data.posBiaya[index].tarifJurusan = {};
+    }
+
+    data.posBiaya[index].tarifJurusan[jurusanKode] = Number(nominal);
+    this.saveData(data);
+    return data.posBiaya[index];
   }
 };
