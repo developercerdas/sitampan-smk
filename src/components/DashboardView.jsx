@@ -118,9 +118,12 @@ export default function DashboardView({ data, onNavigate }) {
               </span>
             </div>
             <h2 className="text-2xl sm:text-3xl font-black mt-2 tracking-tight">
-              Dashboard Keuangan Sekolah
+              Dashboard Keuangan SITAMPAN <span className="text-amber-400">SMK</span>
             </h2>
-            <p className="text-slate-300 text-sm mt-1 max-w-2xl">
+            <p className="text-amber-200 text-xs sm:text-sm font-bold mt-1">
+              <span className="text-white underline decoration-amber-400">S</span>istem <span className="text-white underline decoration-amber-400">I</span>nformasi <span className="text-white underline decoration-amber-400">TA</span>gihan & <span className="text-white underline decoration-amber-400">M</span>anajemen <span className="text-white underline decoration-amber-400">P</span>embay<span className="text-white underline decoration-amber-400">A</span>ran Keua<span className="text-white underline decoration-amber-400">N</span>gan SMK
+            </p>
+            <p className="text-slate-300 text-xs sm:text-sm mt-1 max-w-2xl">
               Pantau arus penerimaan SPP, cicilan uang gedung (SPI), dan saldo piutang siswa per jurusan serta per kelas secara otomatis.
             </p>
           </div>

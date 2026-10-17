@@ -14,7 +14,7 @@ import ProfilKopView from './components/ProfilKopView';
 import MasterRulesView from './components/MasterRulesView';
 import KuitansiModal from './components/KuitansiModal';
 import { dataService } from './services/dataService';
-import { Database, GitBranch, Bell, Menu } from 'lucide-react';
+import { Database, GitBranch, Bell, Menu, LogOut } from 'lucide-react';
 
 const USER_STORAGE_KEY = 'SITAMPAN_CURRENT_USER';
 
@@ -120,7 +120,7 @@ export default function App() {
       />
 
       {/* 2. AREA KONTEN UTAMA */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-y-auto h-screen">
+      <div className="flex-1 flex flex-col min-w-0 overflow-y-auto h-[100dvh] max-h-[100dvh]">
         {/* Top Bar Informasi */}
         <header className="bg-white border-b border-slate-200 px-3 sm:px-6 py-2.5 sm:py-3 flex items-center justify-between no-print sticky top-0 z-30 shadow-2xs">
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">
@@ -152,18 +152,27 @@ export default function App() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-3 text-xs flex-shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-2.5 text-xs flex-shrink-0">
             <span className="bg-blue-50 text-blue-700 font-bold px-2.5 py-1 rounded-lg border border-blue-200 hidden md:inline-block text-[11px]">
               Mitra: {data.sekolah.bankMitra}
             </span>
             <span className="bg-slate-100 text-slate-700 font-bold px-2 py-1 rounded-lg border border-slate-200 text-[11px]">
               TA {data.sekolah.tahunAjaranAktif}
             </span>
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="flex items-center gap-1 px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold rounded-lg border border-rose-200 transition text-[11px] cursor-pointer"
+              title="Keluar / Ganti Akun"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span className="hidden xs:inline">Keluar</span>
+            </button>
           </div>
         </header>
 
-        {/* Content Body */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-6">
+        {/* Content Body (Safe area bottom padding untuk Android address bar) */}
+        <main className="flex-1 p-3 sm:p-5 lg:p-7 max-w-7xl w-full mx-auto space-y-6 pb-28 md:pb-12">
           {/* Dashboard Real-Time (Khusus Admin) */}
           {activeTab === 'dashboard' && role === 'ADMIN' && (
             <DashboardView data={data} onNavigate={setActiveTab} />
@@ -180,12 +189,22 @@ export default function App() {
 
           {/* Buku Pager (Bisa diakses Admin & Wali Kelas) */}
           {activeTab === 'buku-pager' && (
-            <BukuPagerView data={data} currentRole={role} />
+            <BukuPagerView
+              data={data}
+              currentRole={role}
+              currentUser={currentUser}
+              onShowKuitansi={(kwt) => setActiveKuitansi(kwt)}
+            />
           )}
 
           {/* Kartu SPP (Bisa diakses Siswa/Ortu & Admin & Wali Kelas) */}
           {activeTab === 'kartu-spp' && (
-            <KartuSppView data={data} currentRole={role} />
+            <KartuSppView
+              data={data}
+              currentRole={role}
+              currentUser={currentUser}
+              onShowKuitansi={(kwt) => setActiveKuitansi(kwt)}
+            />
           )}
 
           {/* Kenaikan Kelas (Khusus Admin) */}
@@ -245,8 +264,11 @@ export default function App() {
           <p className="font-semibold text-slate-700">
             SITAMPAN SMK — {data.sekolah.nama}
           </p>
-          <p className="text-[11px] text-slate-400 mt-0.5">
-            Sistem Informasi Terpadu Administrasi & Manajemen Pembayaran SPP (Hybrid Tunai + VA)
+          <p className="text-[11px] text-slate-500 mt-0.5">
+            <strong>SITAMPAN SMK:</strong> Sistem Informasi Tagihan & Manajemen Pembayaran Keuangan Sekolah Menengah Kejuruan
+          </p>
+          <p className="text-[10px] text-slate-400 mt-0.5">
+            Sistem Keuangan Terpadu (Hybrid Loket Kasir Tunai + Rekening Bank Virtual Account / VA)
           </p>
         </footer>
       </div>

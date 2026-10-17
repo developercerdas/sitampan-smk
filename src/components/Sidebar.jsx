@@ -89,7 +89,7 @@ export default function Sidebar({
         {
           group: 'PORTAL KEUANGAN SISWA',
           items: [
-            { id: 'kartu-spp', label: 'Kartu SPP 12 Bulan & VA', icon: Smartphone, color: 'text-emerald-500' }
+            { id: 'kartu-spp', label: 'Kartu SPP & Status Tagihan', icon: Smartphone, color: 'text-emerald-500' }
           ]
         }
       ];
@@ -118,7 +118,7 @@ export default function Sidebar({
 
       {/* 2. Container Sidebar (Mendukung Full / Mini Icon-Only / Mobile Drawer) */}
       <aside 
-        className={`fixed md:sticky top-0 left-0 z-50 h-screen bg-slate-900 text-slate-300 flex flex-col justify-between flex-shrink-0 border-r border-slate-800 no-print select-none shadow-2xl transition-all duration-300 ease-in-out ${
+        className={`fixed md:sticky top-0 left-0 z-50 h-[100dvh] max-h-[100dvh] bg-slate-900 text-slate-300 flex flex-col justify-between flex-shrink-0 border-r border-slate-800 no-print select-none shadow-2xl transition-all duration-300 ease-in-out ${
           // Lebar responsive: Mini (w-20) vs Penuh (w-64 lg:w-72)
           isCollapsed ? 'md:w-20' : 'md:w-64 lg:w-72'
         } ${
@@ -126,9 +126,10 @@ export default function Sidebar({
           isMobileOpen ? 'translate-x-0 w-72' : '-translate-x-full md:translate-x-0'
         }`}
       >
-        {/* Header Identitas & Tombol Collapse */}
-        <div>
-          <div className={`p-4 border-b border-slate-800/80 flex items-center justify-between bg-slate-950/60 ${isCollapsed ? 'md:justify-center md:p-3' : ''}`}>
+        {/* Bagian Atas: Header & Menu (Scrollable Flex-1) */}
+        <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+          {/* Header Identitas & Tombol Collapse */}
+          <div className={`flex-shrink-0 p-4 border-b border-slate-800/80 flex items-center justify-between bg-slate-950/60 ${isCollapsed ? 'md:justify-center md:p-3' : ''}`}>
             <div className="flex items-center gap-3 overflow-hidden">
               <SchoolLogo logoUrl={data.sekolah.logoUrl} className={`${isCollapsed ? 'w-10 h-10' : 'w-10 h-10'} flex-shrink-0`} />
               
@@ -137,6 +138,9 @@ export default function Sidebar({
                   <h1 className="text-base font-extrabold tracking-tight text-white leading-tight flex items-center gap-1.5">
                     SITAMPAN <span className="text-amber-400">SMK</span>
                   </h1>
+                  <p className="text-[10px] text-amber-300/90 font-medium truncate mt-0.5" title="Sistem Informasi Tagihan & Manajemen Pembayaran Keuangan SMK">
+                    Sist. Info Tagihan & Manajemen Pembayaran
+                  </p>
                   <p className="text-[11px] font-semibold text-slate-400 truncate mt-0.5" title={data.sekolah.nama}>
                     {data.sekolah.nama}
                   </p>
@@ -150,7 +154,7 @@ export default function Sidebar({
             {/* Tombol Tutup (Di HP) */}
             <button
               onClick={() => setIsMobileOpen(false)}
-              className="p-1.5 text-slate-400 hover:text-white rounded-lg md:hidden"
+              className="p-1.5 text-slate-400 hover:text-white rounded-lg md:hidden cursor-pointer"
               title="Tutup Menu"
             >
               <X className="w-5 h-5" />
@@ -159,15 +163,15 @@ export default function Sidebar({
             {/* Tombol Collapse Icon-Only (Di Desktop/Tablet) */}
             <button
               onClick={toggleCollapse}
-              className={`hidden md:flex p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition ${isCollapsed ? 'mt-2' : ''}`}
+              className={`hidden md:flex p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer ${isCollapsed ? 'mt-2' : ''}`}
               title={isCollapsed ? 'Perluas Sidebar' : 'Ciutkan Sidebar Jadi Logo Kecil'}
             >
               {isCollapsed ? <PanelLeftOpen className="w-5 h-5 text-amber-400" /> : <PanelLeftClose className="w-4 h-4" />}
             </button>
           </div>
 
-          {/* 3. Daftar Menu Sesuai Role Pengguna */}
-          <div className={`py-4 space-y-6 overflow-y-auto max-h-[calc(100vh-210px)] ${isCollapsed ? 'px-2' : 'px-3'}`}>
+          {/* 3. Daftar Menu Sesuai Role Pengguna (Scrollable) */}
+          <div className={`flex-1 min-h-0 py-4 space-y-6 overflow-y-auto ${isCollapsed ? 'px-2' : 'px-3'}`}>
             {menuGroups.map((grp, idx) => (
               <div key={idx} className="space-y-1">
                 {(!isCollapsed || isMobileOpen) ? (
@@ -218,8 +222,8 @@ export default function Sidebar({
           </div>
         </div>
 
-        {/* 4. Footer: User Profile Card & Logout */}
-        <div className={`border-t border-slate-800/80 bg-slate-950/60 ${isCollapsed && !isMobileOpen ? 'p-2' : 'p-3'} space-y-2`}>
+        {/* 4. Footer: User Profile Card & Logout (Safe Area Padding untuk Browser Android dengan Bottom Address Bar) */}
+        <div className={`flex-shrink-0 border-t border-slate-800/80 bg-slate-950/95 ${isCollapsed && !isMobileOpen ? 'p-2 pb-8 md:pb-2' : 'p-3 pb-24 md:pb-3'} space-y-2`}>
           {/* User Card */}
           <div className={`rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between ${isCollapsed && !isMobileOpen ? 'p-2 justify-center' : 'p-2.5'}`}>
             <div className={`flex items-center gap-2.5 min-w-0 ${isCollapsed && !isMobileOpen ? 'justify-center' : ''}`}>

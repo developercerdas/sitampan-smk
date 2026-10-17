@@ -403,23 +403,23 @@ export default function MasterSiswaView({ data, onUpdateData, setActiveTab, onSe
 
       {/* 5. Modal Tambah / Edit Siswa */}
       {modalOpen && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-xl w-full shadow-2xl border border-slate-200 overflow-hidden animate-scaleUp">
-            <div className="bg-slate-50 border-b border-slate-200 px-6 py-4 flex items-center justify-between">
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
+          <div className="bg-white rounded-2xl max-w-xl w-full shadow-2xl border border-slate-200 overflow-hidden animate-scaleUp max-h-[92vh] flex flex-col">
+            <div className="bg-slate-50 border-b border-slate-200 px-5 sm:px-6 py-4 flex items-center justify-between flex-shrink-0">
               <h3 className="font-bold text-slate-800 text-base flex items-center gap-2">
                 <Users className="w-5 h-5 text-blue-600" />
                 {editId ? 'Edit Data Peserta Didik' : 'Tambah Peserta Didik Baru'}
               </h3>
               <button
                 onClick={() => setModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600 font-bold text-lg"
+                className="text-slate-400 hover:text-slate-600 font-bold text-lg p-1"
               >
                 ✕
               </button>
             </div>
 
-            <form onSubmit={handleSimpan} className="p-6 space-y-4">
-              <div className="grid grid-cols-2 gap-3">
+            <form onSubmit={handleSimpan} className="p-5 sm:p-6 space-y-4 overflow-y-auto flex-1">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
                     Nomor Induk Siswa (NIS)
@@ -462,7 +462,7 @@ export default function MasterSiswaView({ data, onUpdateData, setActiveTab, onSe
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
                     Rombel Kelas
@@ -492,7 +492,7 @@ export default function MasterSiswaView({ data, onUpdateData, setActiveTab, onSe
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
                     Nomor Virtual Account (VA)

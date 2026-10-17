@@ -543,9 +543,9 @@ export default function MasterTarifView({ data, onUpdateData, setActiveTab }) {
 
       {/* 4. MODAL TAMBAH / EDIT POS BIAYA */}
       {modalOpen && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden animate-scaleUp">
-            <div className="bg-slate-50 border-b border-slate-200 px-6 py-4 flex items-center justify-between">
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
+          <div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden animate-scaleUp max-h-[92vh] flex flex-col">
+            <div className="bg-slate-50 border-b border-slate-200 px-5 sm:px-6 py-4 flex items-center justify-between flex-shrink-0">
               <h3 className="font-bold text-slate-800 text-base flex items-center gap-2">
                 <DollarSign className="w-5 h-5 text-blue-600" />
                 {editId ? 'Edit Pos Tagihan / Biaya' : 'Buat Pos Biaya Baru (Manual)'}
@@ -735,9 +735,9 @@ export default function MasterTarifView({ data, onUpdateData, setActiveTab }) {
 
       {/* 5. MODAL EDIT CEPAT TARIF JURUSAN */}
       {modalJurusanOpen && selectedPosForJurusan && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-200 overflow-hidden animate-scaleUp">
-            <div className="bg-slate-50 border-b border-slate-200 px-6 py-4 flex items-center justify-between">
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-200 overflow-hidden animate-scaleUp max-h-[92vh] flex flex-col">
+            <div className="bg-slate-50 border-b border-slate-200 px-5 sm:px-6 py-4 flex items-center justify-between flex-shrink-0">
               <div>
                 <h3 className="font-bold text-slate-800 text-base flex items-center gap-2">
                   <Table className="w-5 h-5 text-blue-600" />
@@ -755,7 +755,7 @@ export default function MasterTarifView({ data, onUpdateData, setActiveTab }) {
               </button>
             </div>
 
-            <div className="p-6 space-y-4">
+            <div className="p-5 sm:p-6 space-y-4 overflow-y-auto flex-1">
               <p className="text-xs text-slate-600">
                 Tentukan nominal yang berlaku untuk masing-masing kompetensi keahlian:
               </p>

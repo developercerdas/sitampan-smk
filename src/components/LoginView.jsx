@@ -134,12 +134,15 @@ export default function LoginView({ data, onLogin }) {
           <div className="flex justify-center mb-2.5">
             <SchoolLogo logoUrl={data.sekolah.logoUrl} className="w-16 h-16 drop-shadow-lg" />
           </div>
-          <span className="bg-blue-500/30 text-blue-100 text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full border border-blue-400/30">
-            Sistem Informasi Keuangan Siswa
+          <span className="bg-amber-400/20 text-amber-200 text-[10px] font-extrabold uppercase tracking-widest px-3 py-1 rounded-full border border-amber-400/30">
+            Aplikasi Keuangan Sekolah
           </span>
-          <h1 className="text-2xl font-black tracking-tight mt-1.5">
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight mt-1.5">
             SITAMPAN <span className="text-amber-300">SMK</span>
           </h1>
+          <p className="text-[11px] sm:text-xs font-bold text-amber-200 mt-1 leading-snug max-w-sm mx-auto">
+            <span className="text-white underline decoration-amber-400">S</span>istem <span className="text-white underline decoration-amber-400">I</span>nformasi <span className="text-white underline decoration-amber-400">TA</span>gihan & <span className="text-white underline decoration-amber-400">M</span>anajemen <span className="text-white underline decoration-amber-400">P</span>embay<span className="text-white underline decoration-amber-400">A</span>ran Keua<span className="text-white underline decoration-amber-400">N</span>gan SMK
+          </p>
           <p className="text-xs text-blue-100 mt-1 font-medium">
             {data.sekolah.nama} • Terakreditasi {data.sekolah.akreditasi}
           </p>
@@ -479,8 +482,13 @@ export default function LoginView({ data, onLogin }) {
         </div>
 
         {/* Footer Card */}
-        <div className="bg-slate-50 border-t border-slate-200 px-6 py-2.5 text-center text-[11px] text-slate-500">
-          SITAMPAN SMK • Keuangan Digital {data.sekolah.nama}
+        <div className="bg-slate-50 border-t border-slate-200 px-6 py-3 text-center text-[11px] text-slate-500 space-y-0.5">
+          <p className="font-bold text-slate-700">
+            SITAMPAN SMK — Sistem Informasi Tagihan & Manajemen Pembayaran
+          </p>
+          <p className="text-[10px] text-slate-400">
+            Manajemen Keuangan SPP & Kasir Terpadu • {data.sekolah.nama}
+          </p>
         </div>
       </div>
     </div>
