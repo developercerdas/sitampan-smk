@@ -129,11 +129,23 @@ export default function Sidebar({
         {/* Bagian Atas: Header & Menu (Scrollable Flex-1) */}
         <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
           {/* Header Identitas & Tombol Collapse */}
-          <div className={`flex-shrink-0 p-4 border-b border-slate-800/80 flex items-center justify-between bg-slate-950/60 ${isCollapsed ? 'md:justify-center md:p-3' : ''}`}>
-            <div className="flex items-center gap-3 overflow-hidden">
-              <SchoolLogo logoUrl={data.sekolah.logoUrl} className={`${isCollapsed ? 'w-10 h-10' : 'w-10 h-10'} flex-shrink-0`} />
-              
-              {(!isCollapsed || isMobileOpen) && (
+          {isCollapsed && !isMobileOpen ? (
+            /* TAMPILAN MINI (ICON-ONLY): Logo utuh di tengah, tidak terpotong */
+            <div className="flex-shrink-0 p-3 border-b border-slate-800/80 flex flex-col items-center justify-center bg-slate-950/60">
+              <button
+                type="button"
+                onClick={toggleCollapse}
+                className="group p-1 rounded-xl hover:bg-slate-800 transition cursor-pointer flex items-center justify-center"
+                title="SMK Bina Karya Nusantara - Klik untuk Perluas Menu"
+              >
+                <SchoolLogo logoUrl={data.sekolah.logoUrl} className="w-10 h-10 flex-shrink-0 group-hover:scale-105 transition" />
+              </button>
+            </div>
+          ) : (
+            /* TAMPILAN PENUH: Logo + Identitas Sekolah + Tombol Ciutkan / Tutup */
+            <div className="flex-shrink-0 p-4 border-b border-slate-800/80 flex items-center justify-between bg-slate-950/60">
+              <div className="flex items-center gap-3 overflow-hidden min-w-0">
+                <SchoolLogo logoUrl={data.sekolah.logoUrl} className="w-10 h-10 flex-shrink-0" />
                 <div className="overflow-hidden min-w-0">
                   <h1 className="text-base font-extrabold tracking-tight text-white leading-tight flex items-center gap-1.5">
                     SITAMPAN <span className="text-amber-400">SMK</span>
@@ -148,27 +160,27 @@ export default function Sidebar({
                     TA {data.sekolah.tahunAjaranAktif}
                   </span>
                 </div>
-              )}
+              </div>
+
+              {/* Tombol Tutup (Di HP) */}
+              <button
+                onClick={() => setIsMobileOpen(false)}
+                className="p-1.5 text-slate-400 hover:text-white rounded-lg md:hidden cursor-pointer flex-shrink-0"
+                title="Tutup Menu"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              {/* Tombol Collapse Icon-Only (Di Desktop/Tablet) */}
+              <button
+                onClick={toggleCollapse}
+                className="hidden md:flex p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer flex-shrink-0"
+                title="Ciutkan Sidebar Jadi Logo Kecil"
+              >
+                <PanelLeftClose className="w-4 h-4" />
+              </button>
             </div>
-
-            {/* Tombol Tutup (Di HP) */}
-            <button
-              onClick={() => setIsMobileOpen(false)}
-              className="p-1.5 text-slate-400 hover:text-white rounded-lg md:hidden cursor-pointer"
-              title="Tutup Menu"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            {/* Tombol Collapse Icon-Only (Di Desktop/Tablet) */}
-            <button
-              onClick={toggleCollapse}
-              className={`hidden md:flex p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer ${isCollapsed ? 'mt-2' : ''}`}
-              title={isCollapsed ? 'Perluas Sidebar' : 'Ciutkan Sidebar Jadi Logo Kecil'}
-            >
-              {isCollapsed ? <PanelLeftOpen className="w-5 h-5 text-amber-400" /> : <PanelLeftClose className="w-4 h-4" />}
-            </button>
-          </div>
+          )}
 
           {/* 3. Daftar Menu Sesuai Role Pengguna (Scrollable) */}
           <div className={`flex-1 min-h-0 py-4 space-y-6 overflow-y-auto ${isCollapsed ? 'px-2' : 'px-3'}`}>
