@@ -37,73 +37,64 @@ export default function Sidebar({
   setIsMobileOpen
 }) {
   const role = currentUser?.role || 'ADMIN';
+  const isKasirHana = role === 'KASIR_HANA' || currentUser?.username === 'hana' || (currentUser?.kasirKelompok === 'BISNIS_MANAJEMEN' && role !== 'ADMIN' && role !== 'BENDAHARA');
+  const isKasirUmi = role === 'KASIR_UMI' || currentUser?.username === 'umi' || (currentUser?.kasirKelompok === 'PARIWISATA' && role !== 'ADMIN' && role !== 'BENDAHARA');
 
   // Daftar menu yang disesuaikan secara ketat sesuai RULE pengguna
   const getMenuItems = () => {
-    if (role === 'ADMIN') {
+    // 1. KASIR 1: HANA (Khusus Kasir Bisnis Manajemen)
+    if (isKasirHana) {
       return [
         {
-          group: 'RINGKASAN & TRANSAKSI',
+          group: 'LOKET KASIR BISMAN',
           items: [
-            { id: 'dashboard', label: 'Dashboard Real-Time', icon: LayoutDashboard, color: 'text-amber-400' },
-            { id: 'kasir', label: 'Loket Kasir & Kuitansi', icon: CreditCard, color: 'text-blue-500' },
-            { id: 'buku-pager', label: 'Buku Pager (Rekap Setoran)', icon: BookOpen, color: 'text-indigo-500' },
-            { id: 'kartu-spp', label: 'Kartu SPP Digital (Cek Siswa)', icon: Smartphone, color: 'text-emerald-500' }
-          ]
-        },
-        {
-          group: 'DATA MASTER AKADEMIK',
-          items: [
-            { id: 'master-siswa', label: 'Master Siswa', icon: Users, color: 'text-blue-400' },
-            { id: 'master-kelas', label: 'Master Kelas & Wali Kelas', icon: UserCheck, color: 'text-emerald-400' },
-            { id: 'master-jurusan', label: 'Master Jurusan', icon: GraduationCap, color: 'text-purple-400' }
-          ]
-        },
-        {
-          group: 'AKADEMIK & PROMOSI',
-          items: [
-            { id: 'kenaikan-kelas', label: 'Kenaikan Kelas & Alumni', icon: GraduationCap, color: 'text-cyan-400' }
-          ]
-        },
-        {
-          group: 'TARIF & PENGATURAN',
-          items: [
-            { id: 'master-tarif', label: 'Master Tarif Pos Biaya', icon: Settings, color: 'text-amber-400' },
-            { id: 'profil-kop', label: 'Profil & KOP Sekolah', icon: School, color: 'text-rose-400' },
-            { id: 'master-rules', label: 'Master Hak Akses & Rule', icon: ShieldCheck, color: 'text-teal-400' }
+            { id: 'kasir', label: 'Loket Kasir & Kuitansi (AKL, MPLB, PM)', icon: CreditCard, color: 'text-blue-500' },
+            { id: 'buku-pager', label: 'Buku Pager Rombel BisMan', icon: BookOpen, color: 'text-indigo-500' },
+            { id: 'kartu-spp', label: 'Cek Kartu SPP Siswa BisMan', icon: Smartphone, color: 'text-emerald-500' },
+            { id: 'dashboard', label: 'Dashboard Kasir Hana', icon: LayoutDashboard, color: 'text-amber-400' }
           ]
         }
       ];
-    } else if (role === 'BENDAHARA') {
+    }
+
+    // 2. KASIR 2: UMI (Khusus Kasir Pariwisata)
+    if (isKasirUmi) {
       return [
         {
-          group: 'KEUANGAN & TRANSAKSI',
+          group: 'LOKET KASIR PARIWISATA',
+          items: [
+            { id: 'kasir', label: 'Loket Kasir & Kuitansi (KSP, HTL)', icon: CreditCard, color: 'text-rose-500' },
+            { id: 'buku-pager', label: 'Buku Pager Rombel Pariwisata', icon: BookOpen, color: 'text-indigo-500' },
+            { id: 'kartu-spp', label: 'Cek Kartu SPP Siswa Pariwisata', icon: Smartphone, color: 'text-emerald-500' },
+            { id: 'dashboard', label: 'Dashboard Kasir Umi', icon: LayoutDashboard, color: 'text-amber-400' }
+          ]
+        }
+      ];
+    }
+
+    // 3. BENDAHARA (Khusus Keuangan, Setoran Kasir & Tarif)
+    if (role === 'BENDAHARA' || currentUser?.username === 'bendahara') {
+      return [
+        {
+          group: 'MANAJEMEN KEUANGAN SEKOLAH',
           items: [
             { id: 'dashboard', label: 'Dashboard Real-Time Keuangan', icon: LayoutDashboard, color: 'text-amber-400' },
-            { id: 'kasir', label: 'Loket Kasir & Kuitansi', icon: CreditCard, color: 'text-blue-500' },
+            { id: 'kasir', label: 'Monitoring Loket Kasir', icon: CreditCard, color: 'text-blue-500' },
             { id: 'buku-pager', label: 'Buku Pager (Rekap Setoran)', icon: BookOpen, color: 'text-indigo-500' },
             { id: 'kartu-spp', label: 'Kartu SPP Digital Siswa', icon: Smartphone, color: 'text-emerald-500' }
           ]
         },
         {
-          group: 'PENETAPAN TARIF & MASTER',
+          group: 'PENETAPAN TARIF & BIAYA',
           items: [
-            { id: 'master-tarif', label: 'Master Tarif Pos Biaya', icon: Settings, color: 'text-amber-400' },
-            { id: 'master-siswa', label: 'Master Siswa & VA', icon: Users, color: 'text-blue-400' },
-            { id: 'master-kelas', label: 'Master Kelas & Rombel', icon: UserCheck, color: 'text-emerald-400' },
-            { id: 'master-jurusan', label: 'Master Jurusan', icon: GraduationCap, color: 'text-purple-400' }
-          ]
-        },
-        {
-          group: 'AKADEMIK & PENGATURAN',
-          items: [
-            { id: 'kenaikan-kelas', label: 'Kenaikan Kelas & Alumni', icon: GraduationCap, color: 'text-cyan-400' },
-            { id: 'profil-kop', label: 'Profil & KOP Sekolah', icon: School, color: 'text-rose-400' },
-            { id: 'master-rules', label: 'Master Hak Akses & Rule', icon: ShieldCheck, color: 'text-teal-400' }
+            { id: 'master-tarif', label: 'Master Tarif Pos Biaya', icon: Settings, color: 'text-amber-400' }
           ]
         }
       ];
-    } else if (role === 'KEPALA_SEKOLAH') {
+    }
+
+    // 4. KEPALA SEKOLAH (Khusus Monitoring Eksekutif & Laporan)
+    if (role === 'KEPALA_SEKOLAH' || currentUser?.username === 'kepsek') {
       return [
         {
           group: 'MONITORING EKSEKUTIF',
@@ -114,47 +105,18 @@ export default function Sidebar({
           ]
         },
         {
-          group: 'DATA & BIAYA',
+          group: 'DATA INDUK SEKOLAH',
           items: [
             { id: 'master-siswa', label: 'Data Induk Siswa', icon: Users, color: 'text-blue-400' },
             { id: 'master-kelas', label: 'Daftar Kelas & Wali Kelas', icon: UserCheck, color: 'text-emerald-400' },
-            { id: 'master-jurusan', label: 'Program Keahlian (Jurusan)', icon: GraduationCap, color: 'text-purple-400' },
-            { id: 'master-tarif', label: 'Struktur Tarif & Pos Biaya', icon: Settings, color: 'text-amber-400' }
-          ]
-        },
-        {
-          group: 'LEGALITAS & PROFIL',
-          items: [
-            { id: 'profil-kop', label: 'Profil & Legalitas Sekolah', icon: School, color: 'text-rose-400' },
-            { id: 'master-rules', label: 'Master Hak Akses & Rule', icon: ShieldCheck, color: 'text-teal-400' }
+            { id: 'master-jurusan', label: 'Program Keahlian (Jurusan)', icon: GraduationCap, color: 'text-purple-400' }
           ]
         }
       ];
-    } else if (role === 'KASIR_HANA') {
-      return [
-        {
-          group: 'LOKET KASIR BISNIS MANAJEMEN',
-          items: [
-            { id: 'kasir', label: 'Loket Kasir & Kuitansi (AKL, MPLB, PM)', icon: CreditCard, color: 'text-blue-500' },
-            { id: 'buku-pager', label: 'Buku Pager Rombel BisMan', icon: BookOpen, color: 'text-indigo-500' },
-            { id: 'kartu-spp', label: 'Kartu SPP Siswa BisMan', icon: Smartphone, color: 'text-emerald-500' },
-            { id: 'dashboard', label: 'Dashboard Kasir Hana', icon: LayoutDashboard, color: 'text-amber-400' }
-          ]
-        }
-      ];
-    } else if (role === 'KASIR_UMI') {
-      return [
-        {
-          group: 'LOKET KASIR PARIWISATA',
-          items: [
-            { id: 'kasir', label: 'Loket Kasir & Kuitansi (KSP, HTL)', icon: CreditCard, color: 'text-rose-500' },
-            { id: 'buku-pager', label: 'Buku Pager Rombel Pariwisata', icon: BookOpen, color: 'text-indigo-500' },
-            { id: 'kartu-spp', label: 'Kartu SPP Siswa Pariwisata', icon: Smartphone, color: 'text-emerald-500' },
-            { id: 'dashboard', label: 'Dashboard Kasir Umi', icon: LayoutDashboard, color: 'text-amber-400' }
-          ]
-        }
-      ];
-    } else if (role === 'WALI_KELAS') {
+    }
+
+    // 5. WALI KELAS
+    if (role === 'WALI_KELAS') {
       return [
         {
           group: 'PEMANTAUAN KELAS',
@@ -164,8 +126,10 @@ export default function Sidebar({
           ]
         }
       ];
-    } else {
-      // Role SISWA / ORTU
+    }
+
+    // 6. SISWA / ORTU
+    if (role === 'ORTU' || role === 'SISWA') {
       return [
         {
           group: 'PORTAL KEUANGAN SISWA',
@@ -175,6 +139,41 @@ export default function Sidebar({
         }
       ];
     }
+
+    // 7. ADMIN PUSAT (ALL - Akses Lengkap Seluruh Modul)
+    return [
+      {
+        group: 'RINGKASAN & TRANSAKSI',
+        items: [
+          { id: 'dashboard', label: 'Dashboard Real-Time', icon: LayoutDashboard, color: 'text-amber-400' },
+          { id: 'kasir', label: 'Loket Kasir & Kuitansi', icon: CreditCard, color: 'text-blue-500' },
+          { id: 'buku-pager', label: 'Buku Pager (Rekap Setoran)', icon: BookOpen, color: 'text-indigo-500' },
+          { id: 'kartu-spp', label: 'Kartu SPP Digital (Cek Siswa)', icon: Smartphone, color: 'text-emerald-500' }
+        ]
+      },
+      {
+        group: 'DATA MASTER AKADEMIK',
+        items: [
+          { id: 'master-siswa', label: 'Master Siswa', icon: Users, color: 'text-blue-400' },
+          { id: 'master-kelas', label: 'Master Kelas & Wali Kelas', icon: UserCheck, color: 'text-emerald-400' },
+          { id: 'master-jurusan', label: 'Master Jurusan', icon: GraduationCap, color: 'text-purple-400' }
+        ]
+      },
+      {
+        group: 'AKADEMIK & PROMOSI',
+        items: [
+          { id: 'kenaikan-kelas', label: 'Kenaikan Kelas & Alumni', icon: GraduationCap, color: 'text-cyan-400' }
+        ]
+      },
+      {
+        group: 'TARIF & PENGATURAN',
+        items: [
+          { id: 'master-tarif', label: 'Master Tarif Pos Biaya', icon: Settings, color: 'text-amber-400' },
+          { id: 'profil-kop', label: 'Profil & KOP Sekolah', icon: School, color: 'text-rose-400' },
+          { id: 'master-rules', label: 'Master Hak Akses & Rule', icon: ShieldCheck, color: 'text-teal-400' }
+        ]
+      }
+    ];
   };
 
   const menuGroups = getMenuItems();
@@ -333,8 +332,12 @@ export default function Sidebar({
                     {currentUser?.nama || 'Pengguna'}
                   </p>
                   <p className="text-[10px] text-slate-400 truncate">
-                    {role === 'ADMIN'
-                      ? 'Kasir Loket TU'
+                    {role === 'KASIR_HANA'
+                      ? 'Kasir 1: Bisnis Manajemen'
+                      : role === 'KASIR_UMI'
+                      ? 'Kasir 2: Pariwisata'
+                      : role === 'ADMIN'
+                      ? 'Admin Pusat TU (All)'
                       : role === 'BENDAHARA'
                       ? 'Bendahara Sekolah'
                       : role === 'KEPALA_SEKOLAH'
@@ -351,7 +354,7 @@ export default function Sidebar({
               <button
                 onClick={onLogout}
                 title="Keluar / Ganti Akun"
-                className="p-1.5 text-rose-400 hover:text-white hover:bg-rose-600/80 rounded-lg transition"
+                className="p-1.5 text-rose-400 hover:text-white hover:bg-rose-600/80 rounded-lg transition cursor-pointer"
               >
                 <LogOut className="w-4 h-4" />
               </button>
@@ -363,7 +366,7 @@ export default function Sidebar({
             <button
               onClick={onLogout}
               title="Keluar / Ganti Akun"
-              className="w-full flex items-center justify-center p-2 text-rose-400 hover:text-white hover:bg-rose-600/80 rounded-xl transition"
+              className="w-full flex items-center justify-center p-2 text-rose-400 hover:text-white hover:bg-rose-600/80 rounded-xl transition cursor-pointer"
             >
               <LogOut className="w-4 h-4" />
             </button>
@@ -373,33 +376,11 @@ export default function Sidebar({
           {(!isCollapsed || isMobileOpen) && (
             <button
               onClick={onResetData}
-              className="w-full flex items-center justify-center gap-1.5 py-1 text-[11px] text-slate-500 hover:text-rose-400 transition"
+              className="w-full flex items-center justify-center gap-1.5 py-1 text-[11px] text-slate-500 hover:text-rose-400 transition cursor-pointer"
             >
               <RotateCcw className="w-3 h-3" />
               <span>Reset Data Standar</span>
             </button>
-          )}
-
-          {/* Developer Branding: CV. ISTANA BARCODE COMPUTER - DEVELOPER CERDAS */}
-          {(!isCollapsed || isMobileOpen) && (
-            <div className="pt-2 border-t border-slate-800/80">
-              <div className="p-2 rounded-xl bg-slate-950/70 border border-slate-800/90 flex items-center gap-2">
-                <div className="p-1.5 bg-amber-400/15 border border-amber-400/25 rounded-lg text-amber-400 flex-shrink-0">
-                  <QrCode className="w-4 h-4" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-[9px] font-black uppercase tracking-wider text-slate-500">
-                    Engine by
-                  </p>
-                  <p className="text-[10px] font-black text-slate-200 truncate leading-tight">
-                    CV. ISTANA BARCODE
-                  </p>
-                  <span className="inline-block text-[8px] font-extrabold text-cyan-400 tracking-wider">
-                    DEVELOPER CERDAS
-                  </span>
-                </div>
-              </div>
-            </div>
           )}
         </div>
       </aside>

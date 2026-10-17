@@ -59,11 +59,19 @@ export default function App() {
   });
 
   const [activeKelompok, setActiveKelompok] = useState(() => {
+    const u = (currentUser?.username || '').toLowerCase();
+    if (currentUser?.role === 'KASIR_HANA' || u === 'hana') return 'BISNIS_MANAJEMEN';
+    if (currentUser?.role === 'KASIR_UMI' || u === 'umi') return 'PARIWISATA';
     return currentUser?.kasirKelompok || 'ALL';
   });
 
   useEffect(() => {
-    if (currentUser?.kasirKelompok) {
+    const u = (currentUser?.username || '').toLowerCase();
+    if (currentUser?.role === 'KASIR_HANA' || u === 'hana') {
+      setActiveKelompok('BISNIS_MANAJEMEN');
+    } else if (currentUser?.role === 'KASIR_UMI' || u === 'umi') {
+      setActiveKelompok('PARIWISATA');
+    } else if (currentUser?.kasirKelompok) {
       setActiveKelompok(currentUser.kasirKelompok);
     } else {
       setActiveKelompok('ALL');
@@ -75,15 +83,27 @@ export default function App() {
 
   // Sync role and tab when logging in
   const handleLogin = (userObj) => {
-    setCurrentUser(userObj);
-    localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(userObj));
-    setActiveKelompok(userObj.kasirKelompok || 'ALL');
+    const u = (userObj.username || '').toLowerCase();
+    let normalizedUser = { ...userObj };
+    if (userObj.role === 'KASIR_HANA' || u === 'hana') {
+      normalizedUser.role = 'KASIR_HANA';
+      normalizedUser.kasirKelompok = 'BISNIS_MANAJEMEN';
+      normalizedUser.isKasirTetap = true;
+    } else if (userObj.role === 'KASIR_UMI' || u === 'umi') {
+      normalizedUser.role = 'KASIR_UMI';
+      normalizedUser.kasirKelompok = 'PARIWISATA';
+      normalizedUser.isKasirTetap = true;
+    }
 
-    if (userObj.role === 'WALI_KELAS') {
+    setCurrentUser(normalizedUser);
+    localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(normalizedUser));
+    setActiveKelompok(normalizedUser.kasirKelompok || 'ALL');
+
+    if (normalizedUser.role === 'WALI_KELAS') {
       setActiveTab('buku-pager');
-    } else if (userObj.role === 'ORTU') {
+    } else if (normalizedUser.role === 'ORTU') {
       setActiveTab('kartu-spp');
-    } else if (userObj.role === 'KASIR_HANA' || userObj.role === 'KASIR_UMI') {
+    } else if (normalizedUser.role === 'KASIR_HANA' || normalizedUser.role === 'KASIR_UMI') {
       setActiveTab('kasir');
     } else {
       setActiveTab('dashboard');
@@ -116,7 +136,30 @@ export default function App() {
     return <LoginView data={data} onLogin={handleLogin} />;
   }
 
-  const role = currentUser?.role || 'ADMIN';
+  const username = (currentUser?.username || '').toLowerCase();
+  const isKasirHana = currentUser?.role === 'KASIR_HANA' || username === 'hana' || (currentUser?.kasirKelompok === 'BISNIS_MANAJEMEN' && currentUser?.role !== 'ADMIN' && currentUser?.role !== 'BENDAHARA');
+  const isKasirUmi = currentUser?.role === 'KASIR_UMI' || username === 'umi' || (currentUser?.kasirKelompok === 'PARIWISATA' && currentUser?.role !== 'ADMIN' && currentUser?.role !== 'BENDAHARA');
+  const isKasirTetap = isKasirHana || isKasirUmi || !!currentUser?.isKasirTetap;
+  const role = isKasirHana ? 'KASIR_HANA' : isKasirUmi ? 'KASIR_UMI' : (currentUser?.role || 'ADMIN');
+
+  const effectiveCurrentUser = {
+    ...currentUser,
+    role,
+    kasirKelompok: isKasirHana ? 'BISNIS_MANAJEMEN' : isKasirUmi ? 'PARIWISATA' : currentUser?.kasirKelompok,
+    isKasirTetap
+  };
+
+  const handleSelectKelompok = (k) => {
+    if (isKasirHana) {
+      setActiveKelompok('BISNIS_MANAJEMEN');
+      return;
+    }
+    if (isKasirUmi) {
+      setActiveKelompok('PARIWISATA');
+      return;
+    }
+    setActiveKelompok(k);
+  };
 
   return (
     <div className="min-h-screen bg-slate-100 flex">
@@ -124,7 +167,7 @@ export default function App() {
       <Sidebar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
-        currentUser={currentUser}
+        currentUser={effectiveCurrentUser}
         data={data}
         onLogout={handleLogout}
         onResetData={handleResetData}
@@ -201,7 +244,7 @@ export default function App() {
         </header>
 
         {/* Global Switcher Sudut Pandang Loket Kasir untuk Admin & Bendahara Pusat */}
-        {(role === 'ADMIN' || role === 'BENDAHARA') && (
+        {(role === 'ADMIN' || role === 'BENDAHARA') && !isKasirTetap && (
           <div className="bg-slate-900 text-white px-3 sm:px-6 py-2 border-b border-slate-800 flex flex-wrap items-center justify-between gap-2.5 no-print sticky top-[53px] sm:top-[57px] z-25 shadow-md">
             <div className="flex items-center gap-2">
               <span className="px-2.5 py-0.5 rounded-full bg-amber-400 text-slate-950 font-black text-[10px] uppercase tracking-wider flex items-center gap-1 shadow-xs">
@@ -216,7 +259,7 @@ export default function App() {
             <div className="flex items-center gap-1.5 bg-slate-800 p-1 rounded-xl border border-slate-700 text-xs font-bold w-full sm:w-auto overflow-x-auto">
               <button
                 type="button"
-                onClick={() => setActiveKelompok('ALL')}
+                onClick={() => handleSelectKelompok('ALL')}
                 className={`flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg transition flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap ${
                   activeKelompok === 'ALL'
                     ? 'bg-indigo-600 text-white shadow-xs font-black ring-2 ring-indigo-400'
@@ -229,7 +272,7 @@ export default function App() {
 
               <button
                 type="button"
-                onClick={() => setActiveKelompok('BISNIS_MANAJEMEN')}
+                onClick={() => handleSelectKelompok('BISNIS_MANAJEMEN')}
                 className={`flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg transition flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap ${
                   activeKelompok === 'BISNIS_MANAJEMEN'
                     ? 'bg-blue-600 text-white shadow-xs font-black ring-2 ring-blue-400'
@@ -242,7 +285,7 @@ export default function App() {
 
               <button
                 type="button"
-                onClick={() => setActiveKelompok('PARIWISATA')}
+                onClick={() => handleSelectKelompok('PARIWISATA')}
                 className={`flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg transition flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap ${
                   activeKelompok === 'PARIWISATA'
                     ? 'bg-rose-600 text-white shadow-xs font-black ring-2 ring-rose-400'
@@ -262,10 +305,10 @@ export default function App() {
           {activeTab === 'dashboard' && (role === 'ADMIN' || role === 'BENDAHARA' || role === 'KEPALA_SEKOLAH' || role === 'KASIR_HANA' || role === 'KASIR_UMI') && (
             <DashboardView 
               data={data} 
-              currentUser={currentUser}
+              currentUser={effectiveCurrentUser}
               onNavigate={setActiveTab} 
               activeKelompok={activeKelompok}
-              onSelectKelompok={setActiveKelompok}
+              onSelectKelompok={handleSelectKelompok}
             />
           )}
 
@@ -273,9 +316,9 @@ export default function App() {
           {activeTab === 'kasir' && (role === 'ADMIN' || role === 'BENDAHARA' || role === 'KASIR_HANA' || role === 'KASIR_UMI') && (
             <KasirView
               data={data}
-              currentUser={currentUser}
+              currentUser={effectiveCurrentUser}
               activeKelompok={activeKelompok}
-              onSelectKelompok={setActiveKelompok}
+              onSelectKelompok={handleSelectKelompok}
               onUpdateData={handleUpdateData}
               onShowKuitansi={(kwt) => setActiveKuitansi(kwt)}
             />
@@ -286,7 +329,7 @@ export default function App() {
             <BukuPagerView
               data={data}
               currentRole={role}
-              currentUser={currentUser}
+              currentUser={effectiveCurrentUser}
               activeKelompok={activeKelompok}
               onShowKuitansi={(kwt) => setActiveKuitansi(kwt)}
             />
@@ -297,7 +340,7 @@ export default function App() {
             <KartuSppView
               data={data}
               currentRole={role}
-              currentUser={currentUser}
+              currentUser={effectiveCurrentUser}
               onShowKuitansi={(kwt) => setActiveKuitansi(kwt)}
             />
           )}

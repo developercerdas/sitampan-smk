@@ -28,19 +28,32 @@ export default function KasirView({
   activeKelompok,
   onSelectKelompok 
 }) {
+  const username = (currentUser?.username || '').toLowerCase();
+  const isKasirHana = currentUser?.role === 'KASIR_HANA' || username === 'hana' || (currentUser?.kasirKelompok === 'BISNIS_MANAJEMEN' && currentUser?.role !== 'ADMIN' && currentUser?.role !== 'BENDAHARA');
+  const isKasirUmi = currentUser?.role === 'KASIR_UMI' || username === 'umi' || (currentUser?.kasirKelompok === 'PARIWISATA' && currentUser?.role !== 'ADMIN' && currentUser?.role !== 'BENDAHARA');
+  const isKasirTetap = isKasirHana || isKasirUmi || !!currentUser?.isKasirTetap;
+
   const [internalKelompok, setInternalKelompok] = useState(() => {
+    if (isKasirHana) return 'BISNIS_MANAJEMEN';
+    if (isKasirUmi) return 'PARIWISATA';
     if (activeKelompok) return activeKelompok;
     if (currentUser?.kasirKelompok) return currentUser.kasirKelompok;
     return 'ALL';
   });
 
-  const kelompokFilter = activeKelompok || internalKelompok;
+  const kelompokFilter = isKasirHana 
+    ? 'BISNIS_MANAJEMEN' 
+    : isKasirUmi 
+    ? 'PARIWISATA' 
+    : (activeKelompok || internalKelompok);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [metodeBayar, setMetodeBayar] = useState('TUNAI');
   const [catatan, setCatatan] = useState('');
 
   const [petugasNama, setPetugasNama] = useState(() => {
+    if (isKasirHana) return 'Kasir TU - Hana (Bisnis Manajemen)';
+    if (isKasirUmi) return 'Kasir TU - Umi (Pariwisata)';
     if (currentUser?.petugasLabel) return currentUser.petugasLabel;
     if (kelompokFilter === 'BISNIS_MANAJEMEN') return 'Kasir TU - Hana (Bisnis Manajemen)';
     if (kelompokFilter === 'PARIWISATA') return 'Kasir TU - Umi (Pariwisata)';
@@ -256,7 +269,7 @@ export default function KasirView({
         </div>
 
         {/* Tab Switcher Pembagian Kelompok Kasir (Hanya bisa diubah oleh Admin & Bendahara Pusat) */}
-        {!currentUser?.isKasirTetap ? (
+        {!isKasirTetap ? (
           <div className="flex items-center p-1 bg-slate-100 rounded-xl border border-slate-200 text-xs font-bold w-full md:w-auto overflow-x-auto">
             <button
               type="button"

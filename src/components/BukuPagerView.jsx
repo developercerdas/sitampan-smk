@@ -25,9 +25,11 @@ export default function BukuPagerView({
   onShowKuitansi 
 }) {
   const isWaliKelas = currentRole === 'WALI_KELAS';
-  const effectiveKelompok = activeKelompok || currentUser?.kasirKelompok || 'ALL';
-  const isKasirHana = effectiveKelompok === 'BISNIS_MANAJEMEN';
-  const isKasirUmi = effectiveKelompok === 'PARIWISATA';
+  const username = (currentUser?.username || '').toLowerCase();
+  const isKasirHana = currentRole === 'KASIR_HANA' || username === 'hana' || (currentUser?.kasirKelompok === 'BISNIS_MANAJEMEN' && currentRole !== 'ADMIN' && currentRole !== 'BENDAHARA');
+  const isKasirUmi = currentRole === 'KASIR_UMI' || username === 'umi' || (currentUser?.kasirKelompok === 'PARIWISATA' && currentRole !== 'ADMIN' && currentRole !== 'BENDAHARA');
+  const isKasirTetap = isKasirHana || isKasirUmi || !!currentUser?.isKasirTetap;
+  const effectiveKelompok = isKasirHana ? 'BISNIS_MANAJEMEN' : isKasirUmi ? 'PARIWISATA' : (activeKelompok || currentUser?.kasirKelompok || 'ALL');
 
   // Jika wali kelas, default ke kelas bimbingan miliknya. Jika kasir spesifik, default ke rombel kelompoknya
   let defaultKelas = data.kelas[0]?.id || 1;
@@ -115,7 +117,7 @@ export default function BukuPagerView({
               onChange={(e) => setSelectedKelasId(Number(e.target.value))}
               className="bg-slate-50 border border-slate-300 font-bold text-slate-800 text-xs sm:text-sm rounded-xl px-3.5 py-2 focus:ring-2 focus:ring-blue-500"
             >
-              {(!currentUser?.isKasirTetap || isKasirHana) && (
+              {(!isKasirTetap || isKasirHana) && (
                 <optgroup label="💼 Kelompok Bisnis & Manajemen (Kasir: Hana)">
                   {kelasBisMan.map((k) => (
                     <option key={k.id} value={k.id}>
@@ -124,7 +126,7 @@ export default function BukuPagerView({
                   ))}
                 </optgroup>
               )}
-              {(!currentUser?.isKasirTetap || isKasirUmi) && (
+              {(!isKasirTetap || isKasirUmi) && (
                 <optgroup label="🏖️ Kelompok Pariwisata (Kasir: Umi)">
                   {kelasPariwisata.map((k) => (
                     <option key={k.id} value={k.id}>
@@ -133,7 +135,7 @@ export default function BukuPagerView({
                   ))}
                 </optgroup>
               )}
-              {!currentUser?.isKasirTetap && kelasLain.length > 0 && (
+              {!isKasirTetap && kelasLain.length > 0 && (
                 <optgroup label="Lainnya">
                   {kelasLain.map((k) => (
                     <option key={k.id} value={k.id}>

@@ -23,7 +23,19 @@ export default function DashboardView({
   onSelectKelompok,
   currentUser 
 }) {
-  const effectiveKelompok = currentUser?.isKasirTetap ? currentUser.kasirKelompok : activeKelompok;
+  const role = currentUser?.role || '';
+  const username = (currentUser?.username || '').toLowerCase();
+  const isKasirHana = role === 'KASIR_HANA' || username === 'hana' || (currentUser?.kasirKelompok === 'BISNIS_MANAJEMEN' && role !== 'ADMIN' && role !== 'BENDAHARA');
+  const isKasirUmi = role === 'KASIR_UMI' || username === 'umi' || (currentUser?.kasirKelompok === 'PARIWISATA' && role !== 'ADMIN' && role !== 'BENDAHARA');
+  const isBendahara = role === 'BENDAHARA' || username === 'bendahara';
+  const isKepsek = role === 'KEPALA_SEKOLAH' || username === 'kepsek';
+
+  // Tentukan kelompok yang berlaku untuk kalkulasi dashboard
+  const effectiveKelompok = isKasirHana 
+    ? 'BISNIS_MANAJEMEN' 
+    : isKasirUmi 
+    ? 'PARIWISATA' 
+    : activeKelompok;
 
   // Filter siswa sesuai sudut pandang aktif jika dipilih
   const filteredSiswa = data.siswa.filter((s) => {
@@ -149,23 +161,45 @@ export default function DashboardView({
               </span>
             </div>
             <h2 className="text-2xl sm:text-3xl font-black mt-2 tracking-tight">
-              Dashboard Keuangan SITAMPAN <span className="text-amber-400">SMK</span>
+              {isKasirHana 
+                ? '💼 Dashboard Loket Kasir 1: Bisnis & Manajemen'
+                : isKasirUmi
+                ? '🏖️ Dashboard Loket Kasir 2: Pariwisata'
+                : isBendahara
+                ? '💰 Dashboard Real-Time Keuangan Sekolah'
+                : isKepsek
+                ? '🏛️ Dashboard Monitoring Eksekutif Sekolah'
+                : '🏢 Dashboard Pusat Kendali Keuangan SMK'}
             </h2>
             <p className="text-amber-200 text-xs sm:text-sm font-bold mt-1">
-              <span className="text-white underline decoration-amber-400">S</span>istem <span className="text-white underline decoration-amber-400">I</span>nformasi <span className="text-white underline decoration-amber-400">TA</span>gihan & <span className="text-white underline decoration-amber-400">M</span>anajemen <span className="text-white underline decoration-amber-400">P</span>embay<span className="text-white underline decoration-amber-400">A</span>ran Keua<span className="text-white underline decoration-amber-400">N</span>gan SMK
+              {isKasirHana
+                ? 'Layanan Kasir Khusus: Jurusan AKL, MPLB, dan PM (Kasir: Hana Pratiwi, A.Md.)'
+                : isKasirUmi
+                ? 'Layanan Kasir Khusus: Jurusan Kecantikan & Spa dan Perhotelan (Kasir: Umi Kalsum, S.E.)'
+                : isBendahara
+                ? 'Manajemen Arus Kas, Setoran Tunai Loket & Rekapitulasi Perbankan'
+                : isKepsek
+                ? 'Pemantauan Eksekutif Kelancaran Pembayaran & Rekapitulasi Rombel Sekolah'
+                : 'Sistem Informasi Tagihan & Manajemen Pembayaran Keuangan SMK'}
             </p>
             <p className="text-slate-300 text-xs sm:text-sm mt-1 max-w-2xl">
-              Pantau arus penerimaan SPP, cicilan uang gedung (SPI), dan saldo piutang siswa per jurusan serta per kelas secara otomatis.
+              {isKasirHana
+                ? 'Pantau setoran SPP, cicilan uang gedung (SPI), dan saldo piutang siswa khusus jurusan Bisnis & Manajemen.'
+                : isKasirUmi
+                ? 'Pantau setoran SPP, cicilan uang praktek spa/kitchen, dan saldo piutang siswa khusus jurusan Pariwisata.'
+                : 'Pantau arus penerimaan SPP, cicilan uang gedung (SPI), dan saldo piutang siswa per jurusan serta per kelas secara otomatis.'}
             </p>
           </div>
 
           <div className="flex gap-2">
-            <button
-              onClick={() => onNavigate('kasir')}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold shadow-md transition flex items-center gap-1.5 cursor-pointer"
-            >
-              <CreditCard className="w-3.5 h-3.5" /> Buka Loket Kasir
-            </button>
+            {!isKepsek && (
+              <button
+                onClick={() => onNavigate('kasir')}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold shadow-md transition flex items-center gap-1.5 cursor-pointer"
+              >
+                <CreditCard className="w-3.5 h-3.5" /> {isKasirHana ? 'Buka Kasir BisMan' : isKasirUmi ? 'Buka Kasir Pariwisata' : 'Buka Loket Kasir'}
+              </button>
+            )}
             <button
               onClick={() => onNavigate('buku-pager')}
               className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold border border-white/20 transition flex items-center gap-1.5 cursor-pointer"
@@ -176,7 +210,7 @@ export default function DashboardView({
         </div>
       </div>
 
-      {/* Switcher Cepat Sudut Pandang Loket Kasir di Dashboard */}
+      {/* Switcher Cepat Sudut Pandang Loket Kasir di Dashboard (Hanya untuk Admin & Bendahara) */}
       <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-col md:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-3.5 w-full md:w-auto">
           <div className={`p-3 rounded-2xl border flex items-center justify-center flex-shrink-0 ${
@@ -191,35 +225,39 @@ export default function DashboardView({
           <div>
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
-                Mode Sudut Pandang Kasir
+                {isKasirHana ? 'Loket Kasir 1' : isKasirUmi ? 'Loket Kasir 2' : 'Mode Sudut Pandang'}
               </span>
               <span className="text-[11px] font-bold text-slate-500">
-                {effectiveKelompok === 'BISNIS_MANAJEMEN'
-                  ? 'Penanggung Jawab: Kasir Hana'
+                {isKasirHana
+                  ? 'Petugas Kasir: Hana Pratiwi (AKL, MPLB, PM)'
+                  : isKasirUmi
+                  ? 'Petugas Kasir: Umi Kalsum (KSP, HTL)'
+                  : effectiveKelompok === 'BISNIS_MANAJEMEN'
+                  ? 'Sudut Pandang Kasir: Hana (BisMan)'
                   : effectiveKelompok === 'PARIWISATA'
-                  ? 'Penanggung Jawab: Kasir Umi'
+                  ? 'Sudut Pandang Kasir: Umi (Pariwisata)'
                   : 'Manajemen Pusat (Seluruh 5 Jurusan)'}
               </span>
             </div>
             <h3 className="text-base font-black text-slate-900 mt-0.5">
               {effectiveKelompok === 'BISNIS_MANAJEMEN'
-                ? '💼 Kelompok BisMan (Loket Hana)'
+                ? '💼 Kelompok BisMan (AKL, MPLB, PM)'
                 : effectiveKelompok === 'PARIWISATA'
-                ? '🏖️ Kelompok Pariwisata (Loket Umi)'
+                ? '🏖️ Kelompok Pariwisata (Kecantikan & Spa, Perhotelan)'
                 : '🏢 Semua Rombel (5 Jurusan Pusat)'}
             </h3>
             <p className="text-xs text-slate-500 mt-0.5">
               {effectiveKelompok === 'BISNIS_MANAJEMEN'
-                ? 'Menampilkan rekapitulasi data keuangan jurusan AKL, MPLB, dan PM.'
+                ? 'Hanya menampilkan data keuangan dan statistik siswa jurusan AKL, MPLB, dan PM.'
                 : effectiveKelompok === 'PARIWISATA'
-                ? 'Menampilkan rekapitulasi data keuangan jurusan Kecantikan & Spa dan Perhotelan.'
+                ? 'Hanya menampilkan data keuangan dan statistik siswa jurusan Kecantikan & Spa dan Perhotelan.'
                 : 'Menampilkan seluruh rekapitulasi data keuangan 5 jurusan secara terpusat.'}
             </p>
           </div>
         </div>
 
-        {/* 1-Klik Switcher Buttons (Hanya untuk Admin & Bendahara) */}
-        {!currentUser?.isKasirTetap ? (
+        {/* 1-Klik Switcher Buttons (Hanya muncul jika Admin atau Bendahara) */}
+        {!isKasirHana && !isKasirUmi ? (
           <div className="flex items-center p-1 bg-slate-100 rounded-xl border border-slate-200 text-xs font-bold w-full md:w-auto overflow-x-auto">
             <button
               type="button"
@@ -258,7 +296,7 @@ export default function DashboardView({
         ) : (
           <div className="px-3.5 py-2 bg-slate-100 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span>Kasir Resmi: {currentUser?.nama}</span>
+            <span>Loket Resmi: {isKasirHana ? 'Hana Pratiwi (BisMan)' : 'Umi Kalsum (Pariwisata)'}</span>
           </div>
         )}
       </div>
