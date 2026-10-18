@@ -29,26 +29,29 @@ export default function MasterTarifView({ data, onUpdateData, setActiveTab }) {
   // Filter di daftar pos
   const [filterTipe, setFilterTipe] = useState('SEMUA');
   const [filterJurusan, setFilterJurusan] = useState('SEMUA');
+  const [filterPeruntukan, setFilterPeruntukan] = useState('SEMUA'); // 'SEMUA' | 'SISWA_AKTIF' | 'PPDB'
 
   // Modal Tarif Cepat Per Jurusan
   const [modalJurusanOpen, setModalJurusanOpen] = useState(false);
   const [selectedPosForJurusan, setSelectedPosForJurusan] = useState(null);
   const [tempTarifJurusan, setTempTarifJurusan] = useState({});
 
-  // State Form Tambah/Edit Pos Biaya
+  // State Form Tambah/Edit Pos Biaya (Dengan Pemilihan Modul Target)
   const [formData, setFormData] = useState({
     id: '',
     nama: '',
+    peruntukan: 'SISWA_AKTIF', // 'SISWA_AKTIF' | 'PPDB' | 'KEDUANYA'
     tipe: 'SEKALI_BAYAR',
     nominalDefault: '',
     targetJurusan: 'SEMUA',
     targetTingkat: 'SEMUA',
+    wajibPpdb: true,
     keterangan: '',
     bedaPerJurusan: false,
     tarifJurusan: {}
   });
 
-  const bukaModalTambah = () => {
+  const bukaModalTambah = (targetAwal = 'SISWA_AKTIF') => {
     setEditId(null);
     const initialTarif = {};
     data.jurusan.forEach((j) => {
@@ -58,10 +61,12 @@ export default function MasterTarifView({ data, onUpdateData, setActiveTab }) {
     setFormData({
       id: '',
       nama: '',
+      peruntukan: targetAwal,
       tipe: 'SEKALI_BAYAR',
       nominalDefault: '',
       targetJurusan: 'SEMUA',
       targetTingkat: 'SEMUA',
+      wajibPpdb: true,
       keterangan: '',
       bedaPerJurusan: false,
       tarifJurusan: initialTarif
@@ -73,16 +78,18 @@ export default function MasterTarifView({ data, onUpdateData, setActiveTab }) {
     setEditId(pos.id);
     const initialTarif = {};
     data.jurusan.forEach((j) => {
-      initialTarif[j.kode] = pos.tarifJurusan?.[j.kode] || pos.nominalDefault || '';
+      initialTarif[j.kode] = pos.tarifJurusan?.[j.kode] || pos.nominalDefault || pos.nominal || '';
     });
 
     setFormData({
       id: pos.id,
       nama: pos.nama,
+      peruntukan: pos.isPpdb ? 'PPDB' : 'SISWA_AKTIF',
       tipe: pos.tipe || 'SEKALI_BAYAR',
-      nominalDefault: pos.nominalDefault || 0,
+      nominalDefault: pos.nominalDefault !== undefined ? pos.nominalDefault : (pos.nominal || 0),
       targetJurusan: pos.targetJurusan || 'SEMUA',
       targetTingkat: pos.targetTingkat || 'SEMUA',
+      wajibPpdb: pos.wajib !== undefined ? !!pos.wajib : true,
       keterangan: pos.keterangan || '',
       bedaPerJurusan: !!(pos.tarifJurusan && Object.keys(pos.tarifJurusan).length > 0),
       tarifJurusan: initialTarif
@@ -96,6 +103,7 @@ export default function MasterTarifView({ data, onUpdateData, setActiveTab }) {
       alert('Mohon isi nama pos tagihan!');
       return;
     }
+    const nominalAngka = Number(formData.nominalDefault) || 0;
 
     try {
       const payloadTarif = {};
@@ -107,23 +115,68 @@ export default function MasterTarifView({ data, onUpdateData, setActiveTab }) {
         });
       }
 
-      const payload = {
-        id: formData.id,
-        nama: formData.nama,
-        tipe: formData.tipe,
-        nominalDefault: Number(formData.nominalDefault) || 0,
-        targetJurusan: formData.targetJurusan,
-        targetTingkat: formData.targetTingkat,
-        tarifJurusan: payloadTarif,
-        keterangan: formData.keterangan
-      };
-
       if (editId) {
-        dataService.updatePosBiaya(editId, payload);
-        setPesan({ tipe: 'sukses', teks: `Pos biaya "${formData.nama}" berhasil diperbarui!` });
+        if (formData.peruntukan === 'PPDB') {
+          dataService.updatePosBiayaPpdb(editId, {
+            nama: formData.nama.trim(),
+            nominal: nominalAngka,
+            wajib: formData.wajibPpdb,
+            keterangan: formData.keterangan.trim()
+          });
+          setPesan({ tipe: 'sukses', teks: `Pos biaya PPDB "${formData.nama}" berhasil diperbarui!` });
+        } else {
+          dataService.updatePosBiaya(editId, {
+            id: formData.id,
+            nama: formData.nama.trim(),
+            tipe: formData.tipe,
+            nominalDefault: nominalAngka,
+            targetJurusan: formData.targetJurusan,
+            targetTingkat: formData.targetTingkat,
+            tarifJurusan: payloadTarif,
+            keterangan: formData.keterangan.trim()
+          });
+          setPesan({ tipe: 'sukses', teks: `Pos biaya Siswa Aktif "${formData.nama}" berhasil diperbarui!` });
+        }
       } else {
-        dataService.tambahPosBiaya(payload);
-        setPesan({ tipe: 'sukses', teks: `Pos biaya baru "${formData.nama}" berhasil dibuat!` });
+        if (formData.peruntukan === 'PPDB') {
+          dataService.tambahPosBiayaPpdb({
+            nama: formData.nama.trim(),
+            nominal: nominalAngka,
+            wajib: formData.wajibPpdb,
+            keterangan: formData.keterangan.trim()
+          });
+          setPesan({ tipe: 'sukses', teks: `Pos biaya baru Calon Siswa PPDB "${formData.nama}" berhasil dibuat!` });
+        } else if (formData.peruntukan === 'SISWA_AKTIF') {
+          dataService.tambahPosBiaya({
+            id: formData.id,
+            nama: formData.nama.trim(),
+            tipe: formData.tipe,
+            nominalDefault: nominalAngka,
+            targetJurusan: formData.targetJurusan,
+            targetTingkat: formData.targetTingkat,
+            tarifJurusan: payloadTarif,
+            keterangan: formData.keterangan.trim()
+          });
+          setPesan({ tipe: 'sukses', teks: `Pos biaya baru Siswa Aktif "${formData.nama}" berhasil dibuat!` });
+        } else if (formData.peruntukan === 'KEDUANYA') {
+          dataService.tambahPosBiaya({
+            id: formData.id,
+            nama: formData.nama.trim(),
+            tipe: formData.tipe,
+            nominalDefault: nominalAngka,
+            targetJurusan: formData.targetJurusan,
+            targetTingkat: formData.targetTingkat,
+            tarifJurusan: payloadTarif,
+            keterangan: formData.keterangan.trim()
+          });
+          dataService.tambahPosBiayaPpdb({
+            nama: formData.nama.trim(),
+            nominal: nominalAngka,
+            wajib: formData.wajibPpdb,
+            keterangan: formData.keterangan.trim()
+          });
+          setPesan({ tipe: 'sukses', teks: `Pos biaya "${formData.nama}" berhasil dipasang pada Siswa Aktif DAN Calon Siswa PPDB!` });
+        }
       }
 
       onUpdateData();
@@ -142,9 +195,14 @@ export default function MasterTarifView({ data, onUpdateData, setActiveTab }) {
 
     if (confirm(`Apakah Anda yakin ingin menghapus pos biaya "${pos.nama}"?`)) {
       try {
-        dataService.hapusPosBiaya(pos.id);
+        if (pos.isPpdb) {
+          dataService.hapusPosBiayaPpdb(pos.id);
+          setPesan({ tipe: 'sukses', teks: `Pos biaya PPDB "${pos.nama}" berhasil dihapus!` });
+        } else {
+          dataService.hapusPosBiaya(pos.id);
+          setPesan({ tipe: 'sukses', teks: `Pos biaya "${pos.nama}" berhasil dihapus!` });
+        }
         onUpdateData();
-        setPesan({ tipe: 'sukses', teks: `Pos biaya "${pos.nama}" berhasil dihapus!` });
         setTimeout(() => setPesan({ tipe: '', teks: '' }), 4000);
       } catch (err) {
         alert(err.message);
@@ -187,11 +245,28 @@ export default function MasterTarifView({ data, onUpdateData, setActiveTab }) {
     }
   };
 
-  // Filter daftar pos biaya
-  const filteredPosList = data.posBiaya.filter((p) => {
+  // Gabungkan daftar pos biaya Siswa Aktif dan PPDB dengan identitas jelas
+  const posBiayaSiswaAktif = (data.posBiaya || []).map(p => ({ ...p, isPpdb: false, peruntukan: 'SISWA_AKTIF' }));
+  const posBiayaPpdbList = (data.masterPpdb?.posBiayaPpdb || []).map(p => ({
+    ...p,
+    isPpdb: true,
+    peruntukan: 'PPDB',
+    tipe: 'SEKALI_BAYAR',
+    nominalDefault: p.nominal,
+    targetJurusan: 'SEMUA',
+    targetTingkat: 'X'
+  }));
+
+  const allCombinedPos = [...posBiayaSiswaAktif, ...posBiayaPpdbList];
+
+  // Filter daftar pos biaya gabungan
+  const filteredPosList = allCombinedPos.filter((p) => {
+    const matchPeruntukan = filterPeruntukan === 'SEMUA' || 
+      (filterPeruntukan === 'SISWA_AKTIF' && !p.isPpdb) || 
+      (filterPeruntukan === 'PPDB' && p.isPpdb);
     const matchTipe = filterTipe === 'SEMUA' || p.tipe === filterTipe;
     const matchJurusan = filterJurusan === 'SEMUA' || p.targetJurusan === 'SEMUA' || p.targetJurusan === filterJurusan;
-    return matchTipe && matchJurusan;
+    return matchPeruntukan && matchTipe && matchJurusan;
   });
 
   return (
@@ -286,7 +361,7 @@ export default function MasterTarifView({ data, onUpdateData, setActiveTab }) {
             }`}
           >
             <Layers className="w-4 h-4" />
-            Daftar Seluruh Pos Tagihan & Biaya Lain-Lain ({data.posBiaya.length})
+            Daftar Seluruh Pos Tagihan & Biaya Lain-Lain ({allCombinedPos.length})
           </button>
         </div>
 
@@ -407,31 +482,50 @@ export default function MasterTarifView({ data, onUpdateData, setActiveTab }) {
         <div className="space-y-4">
           {/* Bar Filter */}
           <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-slate-600">Tipe Pos:</span>
-              <select
-                value={filterTipe}
-                onChange={(e) => setFilterTipe(e.target.value)}
-                className="px-3 py-1.5 border border-slate-300 rounded-xl text-xs font-semibold focus:outline-none bg-white"
-              >
-                <option value="SEMUA">Semua Tipe</option>
-                <option value="BULANAN">Bulanan Rutin</option>
-                <option value="SEKALI_BAYAR">Sekali Bayar / Insidental</option>
-              </select>
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-slate-600">Peruntukan:</span>
+                <select
+                  value={filterPeruntukan}
+                  onChange={(e) => setFilterPeruntukan(e.target.value)}
+                  className="px-3 py-1.5 border border-slate-300 rounded-xl text-xs font-bold focus:outline-none bg-white text-slate-800"
+                >
+                  <option value="SEMUA">🌐 Semua Pos (Siswa Aktif & PPDB)</option>
+                  <option value="SISWA_AKTIF">🎓 Khusus Siswa Aktif (KBM)</option>
+                  <option value="PPDB">🌟 Khusus Calon Siswa (PPDB)</option>
+                </select>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-slate-600">Tipe Pos:</span>
+                <select
+                  value={filterTipe}
+                  onChange={(e) => setFilterTipe(e.target.value)}
+                  className="px-3 py-1.5 border border-slate-300 rounded-xl text-xs font-semibold focus:outline-none bg-white text-slate-700"
+                >
+                  <option value="SEMUA">Semua Tipe</option>
+                  <option value="BULANAN">Bulanan Rutin</option>
+                  <option value="SEKALI_BAYAR">Sekali Bayar / Insidental</option>
+                </select>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-slate-600">Target Jurusan:</span>
+                <select
+                  value={filterJurusan}
+                  onChange={(e) => setFilterJurusan(e.target.value)}
+                  className="px-3 py-1.5 border border-slate-300 rounded-xl text-xs font-semibold focus:outline-none bg-white text-slate-700"
+                >
+                  <option value="SEMUA">Semua Jurusan</option>
+                  {data.jurusan.map((j) => (
+                    <option key={j.id} value={j.kode}>{j.kode} - {j.nama}</option>
+                  ))}
+                </select>
+              </div>
             </div>
 
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-slate-600">Target Jurusan:</span>
-              <select
-                value={filterJurusan}
-                onChange={(e) => setFilterJurusan(e.target.value)}
-                className="px-3 py-1.5 border border-slate-300 rounded-xl text-xs font-semibold focus:outline-none bg-white"
-              >
-                <option value="SEMUA">Semua Jurusan</option>
-                {data.jurusan.map((j) => (
-                  <option key={j.id} value={j.kode}>{j.kode} - {j.nama}</option>
-                ))}
-              </select>
+            <div className="text-xs font-bold text-slate-500">
+              Total {filteredPosList.length} Pos Tagihan Ditemukan
             </div>
           </div>
 
@@ -441,20 +535,34 @@ export default function MasterTarifView({ data, onUpdateData, setActiveTab }) {
 
               return (
                 <div 
-                  key={pos.id}
-                  className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs hover:shadow-md transition flex flex-col justify-between"
+                  key={`${pos.isPpdb ? 'ppdb' : 'aktif'}-${pos.id}`}
+                  className={`bg-white rounded-2xl border p-5 shadow-xs hover:shadow-md transition flex flex-col justify-between ${
+                    pos.isPpdb ? 'border-purple-200 bg-purple-50/15' : 'border-slate-200'
+                  }`}
                 >
                   <div>
                     <div className="flex items-center justify-between mb-2">
-                      <span className="font-mono text-xs font-black bg-slate-100 text-slate-700 px-2 py-0.5 rounded border border-slate-200">
-                        {pos.id}
-                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-mono text-xs font-black bg-slate-100 text-slate-700 px-2 py-0.5 rounded border border-slate-200">
+                          {pos.id}
+                        </span>
+                        {pos.isPpdb ? (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 border border-purple-200 flex items-center gap-1">
+                            🌟 Calon PPDB
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 border border-blue-200 flex items-center gap-1">
+                            🎓 Siswa Aktif
+                          </span>
+                        )}
+                      </div>
+                      
                       <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
                         pos.tipe === 'BULANAN'
                           ? 'bg-blue-100 text-blue-800'
                           : 'bg-emerald-100 text-emerald-800'
                       }`}>
-                        {pos.tipe === 'BULANAN' ? 'Bulanan' : 'Sekali Bayar'}
+                        {pos.isPpdb ? (pos.wajib ? 'Wajib Awal' : 'Dapat Dicicil') : (pos.tipe === 'BULANAN' ? 'Bulanan' : 'Sekali Bayar')}
                       </span>
                     </div>
 
@@ -476,21 +584,38 @@ export default function MasterTarifView({ data, onUpdateData, setActiveTab }) {
                         </span>
                       </div>
 
-                      <div className="flex items-center justify-between">
-                        <span className="text-slate-500 font-medium">Target Jurusan:</span>
-                        <span className="font-bold text-slate-800">
-                          {pos.targetJurusan === 'SEMUA' ? 'Semua Jurusan' : `Khusus ${pos.targetJurusan}`}
-                        </span>
-                      </div>
+                      {pos.isPpdb ? (
+                        <>
+                          <div className="flex items-center justify-between">
+                            <span className="text-slate-500 font-medium">Sifat Tagihan:</span>
+                            <span className={`font-bold ${pos.wajib ? 'text-amber-700' : 'text-emerald-700'}`}>
+                              {pos.wajib ? 'Wajib Lunas Saat Daftar Ulang' : 'Bisa Dicicil Bertahap'}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-slate-500 font-medium">Peruntukan:</span>
+                            <span className="font-bold text-purple-700">Calon Peserta Didik Baru</span>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div className="flex items-center justify-between">
+                            <span className="text-slate-500 font-medium">Target Jurusan:</span>
+                            <span className="font-bold text-slate-800">
+                              {pos.targetJurusan === 'SEMUA' ? 'Semua Jurusan' : `Khusus ${pos.targetJurusan}`}
+                            </span>
+                          </div>
 
-                      <div className="flex items-center justify-between">
-                        <span className="text-slate-500 font-medium">Target Tingkat:</span>
-                        <span className="font-bold text-slate-800">
-                          {pos.targetTingkat === 'SEMUA' ? 'Semua Tingkat (X, XI, XII)' : `Hanya Kelas ${pos.targetTingkat}`}
-                        </span>
-                      </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-slate-500 font-medium">Target Tingkat:</span>
+                            <span className="font-bold text-slate-800">
+                              {pos.targetTingkat === 'SEMUA' ? 'Semua Tingkat (X, XI, XII)' : `Hanya Kelas ${pos.targetTingkat}`}
+                            </span>
+                          </div>
+                        </>
+                      )}
 
-                      {adaTarifKhusus && (
+                      {adaTarifKhusus && !pos.isPpdb && (
                         <div className="pt-2 border-t border-dashed border-slate-200">
                           <p className="text-[10px] font-bold text-blue-700 uppercase mb-1">Tarif Khusus Jurusan:</p>
                           <div className="grid grid-cols-2 gap-1 text-[11px] font-mono">
@@ -507,13 +632,19 @@ export default function MasterTarifView({ data, onUpdateData, setActiveTab }) {
                   </div>
 
                   <div className="mt-5 pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
-                    <button
-                      onClick={() => bukaModalEditTarifJurusan(pos)}
-                      className="px-2.5 py-1.5 bg-slate-50 hover:bg-blue-50 hover:text-blue-700 text-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1 border border-slate-200"
-                    >
-                      <Table className="w-3.5 h-3.5" />
-                      Tarif Jurusan
-                    </button>
+                    {!pos.isPpdb ? (
+                      <button
+                        onClick={() => bukaModalEditTarifJurusan(pos)}
+                        className="px-2.5 py-1.5 bg-slate-50 hover:bg-blue-50 hover:text-blue-700 text-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1 border border-slate-200"
+                      >
+                        <Table className="w-3.5 h-3.5" />
+                        Tarif Jurusan
+                      </button>
+                    ) : (
+                      <span className="text-[11px] font-bold text-purple-600 bg-purple-50 px-2 py-1 rounded-lg">
+                        Modul PPDB Online
+                      </span>
+                    )}
 
                     <div className="flex items-center gap-1">
                       <button
@@ -523,7 +654,7 @@ export default function MasterTarifView({ data, onUpdateData, setActiveTab }) {
                       >
                         <Edit className="w-4 h-4" />
                       </button>
-                      {!['SPP', 'DU'].includes(pos.id) && (
+                      {!['SPP', 'DU', 'PPDB_FORMULIR', 'PPDB_DAFTAR_ULANG'].includes(pos.id) && (
                         <button
                           onClick={() => handleHapusPos(pos)}
                           className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition"
@@ -559,6 +690,96 @@ export default function MasterTarifView({ data, onUpdateData, setActiveTab }) {
             </div>
 
             <form onSubmit={handleSimpanPos} className="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
+              {/* PILIHAN PERUNTUKAN / MODUL SASARAN */}
+              {!editId ? (
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase mb-2">
+                    Mau Dipasang Pada Modul Mana? (Peruntukan Biaya)
+                  </label>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, peruntukan: 'SISWA_AKTIF' })}
+                      className={`p-3 rounded-xl border text-left transition flex flex-col justify-between ${
+                        formData.peruntukan === 'SISWA_AKTIF'
+                          ? 'border-blue-600 bg-blue-50/70 text-blue-900 ring-2 ring-blue-500'
+                          : 'border-slate-200 hover:border-slate-300 bg-white text-slate-700'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-xl">🎓</span>
+                        {formData.peruntukan === 'SISWA_AKTIF' && (
+                          <span className="w-2.5 h-2.5 rounded-full bg-blue-600"></span>
+                        )}
+                      </div>
+                      <div>
+                        <p className="font-extrabold text-xs">Khusus Siswa Aktif</p>
+                        <p className="text-[10px] text-slate-500 mt-0.5 leading-tight">
+                          KBM berjalan, Buku Pager, Kartu SPP & Kasir Siswa
+                        </p>
+                      </div>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, peruntukan: 'PPDB' })}
+                      className={`p-3 rounded-xl border text-left transition flex flex-col justify-between ${
+                        formData.peruntukan === 'PPDB'
+                          ? 'border-purple-600 bg-purple-50/70 text-purple-900 ring-2 ring-purple-500'
+                          : 'border-slate-200 hover:border-slate-300 bg-white text-slate-700'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-xl">🌟</span>
+                        {formData.peruntukan === 'PPDB' && (
+                          <span className="w-2.5 h-2.5 rounded-full bg-purple-600"></span>
+                        )}
+                      </div>
+                      <div>
+                        <p className="font-extrabold text-xs">Khusus Calon PPDB</p>
+                        <p className="text-[10px] text-slate-500 mt-0.5 leading-tight">
+                          Pendaftaran baru, Formulir, Kasir PPDB & VA Calon
+                        </p>
+                      </div>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, peruntukan: 'KEDUANYA' })}
+                      className={`p-3 rounded-xl border text-left transition flex flex-col justify-between ${
+                        formData.peruntukan === 'KEDUANYA'
+                          ? 'border-emerald-600 bg-emerald-50/70 text-emerald-900 ring-2 ring-emerald-500'
+                          : 'border-slate-200 hover:border-slate-300 bg-white text-slate-700'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-xl">🔄</span>
+                        {formData.peruntukan === 'KEDUANYA' && (
+                          <span className="w-2.5 h-2.5 rounded-full bg-emerald-600"></span>
+                        )}
+                      </div>
+                      <div>
+                        <p className="font-extrabold text-xs">Berlaku Keduanya</p>
+                        <p className="text-[10px] text-slate-500 mt-0.5 leading-tight">
+                          Seragam, OSIS, Majalah, Perawatan Sarana, dll
+                        </p>
+                      </div>
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="p-3 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-between text-xs">
+                  <span className="font-bold text-slate-700">Peruntukan Modul:</span>
+                  <span className={`px-2.5 py-0.5 rounded-full font-extrabold ${
+                    formData.peruntukan === 'PPDB' 
+                      ? 'bg-purple-100 text-purple-800 border border-purple-200' 
+                      : 'bg-blue-100 text-blue-800 border border-blue-200'
+                  }`}>
+                    {formData.peruntukan === 'PPDB' ? '🌟 Calon Siswa Baru (PPDB)' : '🎓 Siswa Aktif (KBM)'}
+                  </span>
+                </div>
+              )}
+
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
                   Nama Pos Tagihan / Biaya Sekolah
@@ -566,7 +787,7 @@ export default function MasterTarifView({ data, onUpdateData, setActiveTab }) {
                 <input
                   type="text"
                   required
-                  placeholder="Misal: Uji Kompetensi Keahlian (UKK) / Bahan Praktik"
+                  placeholder="Misal: Uang Seragam Kejuruan / Iuran OSIS / Sarpras"
                   value={formData.nama}
                   onChange={(e) => setFormData({ ...formData, nama: e.target.value })}
                   className="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm font-bold focus:ring-2 focus:ring-blue-500 focus:outline-none"
@@ -581,7 +802,7 @@ export default function MasterTarifView({ data, onUpdateData, setActiveTab }) {
                   <input
                     type="text"
                     disabled={!!editId}
-                    placeholder="Misal: UKK_2026"
+                    placeholder={formData.peruntukan === 'PPDB' ? 'Misal: PPDB_SERAGAM' : 'Misal: SERAGAM'}
                     value={formData.id}
                     onChange={(e) => setFormData({ ...formData, id: e.target.value.toUpperCase().replace(/\s+/g, '_') })}
                     className="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm font-mono uppercase bg-slate-50 focus:bg-white"
@@ -590,115 +811,140 @@ export default function MasterTarifView({ data, onUpdateData, setActiveTab }) {
 
                 <div>
                   <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
-                    Tipe Tagihan
+                    Nominal Acuan Standar (Rp)
                   </label>
-                  <select
-                    value={formData.tipe}
-                    onChange={(e) => setFormData({ ...formData, tipe: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm font-semibold bg-white"
-                  >
-                    <option value="SEKALI_BAYAR">Sekali Bayar / Insidental</option>
-                    <option value="BULANAN">Bulanan (Ditagih Tiap Bulan)</option>
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
-                  Nominal Acuan Standar (Rp)
-                </label>
-                <input
-                  type="number"
-                  required
-                  placeholder="300000"
-                  value={formData.nominalDefault}
-                  onChange={(e) => setFormData({ ...formData, nominalDefault: e.target.value })}
-                  className="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm font-mono font-bold focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
-                    Sasaran Jurusan
-                  </label>
-                  <select
-                    value={formData.targetJurusan}
-                    onChange={(e) => setFormData({ ...formData, targetJurusan: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm bg-white"
-                  >
-                    <option value="SEMUA">Semua Jurusan</option>
-                    {data.jurusan.map((j) => (
-                      <option key={j.id} value={j.kode}>Khusus {j.kode} ({j.nama})</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
-                    Sasaran Tingkat
-                  </label>
-                  <select
-                    value={formData.targetTingkat}
-                    onChange={(e) => setFormData({ ...formData, targetTingkat: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm bg-white"
-                  >
-                    <option value="SEMUA">Semua Tingkat</option>
-                    <option value="X">Kelas X Saja</option>
-                    <option value="XI">Kelas XI Saja</option>
-                    <option value="XII">Kelas XII Saja</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Opsi Tarif Berbeda Tiap Jurusan */}
-              <div className="pt-2 border-t border-slate-200">
-                <label className="flex items-center gap-2 cursor-pointer mb-2">
                   <input
-                    type="checkbox"
-                    checked={formData.bedaPerJurusan}
-                    onChange={(e) => setFormData({ ...formData, bedaPerJurusan: e.target.checked })}
-                    className="w-4 h-4 text-blue-600 rounded"
+                    type="number"
+                    required
+                    placeholder="300000"
+                    value={formData.nominalDefault}
+                    onChange={(e) => setFormData({ ...formData, nominalDefault: e.target.value })}
+                    className="w-full px-3.5 py-2 border border-slate-300 rounded-xl text-sm font-mono font-bold focus:ring-2 focus:ring-blue-500"
                   />
-                  <span className="text-xs font-bold text-slate-800">
-                    Tentukan Nominal Berbeda Khusus Tiap Jurusan
-                  </span>
-                </label>
+                </div>
+              </div>
 
-                {formData.bedaPerJurusan && (
-                  <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-2 mt-2">
-                    <p className="text-[11px] text-slate-600 font-medium">
-                      Masukkan nominal khusus untuk masing-masing jurusan di bawah ini:
-                    </p>
-                    <div className="grid grid-cols-2 gap-2">
-                      {data.jurusan.map((j) => (
-                        <div key={j.id} className="bg-white p-2 rounded-lg border border-slate-200">
-                          <span className="block text-[11px] font-bold text-slate-700">{j.kode}</span>
-                          <div className="relative mt-0.5">
-                            <span className="absolute left-2 top-1 text-[11px] text-slate-400 font-bold">Rp</span>
-                            <input
-                              type="number"
-                              placeholder={formData.nominalDefault || '0'}
-                              value={formData.tarifJurusan[j.kode] || ''}
-                              onChange={(e) => {
-                                const val = e.target.value;
-                                setFormData((prev) => ({
-                                  ...prev,
-                                  tarifJurusan: {
-                                    ...prev.tarifJurusan,
-                                    [j.kode]: val
-                                  }
-                                }));
-                              }}
-                              className="w-full pl-7 pr-2 py-1 text-xs font-mono font-bold border border-slate-300 rounded"
-                            />
-                          </div>
-                        </div>
-                      ))}
+              {/* JIKA PPDB ATAU KEDUANYA: PILIHAN SIFAT TAGIHAN PPDB */}
+              {(formData.peruntukan === 'PPDB' || formData.peruntukan === 'KEDUANYA') && (
+                <div className="p-3 bg-purple-50/70 border border-purple-200 rounded-xl space-y-2">
+                  <label className="block text-xs font-extrabold text-purple-900 uppercase">
+                    Sifat Tagihan di Modul PPDB (Calon Siswa Baru)
+                  </label>
+                  <select
+                    value={formData.wajibPpdb ? 'WAJIB' : 'CICIL'}
+                    onChange={(e) => setFormData({ ...formData, wajibPpdb: e.target.value === 'WAJIB' })}
+                    className="w-full px-3 py-2 border border-purple-300 rounded-xl text-xs font-bold bg-white text-purple-900"
+                  >
+                    <option value="WAJIB">Wajib Lunas Saat Daftar Ulang Awal (Prioritas Utama)</option>
+                    <option value="CICIL">Dapat Dicicil Bertahap Selama Periode PPDB Berjalan</option>
+                  </select>
+                  <p className="text-[11px] text-purple-700">
+                    Pos ini akan otomatis tampil pada tabel rincian tagihan calon siswa, Kasir PPDB, dan verifikasi VA Calon Siswa Baru.
+                  </p>
+                </div>
+              )}
+
+              {/* JIKA SISWA AKTIF ATAU KEDUANYA: PILIHAN TARGET KBM */}
+              {(formData.peruntukan === 'SISWA_AKTIF' || formData.peruntukan === 'KEDUANYA') && (
+                <>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
+                        Tipe Tagihan KBM
+                      </label>
+                      <select
+                        value={formData.tipe}
+                        onChange={(e) => setFormData({ ...formData, tipe: e.target.value })}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm font-semibold bg-white"
+                      >
+                        <option value="SEKALI_BAYAR">Sekali Bayar / Insidental</option>
+                        <option value="BULANAN">Bulanan (Ditagih Tiap Bulan)</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
+                        Sasaran Tingkat
+                      </label>
+                      <select
+                        value={formData.targetTingkat}
+                        onChange={(e) => setFormData({ ...formData, targetTingkat: e.target.value })}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm bg-white"
+                      >
+                        <option value="SEMUA">Semua Tingkat (X, XI, XII)</option>
+                        <option value="X">Kelas X Saja</option>
+                        <option value="XI">Kelas XI Saja</option>
+                        <option value="XII">Kelas XII Saja</option>
+                      </select>
                     </div>
                   </div>
-                )}
-              </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
+                      Sasaran Jurusan KBM
+                    </label>
+                    <select
+                      value={formData.targetJurusan}
+                      onChange={(e) => setFormData({ ...formData, targetJurusan: e.target.value })}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm bg-white"
+                    >
+                      <option value="SEMUA">Semua Jurusan</option>
+                      {data.jurusan.map((j) => (
+                        <option key={j.id} value={j.kode}>Khusus {j.kode} ({j.nama})</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Opsi Tarif Berbeda Tiap Jurusan */}
+                  <div className="pt-2 border-t border-slate-200">
+                    <label className="flex items-center gap-2 cursor-pointer mb-2">
+                      <input
+                        type="checkbox"
+                        checked={formData.bedaPerJurusan}
+                        onChange={(e) => setFormData({ ...formData, bedaPerJurusan: e.target.checked })}
+                        className="w-4 h-4 text-blue-600 rounded"
+                      />
+                      <span className="text-xs font-bold text-slate-800">
+                        Tentukan Nominal Berbeda Khusus Tiap Jurusan (KBM)
+                      </span>
+                    </label>
+
+                    {formData.bedaPerJurusan && (
+                      <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-2 mt-2">
+                        <p className="text-[11px] text-slate-600 font-medium">
+                          Masukkan nominal khusus untuk masing-masing jurusan di bawah ini:
+                        </p>
+                        <div className="grid grid-cols-2 gap-2">
+                          {data.jurusan.map((j) => (
+                            <div key={j.id} className="bg-white p-2 rounded-lg border border-slate-200">
+                              <span className="block text-[11px] font-bold text-slate-700">{j.kode}</span>
+                              <div className="relative mt-0.5">
+                                <span className="absolute left-2 top-1 text-[11px] text-slate-400 font-bold">Rp</span>
+                                <input
+                                  type="number"
+                                  placeholder={formData.nominalDefault || '0'}
+                                  value={formData.tarifJurusan[j.kode] || ''}
+                                  onChange={(e) => {
+                                    const val = e.target.value;
+                                    setFormData((prev) => ({
+                                      ...prev,
+                                      tarifJurusan: {
+                                        ...prev.tarifJurusan,
+                                        [j.kode]: val
+                                      }
+                                    }));
+                                  }}
+                                  className="w-full pl-7 pr-2 py-1 text-xs font-mono font-bold border border-slate-300 rounded"
+                                />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
