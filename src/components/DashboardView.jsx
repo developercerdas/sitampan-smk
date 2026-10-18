@@ -12,7 +12,8 @@ import {
   Calendar,
   Layers,
   ArrowRight,
-  PieChart
+  PieChart,
+  UserPlus
 } from 'lucide-react';
 import { dataService } from '../services/dataService';
 
@@ -191,7 +192,14 @@ export default function DashboardView({
             </p>
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
+            <button
+              onClick={() => onNavigate('ppdb')}
+              className="px-4 py-2 bg-amber-400 hover:bg-amber-300 text-slate-950 rounded-xl text-xs font-black shadow-md transition flex items-center gap-1.5 cursor-pointer"
+            >
+              <UserPlus className="w-3.5 h-3.5 text-slate-950" />
+              Persiapan PPDB
+            </button>
             {!isKepsek && (
               <button
                 onClick={() => onNavigate('kasir')}

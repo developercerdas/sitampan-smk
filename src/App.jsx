@@ -12,6 +12,7 @@ import MasterKelasView from './components/MasterKelasView';
 import MasterJurusanView from './components/MasterJurusanView';
 import ProfilKopView from './components/ProfilKopView';
 import MasterRulesView from './components/MasterRulesView';
+import PpdbView from './components/PpdbView';
 import KuitansiModal from './components/KuitansiModal';
 import { dataService } from './services/dataService';
 import { Database, GitBranch, Bell, Menu, LogOut, QrCode, Sparkles, BadgeCheck, ScanBarcode, Printer, Monitor, Code2, Cctv } from 'lucide-react';
@@ -321,6 +322,16 @@ export default function App() {
               onSelectKelompok={handleSelectKelompok}
               onUpdateData={handleUpdateData}
               onShowKuitansi={(kwt) => setActiveKuitansi(kwt)}
+            />
+          )}
+
+          {/* Menu Persiapan PPDB & Penerimaan Siswa Baru (Admin, Bendahara, Kepala Sekolah, Kasir Hana, Kasir Umi) */}
+          {activeTab === 'ppdb' && (role === 'ADMIN' || role === 'BENDAHARA' || role === 'KEPALA_SEKOLAH' || role === 'KASIR_HANA' || role === 'KASIR_UMI') && (
+            <PpdbView
+              data={data}
+              currentUser={effectiveCurrentUser}
+              activeKelompok={activeKelompok}
+              onUpdateData={handleUpdateData}
             />
           )}
 

@@ -20,7 +20,8 @@ import {
   Sparkles,
   PanelLeftClose,
   PanelLeftOpen,
-  QrCode
+  QrCode,
+  UserPlus
 } from 'lucide-react';
 import SchoolLogo from './SchoolLogo';
 
@@ -49,6 +50,7 @@ export default function Sidebar({
           group: 'LOKET KASIR BISMAN',
           items: [
             { id: 'kasir', label: 'Loket Kasir & Kuitansi (AKL, MPLB, PM)', icon: CreditCard, color: 'text-blue-500' },
+            { id: 'ppdb', label: 'PPDB & Siswa Baru BisMan', icon: UserPlus, color: 'text-amber-400' },
             { id: 'buku-pager', label: 'Buku Pager Rombel BisMan', icon: BookOpen, color: 'text-indigo-500' },
             { id: 'kartu-spp', label: 'Cek Kartu SPP Siswa BisMan', icon: Smartphone, color: 'text-emerald-500' },
             { id: 'dashboard', label: 'Dashboard Kasir Hana', icon: LayoutDashboard, color: 'text-amber-400' }
@@ -64,6 +66,7 @@ export default function Sidebar({
           group: 'LOKET KASIR PARIWISATA',
           items: [
             { id: 'kasir', label: 'Loket Kasir & Kuitansi (KSP, HTL)', icon: CreditCard, color: 'text-rose-500' },
+            { id: 'ppdb', label: 'PPDB & Siswa Baru Pariwisata', icon: UserPlus, color: 'text-amber-400' },
             { id: 'buku-pager', label: 'Buku Pager Rombel Pariwisata', icon: BookOpen, color: 'text-indigo-500' },
             { id: 'kartu-spp', label: 'Cek Kartu SPP Siswa Pariwisata', icon: Smartphone, color: 'text-emerald-500' },
             { id: 'dashboard', label: 'Dashboard Kasir Umi', icon: LayoutDashboard, color: 'text-amber-400' }
@@ -79,6 +82,7 @@ export default function Sidebar({
           group: 'MANAJEMEN KEUANGAN SEKOLAH',
           items: [
             { id: 'dashboard', label: 'Dashboard Real-Time Keuangan', icon: LayoutDashboard, color: 'text-amber-400' },
+            { id: 'ppdb', label: 'Keuangan & Penerimaan PPDB', icon: UserPlus, color: 'text-amber-400' },
             { id: 'kasir', label: 'Monitoring Loket Kasir', icon: CreditCard, color: 'text-blue-500' },
             { id: 'buku-pager', label: 'Buku Pager (Rekap Setoran)', icon: BookOpen, color: 'text-indigo-500' },
             { id: 'kartu-spp', label: 'Kartu SPP Digital Siswa', icon: Smartphone, color: 'text-emerald-500' }
@@ -100,6 +104,7 @@ export default function Sidebar({
           group: 'MONITORING EKSEKUTIF',
           items: [
             { id: 'dashboard', label: 'Dashboard Eksekutif Sekolah', icon: LayoutDashboard, color: 'text-amber-400' },
+            { id: 'ppdb', label: 'Monitoring Penerimaan PPDB', icon: UserPlus, color: 'text-amber-400' },
             { id: 'buku-pager', label: 'Laporan Setoran Seluruh Kelas', icon: BookOpen, color: 'text-indigo-500' },
             { id: 'kartu-spp', label: 'Monitoring Kartu SPP Siswa', icon: Smartphone, color: 'text-emerald-500' }
           ]
@@ -146,6 +151,7 @@ export default function Sidebar({
         group: 'RINGKASAN & TRANSAKSI',
         items: [
           { id: 'dashboard', label: 'Dashboard Real-Time', icon: LayoutDashboard, color: 'text-amber-400' },
+          { id: 'ppdb', label: 'Persiapan PPDB & Siswa Baru', icon: UserPlus, color: 'text-amber-400' },
           { id: 'kasir', label: 'Loket Kasir & Kuitansi', icon: CreditCard, color: 'text-blue-500' },
           { id: 'buku-pager', label: 'Buku Pager (Rekap Setoran)', icon: BookOpen, color: 'text-indigo-500' },
           { id: 'kartu-spp', label: 'Kartu SPP Digital (Cek Siswa)', icon: Smartphone, color: 'text-emerald-500' }

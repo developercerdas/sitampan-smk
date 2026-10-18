@@ -888,5 +888,239 @@ export const INITIAL_DATA = {
         { item: 'SPP Bulan November 2026', nominal: 325000 }
       ]
     }
+  ],
+
+  // Modul Persiapan PPDB (Penerimaan Peserta Didik Baru)
+  masterPpdb: {
+    tahunAjaranPpdb: '2027/2028',
+    gelombangAktif: 'Gelombang 1',
+    periodePendaftaran: '1 Maret - 30 Juni 2027',
+    bankMitraVa: 'Bank BNI / Mandiri / Jateng',
+    kodePrefixVa: '8808',
+    posBiayaPpdb: [
+      { id: 'PPDB_FORMULIR', nama: 'Formulir & Registrasi PPDB', nominal: 150000, wajib: true },
+      { id: 'PPDB_SERAGAM', nama: 'Paket Seragam & Atribut Sekolah (5 Stel)', nominal: 750000, wajib: true },
+      { id: 'PPDB_MPLS', nama: 'Kegiatan MPLS & Pengenalan Vokasi', nominal: 200000, wajib: true },
+      { id: 'PPDB_SPI_AWAL', nama: 'Uang Pangkal / SPI Masuk (Tahap 1)', nominal: 1000000, wajib: false }
+    ],
+    kuotaJurusan: {
+      AKL: { targetSiswa: 72, rombelPerkiraan: 2 },
+      MPLB: { targetSiswa: 72, rombelPerkiraan: 2 },
+      PM: { targetSiswa: 72, rombelPerkiraan: 2 },
+      KSP: { targetSiswa: 36, rombelPerkiraan: 1 },
+      HTL: { targetSiswa: 72, rombelPerkiraan: 2 }
+    }
+  },
+
+  calonSiswaPpdb: [
+    {
+      id: 101,
+      noPendaftaran: 'PPDB-2027-001',
+      nisn: '0098765401',
+      nama: 'Bagus Setyawan',
+      jenisKelamin: 'L',
+      asalSekolah: 'SMP Negeri 1 Kudus',
+      noHp: '08123456001',
+      jurusanKode: 'AKL',
+      kelasId: null, // Wali kelas & kelas bisa menyusul
+      tanggalDaftar: '2027-03-05',
+      va: '88082027000101',
+      gelombang: 'Gelombang 1',
+      statusPendaftaran: 'DITERIMA',
+      totalTagihan: 2100000,
+      totalBayar: 2100000,
+      statusBayar: 'LUNAS',
+      statusFinal: 'CALON'
+    },
+    {
+      id: 102,
+      noPendaftaran: 'PPDB-2027-002',
+      nisn: '0098765402',
+      nama: 'Adelia Putri Maharani',
+      jenisKelamin: 'P',
+      asalSekolah: 'SMP Negeri 3 Kudus',
+      noHp: '08123456002',
+      jurusanKode: 'MPLB',
+      kelasId: null,
+      tanggalDaftar: '2027-03-08',
+      va: '88082027000102',
+      gelombang: 'Gelombang 1',
+      statusPendaftaran: 'DITERIMA',
+      totalTagihan: 2100000,
+      totalBayar: 1100000,
+      statusBayar: 'CICILAN',
+      statusFinal: 'CALON'
+    },
+    {
+      id: 103,
+      noPendaftaran: 'PPDB-2027-003',
+      nisn: '0098765403',
+      nama: 'Cantika Ayu Wardani',
+      jenisKelamin: 'P',
+      asalSekolah: 'MTs Negeri 1 Kudus',
+      noHp: '08123456003',
+      jurusanKode: 'KSP',
+      kelasId: null,
+      tanggalDaftar: '2027-03-12',
+      va: '88082027000103',
+      gelombang: 'Gelombang 1',
+      statusPendaftaran: 'DITERIMA',
+      totalTagihan: 2250000,
+      totalBayar: 150000,
+      statusBayar: 'CICILAN',
+      statusFinal: 'CALON'
+    },
+    {
+      id: 104,
+      noPendaftaran: 'PPDB-2027-004',
+      nisn: '0098765404',
+      nama: 'Dimas Arya Pratama',
+      jenisKelamin: 'L',
+      asalSekolah: 'SMP IT Al-Madani',
+      noHp: '08123456004',
+      jurusanKode: 'HTL',
+      kelasId: null,
+      tanggalDaftar: '2027-03-15',
+      va: '88082027000104',
+      gelombang: 'Gelombang 1',
+      statusPendaftaran: 'TERDAFTAR',
+      totalTagihan: 2200000,
+      totalBayar: 0,
+      statusBayar: 'BELUM_BAYAR',
+      statusFinal: 'CALON'
+    },
+    {
+      id: 105,
+      noPendaftaran: 'PPDB-2027-005',
+      nisn: '0098765405',
+      nama: 'Fajar Nugroho',
+      jenisKelamin: 'L',
+      asalSekolah: 'SMP Negeri 2 Mejobo',
+      noHp: '08123456005',
+      jurusanKode: 'PM',
+      kelasId: null,
+      tanggalDaftar: '2027-03-18',
+      va: '88082027000105',
+      gelombang: 'Gelombang 1',
+      statusPendaftaran: 'DITERIMA',
+      totalTagihan: 2100000,
+      totalBayar: 2100000,
+      statusBayar: 'LUNAS',
+      statusFinal: 'CALON'
+    },
+    {
+      id: 106,
+      noPendaftaran: 'PPDB-2027-006',
+      nisn: '0098765406',
+      nama: 'Nabila Khairunnisa',
+      jenisKelamin: 'P',
+      asalSekolah: 'SMP Negeri 1 Gebog',
+      noHp: '08123456006',
+      jurusanKode: 'AKL',
+      kelasId: null,
+      tanggalDaftar: '2027-03-20',
+      va: '88082027000106',
+      gelombang: 'Gelombang 1',
+      statusPendaftaran: 'DITERIMA',
+      totalTagihan: 2100000,
+      totalBayar: 1100000,
+      statusBayar: 'CICILAN',
+      statusFinal: 'CALON'
+    },
+    {
+      id: 107,
+      noPendaftaran: 'PPDB-2027-007',
+      nisn: '0098765407',
+      nama: 'Rendy Dwi Saputra',
+      jenisKelamin: 'L',
+      asalSekolah: 'SMP Negeri 4 Kudus',
+      noHp: '08123456007',
+      jurusanKode: 'HTL',
+      kelasId: null,
+      tanggalDaftar: '2027-03-22',
+      va: '88082027000107',
+      gelombang: 'Gelombang 1',
+      statusPendaftaran: 'TERDAFTAR',
+      totalTagihan: 2200000,
+      totalBayar: 0,
+      statusBayar: 'BELUM_BAYAR',
+      statusFinal: 'CALON'
+    },
+    {
+      id: 108,
+      noPendaftaran: 'PPDB-2027-008',
+      nisn: '0098765408',
+      nama: 'Salsa Bela Ramadhani',
+      jenisKelamin: 'P',
+      asalSekolah: 'SMP PGRI Kudus',
+      noHp: '08123456008',
+      jurusanKode: 'KSP',
+      kelasId: null,
+      tanggalDaftar: '2027-03-25',
+      va: '88082027000108',
+      gelombang: 'Gelombang 1',
+      statusPendaftaran: 'DITERIMA',
+      totalTagihan: 2250000,
+      totalBayar: 2250000,
+      statusBayar: 'LUNAS',
+      statusFinal: 'CALON'
+    }
+  ],
+
+  riwayatPembayaranPpdb: [
+    {
+      id: 'KWT-PPDB-20270305-001',
+      calonSiswaId: 101,
+      noPendaftaran: 'PPDB-2027-001',
+      namaSiswa: 'Bagus Setyawan',
+      jurusanKode: 'AKL',
+      tanggal: '2027-03-05',
+      total: 2100000,
+      metode: 'TUNAI',
+      petugas: 'Kasir TU - Hana (Bisnis Manajemen)',
+      catatan: 'Pelunasan Biaya Formulir, Seragam, MPLS, dan SPI Masuk Tahap 1',
+      rincian: [
+        { posId: 'PPDB_FORMULIR', nama: 'Formulir & Registrasi PPDB', nominal: 150000 },
+        { posId: 'PPDB_SERAGAM', nama: 'Paket Seragam & Atribut Sekolah (5 Stel)', nominal: 750000 },
+        { posId: 'PPDB_MPLS', nama: 'Kegiatan MPLS & Pengenalan Vokasi', nominal: 200000 },
+        { posId: 'PPDB_SPI_AWAL', nama: 'Uang Pangkal / SPI Masuk (Tahap 1)', nominal: 1000000 }
+      ]
+    },
+    {
+      id: 'VA-PPDB-20270308-002',
+      calonSiswaId: 102,
+      noPendaftaran: 'PPDB-2027-002',
+      namaSiswa: 'Adelia Putri Maharani',
+      jurusanKode: 'MPLB',
+      tanggal: '2027-03-08',
+      total: 1100000,
+      metode: 'VA_TRANSFER',
+      noReferensi: 'BNI-VA-PPDB-88082027000102',
+      petugas: 'SISTEM VA AUTO',
+      catatan: 'Pembayaran Formulir, Seragam, & MPLS via Virtual Account BNI',
+      rincian: [
+        { posId: 'PPDB_FORMULIR', nama: 'Formulir & Registrasi PPDB', nominal: 150000 },
+        { posId: 'PPDB_SERAGAM', nama: 'Paket Seragam & Atribut Sekolah (5 Stel)', nominal: 750000 },
+        { posId: 'PPDB_MPLS', nama: 'Kegiatan MPLS & Pengenalan Vokasi', nominal: 200000 }
+      ]
+    },
+    {
+      id: 'KWT-PPDB-20270325-003',
+      calonSiswaId: 108,
+      noPendaftaran: 'PPDB-2027-008',
+      namaSiswa: 'Salsa Bela Ramadhani',
+      jurusanKode: 'KSP',
+      tanggal: '2027-03-25',
+      total: 2250000,
+      metode: 'TUNAI',
+      petugas: 'Kasir TU - Umi (Pariwisata)',
+      catatan: 'Pelunasan Penuh Biaya PPDB Kejuruan Kecantikan & Spa',
+      rincian: [
+        { posId: 'PPDB_FORMULIR', nama: 'Formulir & Registrasi PPDB', nominal: 150000 },
+        { posId: 'PPDB_SERAGAM', nama: 'Paket Seragam & Atribut Sekolah (5 Stel)', nominal: 750000 },
+        { posId: 'PPDB_MPLS', nama: 'Kegiatan MPLS & Pengenalan Vokasi', nominal: 200000 },
+        { posId: 'PPDB_SPI_AWAL', nama: 'Uang Pangkal / SPI Masuk (Tahap 1)', nominal: 1150000 }
+      ]
+    }
   ]
 };

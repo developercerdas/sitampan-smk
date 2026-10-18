@@ -134,9 +134,17 @@ export const dataService = {
           dataPerluUpdate = true;
         }
 
-        // Sinkronkan posBiaya baru jika belum ada
-        if (!parsed.posBiaya || parsed.posBiaya.length < INITIAL_DATA.posBiaya.length) {
-          parsed.posBiaya = INITIAL_DATA.posBiaya;
+        // Sinkronkan modul PPDB jika belum ada di LocalStorage
+        if (!parsed.masterPpdb) {
+          parsed.masterPpdb = INITIAL_DATA.masterPpdb;
+          dataPerluUpdate = true;
+        }
+        if (!parsed.calonSiswaPpdb) {
+          parsed.calonSiswaPpdb = INITIAL_DATA.calonSiswaPpdb;
+          dataPerluUpdate = true;
+        }
+        if (!parsed.riwayatPembayaranPpdb) {
+          parsed.riwayatPembayaranPpdb = INITIAL_DATA.riwayatPembayaranPpdb;
           dataPerluUpdate = true;
         }
 
@@ -417,16 +425,19 @@ export const dataService = {
   },
 
   // 9. CRUD Master Kelas & Wali Kelas
-  tambahKelas({ nama, tingkat, jurusanKode, rombel, waliKelas }) {
+  tambahKelas({ nama, tingkat, jurusanKode, rombel, waliKelas, kelompok }) {
     const data = this.getData();
     const newId = data.kelas.length > 0 ? Math.max(...data.kelas.map((k) => k.id)) + 1 : 1;
+    const jur = (jurusanKode || 'AKL').toUpperCase().trim();
+    const isPariwisata = jur === 'KSP' || jur === 'HTL' || kelompok === 'PARIWISATA';
     const baru = {
       id: newId,
-      nama: nama || `${tingkat} ${jurusanKode} ${rombel}`,
+      nama: nama || `${tingkat || 'X'} ${jur} ${rombel || '1'}`,
       tingkat: tingkat || 'X',
-      jurusanKode: jurusanKode || 'AKL',
+      jurusanKode: jur,
       rombel: rombel || '1',
-      waliKelas: waliKelas || 'Belum Ditentukan'
+      kelompok: isPariwisata ? 'PARIWISATA' : 'BISNIS_MANAJEMEN',
+      waliKelas: waliKelas?.trim() || 'Belum Ditentukan (Menyusul)'
     };
     data.kelas.push(baru);
     this.saveData(data);
@@ -566,5 +577,168 @@ export const dataService = {
     data.posBiaya[index].tarifJurusan[jurusanKode] = Number(nominal);
     this.saveData(data);
     return data.posBiaya[index];
+  },
+
+  // 12. Modul PPDB (Penerimaan Peserta Didik Baru)
+  generateVaPpdb(jurusanKode) {
+    const data = this.getData();
+    const prefix = data.masterPpdb?.kodePrefixVa || '8808';
+    const tahun = (data.masterPpdb?.tahunAjaranPpdb || '2027').split('/')[0] || '2027';
+    const jurKodeMap = { AKL: '01', MPLB: '02', PM: '03', KSP: '04', HTL: '05' };
+    const jurDigit = jurKodeMap[jurusanKode] || '99';
+    const existingCount = (data.calonSiswaPpdb || []).length + 1;
+    const urutStr = String(existingCount).padStart(4, '0');
+    return `${prefix}${tahun}${jurDigit}${urutStr}`;
+  },
+
+  tambahCalonSiswaPpdb({ nama, nisn, jenisKelamin, asalSekolah, noHp, jurusanKode, kelasId, gelombang, vaManual }) {
+    const data = this.getData();
+    const newId = (data.calonSiswaPpdb && data.calonSiswaPpdb.length > 0)
+      ? Math.max(...data.calonSiswaPpdb.map(s => s.id)) + 1
+      : 101;
+    
+    const tahun = (data.masterPpdb?.tahunAjaranPpdb || '2027').split('/')[0] || '2027';
+    const noPendaftaran = `PPDB-${tahun}-${String(newId).padStart(3, '0')}`;
+    const vaFinal = vaManual?.trim() ? vaManual.trim() : this.generateVaPpdb(jurusanKode);
+
+    // Hitung total tagihan dari master biaya PPDB
+    let totalTagihan = 0;
+    (data.masterPpdb?.posBiayaPpdb || []).forEach(pos => {
+      totalTagihan += Number(pos.nominal || 0);
+    });
+
+    const baru = {
+      id: newId,
+      noPendaftaran,
+      nisn: nisn?.trim() || `009${Math.floor(1000000 + Math.random() * 9000000)}`,
+      nama: nama.trim(),
+      jenisKelamin: jenisKelamin || 'L',
+      asalSekolah: asalSekolah?.trim() || '-',
+      noHp: noHp?.trim() || '',
+      jurusanKode: jurusanKode || 'AKL',
+      kelasId: kelasId ? Number(kelasId) : null,
+      tanggalDaftar: new Date().toISOString().split('T')[0],
+      va: vaFinal,
+      gelombang: gelombang || data.masterPpdb?.gelombangAktif || 'Gelombang 1',
+      statusPendaftaran: 'DITERIMA',
+      totalTagihan,
+      totalBayar: 0,
+      statusBayar: 'BELUM_BAYAR',
+      statusFinal: 'CALON'
+    };
+
+    if (!data.calonSiswaPpdb) data.calonSiswaPpdb = [];
+    data.calonSiswaPpdb.unshift(baru);
+    this.saveData(data);
+    return baru;
+  },
+
+  updateCalonSiswaPpdb(id, updatedFields) {
+    const data = this.getData();
+    const index = (data.calonSiswaPpdb || []).findIndex(s => s.id === Number(id));
+    if (index === -1) throw new Error('Data calon siswa tidak ditemukan');
+
+    data.calonSiswaPpdb[index] = {
+      ...data.calonSiswaPpdb[index],
+      ...updatedFields
+    };
+
+    // Sinkronkan status bayar jika totalBayar berubah
+    const cs = data.calonSiswaPpdb[index];
+    if (cs.totalBayar >= cs.totalTagihan && cs.totalTagihan > 0) {
+      cs.statusBayar = 'LUNAS';
+    } else if (cs.totalBayar > 0) {
+      cs.statusBayar = 'CICILAN';
+    } else {
+      cs.statusBayar = 'BELUM_BAYAR';
+    }
+
+    this.saveData(data);
+    return data.calonSiswaPpdb[index];
+  },
+
+  hapusCalonSiswaPpdb(id) {
+    const data = this.getData();
+    data.calonSiswaPpdb = (data.calonSiswaPpdb || []).filter(s => s.id !== Number(id));
+    this.saveData(data);
+    return true;
+  },
+
+  catatPembayaranPpdb({ calonSiswaId, nominal, metode, nomorReferensi, petugas, rincianItems, catatan }) {
+    const data = this.getData();
+    const index = (data.calonSiswaPpdb || []).findIndex(s => s.id === Number(calonSiswaId));
+    if (index === -1) throw new Error('Calon siswa tidak ditemukan');
+
+    const calon = data.calonSiswaPpdb[index];
+    const noKwitansi = `KWT-PPDB-${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}${String(new Date().getDate()).padStart(2, '0')}-${Math.floor(100 + Math.random() * 900)}`;
+
+    const bayarNominal = Number(nominal);
+    calon.totalBayar = (calon.totalBayar || 0) + bayarNominal;
+
+    if (calon.totalBayar >= calon.totalTagihan) {
+      calon.statusBayar = 'LUNAS';
+    } else if (calon.totalBayar > 0) {
+      calon.statusBayar = 'CICILAN';
+    }
+
+    const transaksiPpdb = {
+      id: noKwitansi,
+      calonSiswaId: calon.id,
+      noPendaftaran: calon.noPendaftaran,
+      namaSiswa: calon.nama,
+      jurusanKode: calon.jurusanKode,
+      tanggal: new Date().toISOString().split('T')[0],
+      total: bayarNominal,
+      metode: metode || 'TUNAI',
+      nomorReferensi: nomorReferensi || null,
+      petugas: petugas || 'Kasir TU PPDB',
+      catatan: catatan || '',
+      rincian: rincianItems || []
+    };
+
+    if (!data.riwayatPembayaranPpdb) data.riwayatPembayaranPpdb = [];
+    data.riwayatPembayaranPpdb.unshift(transaksiPpdb);
+    this.saveData(data);
+    return transaksiPpdb;
+  },
+
+  updateMasterPpdb(newMasterPpdb) {
+    const data = this.getData();
+    data.masterPpdb = { ...data.masterPpdb, ...newMasterPpdb };
+    this.saveData(data);
+    return data.masterPpdb;
+  },
+
+  promosikanSiswaPpdbKeAktif(calonSiswaId, kelasIdTarget, nisBaru) {
+    const data = this.getData();
+    const calonIndex = (data.calonSiswaPpdb || []).findIndex(s => s.id === Number(calonSiswaId));
+    if (calonIndex === -1) throw new Error('Calon siswa tidak ditemukan');
+
+    const calon = data.calonSiswaPpdb[calonIndex];
+    const newSiswaId = data.siswa.length > 0 ? Math.max(...data.siswa.map(s => s.id)) + 1 : 1;
+    const finalNis = nisBaru?.trim() || String(13000 + newSiswaId);
+
+    const siswaBaru = {
+      id: newSiswaId,
+      nis: finalNis,
+      nisn: calon.nisn || '',
+      nama: calon.nama,
+      tanggalLahir: '2011-01-01',
+      kelasId: Number(kelasIdTarget),
+      jurusanKode: calon.jurusanKode,
+      tingkat: 'X',
+      va: calon.va || `8808${finalNis}00${newSiswaId}`,
+      telepon: calon.noHp || '',
+      status: 'AKTIF',
+      spi: 0,
+      tunggakanLalu: 0,
+      duJuli: 0,
+      bayarBulanan: {}
+    };
+
+    data.siswa.push(siswaBaru);
+    calon.statusFinal = 'RESMI_AKTIF';
+    this.saveData(data);
+    return siswaBaru;
   }
 };

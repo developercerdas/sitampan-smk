@@ -64,14 +64,19 @@ export default function MasterKelasView({ data, onUpdateData, setActiveTab }) {
 
   const handleSimpan = (e) => {
     e.preventDefault();
-    if (!formData.nama.trim() || !formData.waliKelas.trim()) {
-      alert('Mohon lengkapi Nama Kelas dan Nama Guru Wali Kelas!');
+    if (!formData.nama.trim()) {
+      alert('Mohon lengkapi Nama Kelas!');
       return;
     }
 
+    const payload = {
+      ...formData,
+      waliKelas: formData.waliKelas?.trim() || 'Belum Ditentukan (Menyusul)'
+    };
+
     try {
       if (editId) {
-        dataService.updateKelas(editId, formData);
+        dataService.updateKelas(editId, payload);
         setPesan({ tipe: 'sukses', teks: `Data Kelas ${formData.nama} berhasil diperbarui!` });
       } else {
         // Cek duplikasi nama kelas
@@ -79,7 +84,7 @@ export default function MasterKelasView({ data, onUpdateData, setActiveTab }) {
           alert(`Nama Kelas "${formData.nama}" sudah ada! Mohon gunakan nomor rombel lain.`);
           return;
         }
-        dataService.tambahKelas(formData);
+        dataService.tambahKelas(payload);
         setPesan({ tipe: 'sukses', teks: `Kelas ${formData.nama} berhasil ditambahkan!` });
       }
       onUpdateData();
@@ -390,18 +395,17 @@ export default function MasterKelasView({ data, onUpdateData, setActiveTab }) {
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
-                  Nama Guru Wali Kelas & Gelar
+                  Nama Guru Wali Kelas & Gelar <span className="text-slate-400 font-normal lowercase">(opsional / bisa menyusul saat PPDB)</span>
                 </label>
                 <input
                   type="text"
-                  required
                   value={formData.waliKelas}
                   onChange={(e) => setFormData({ ...formData, waliKelas: e.target.value })}
-                  placeholder="Misal: Dra. Hj. Siti Handayani, M.Pd"
+                  placeholder="Misal: Dra. Hj. Siti Handayani, M.Pd (Bisa kosong / menyusul)"
                   className="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500"
                 />
                 <p className="text-[11px] text-slate-500 mt-1">
-                  Nama wali kelas ini akan tertera di portal Wali Kelas dan buku setoran kelas terkait.
+                  Saat persiapan PPDB baru, nama wali kelas bisa dikosongkan dan akan otomatis berlabel <em>Belum Ditentukan (Menyusul)</em>.
                 </p>
               </div>
 

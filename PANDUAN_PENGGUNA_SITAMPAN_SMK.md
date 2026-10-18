@@ -115,7 +115,46 @@ Admin Pusat memiliki tombol navigasi khusus di bilah atas layar:
 
 ---
 
-## 6. PUSAT BANTUAN & PEMELIHARAAN SISTEM
+---
+
+## 6. PANDUAN MODUL PERSIAPAN PPDB (PENERIMAAN SISWA BARU)
+
+Modul **Persiapan PPDB** dirancang khusus untuk menangani proses penerimaan calon siswa baru saat rombel dan wali kelas definitif belum terbentuk.
+
+### A. Pendaftaran Calon Siswa & Nomor Virtual Account (VA)
+1. Buka menu **Persiapan PPDB & Siswa Baru** di sidebar.
+2. Klik tombol **"+ Daftar Siswa Baru"**.
+3. Isi data calon siswa:
+   * **Nama Calon Siswa** (Wajib).
+   * **NISN, Jenis Kelamin, Asal Sekolah (SMP/MTs), dan No. WhatsApp** (untuk pengiriman bukti/notifikasi).
+   * **Pilihan Jurusan**: Sesuai hak akses kasir (Kasir Hana khusus AKL/MPLB/PM; Kasir Umi khusus KSP/HTL; Admin/Bendahara bebas semua jurusan).
+   * **Pilihan Kelas**: Dapat memilih `(Belum Ditentukan / Menyusul)` jika belum ada pembagian kelas, atau langsung memilih rombel tingkat X yang ada.
+4. **Pengaturan Nomor Virtual Account (VA):**
+   * **Auto-Generate Otomatis:** Sistem menyusun nomor VA terstandar format bank mitra (contoh: `88082027000101`).
+   * **Input Manual:** Kasir/admin dapat **mengetik manual** nomor VA jika bank mitra telah menerbitkan nomor rekening VA tersendiri.
+5. Klik **"Daftarkan Siswa Sekarang"**.
+
+### B. Input Pembayaran Uang Masuk PPDB (Kasir & VA)
+1. Di tab **Data Calon Siswa Baru** atau **Loket Pembayaran PPDB**, klik tombol **"Bayar"** pada calon siswa terkait.
+2. Masukkan nominal uang yang diterima (bisa **Bayar Penuh / Lunas** atau **Nyicil Sebagian**).
+3. Pilih metode pembayaran: **TUNAI (Loket)** atau **VIRTUAL ACCOUNT (Transfer Bank)**.
+4. Klik **"Proses & Terbitkan Kuitansi"**.
+5. Kuitansi resmi tanda bukti setoran PPDB lengkap dengan nomor kuitansi, KOP sekolah, rincian biaya, dan verifikasi QR Code siap langsung dicetak!
+
+### C. Pembukaan Rombel Kelas X Baru Dinamis
+1. Karena baru masa pendaftaran PPDB dan sekolah belum mengetahui pasti dapat berapa kelas dan siswa per jurusan:
+   * Klik tab **"Master Kelas & Kuota Jurusan"** atau tombol **"+ Rombel Kelas X Baru"**.
+   * Pilih Jurusan dan nomor rombel (contoh: `X AKL 2`, `X HTL 2`).
+   * **Guru Wali Kelas:** Bersifat **opsional (bisa dikosongkan/menyusul)** dan default sebagai `Belum Ditentukan (Menyusul)`.
+2. Klik **"Buka Kelas Baru"**. Rombel baru seketika terdaftar di master data sekolah!
+
+### D. Promosi Calon Siswa Menjadi Siswa Aktif
+* Ketika calon siswa telah menyelesaikan registrasi/diterima dan tahun ajaran baru resmi dimulai:
+* Klik ikon topi toga **"Promosikan Jadi Siswa Aktif"** pada tabel calon siswa, pilih kelas X definitifnya, dan calon siswa otomatis resmi tercatat di data induk siswa aktif (`Master Siswa`) sekolah!
+
+---
+
+## 7. PUSAT BANTUAN & PEMELIHARAAN SISTEM
 
 Jika sekolah membutuhkan penambahan akun kasir baru, perubahan logo sekolah, penyesuaian tarif iuran per jurusan, atau integrasi gateway WhatsApp kuitansi:
 * **Dukungan Teknis:** CV. ISTANA BARCODE COMPUTER — DEVELOPER CERDAS
