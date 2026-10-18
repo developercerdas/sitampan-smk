@@ -147,9 +147,9 @@ export default function LoginView({ data, onLogin }) {
       const u = username.trim().toLowerCase();
       const p = password.trim();
 
-      if (u === 'hana' && (p === 'hana123' || p === 'hana' || p === 'admin123')) {
+      if ((u === 'hana' || u === 'kasir1' || u === 'kasir_bisman' || u === 'bisman') && (p === 'hana123' || p === 'hana' || p === 'kasir123' || p === 'admin123')) {
         handleQuickLogin('KASIR_HANA');
-      } else if (u === 'umi' && (p === 'umi123' || p === 'umi' || p === 'admin123')) {
+      } else if ((u === 'umi' || u === 'kasir2' || u === 'kasir_par' || u === 'pariwisata') && (p === 'umi123' || p === 'umi' || p === 'kasir123' || p === 'admin123')) {
         handleQuickLogin('KASIR_UMI');
       } else if (u === 'admin' && (p === 'admin123' || p === 'admin')) {
         handleQuickLogin('ADMIN');
@@ -157,9 +157,9 @@ export default function LoginView({ data, onLogin }) {
         handleQuickLogin('BENDAHARA');
       } else if (u === 'kepsek' && (p === 'kepsek123' || p === 'kepsek' || p === 'admin123' || p === 'admin')) {
         handleQuickLogin('KEPALA_SEKOLAH');
-      } else if (staffRole === 'KASIR_HANA' && (p === 'hana123' || p === 'admin123')) {
+      } else if (staffRole === 'KASIR_HANA' && (p === 'hana123' || p === 'kasir123' || p === 'admin123')) {
         handleQuickLogin('KASIR_HANA');
-      } else if (staffRole === 'KASIR_UMI' && (p === 'umi123' || p === 'admin123')) {
+      } else if (staffRole === 'KASIR_UMI' && (p === 'umi123' || p === 'kasir123' || p === 'admin123')) {
         handleQuickLogin('KASIR_UMI');
       } else if (staffRole === 'BENDAHARA' && (p === 'bendahara123' || p === 'admin123' || p === 'admin')) {
         handleQuickLogin('BENDAHARA');
@@ -168,7 +168,7 @@ export default function LoginView({ data, onLogin }) {
       } else if (staffRole === 'ADMIN' && (p === 'admin123' || p === 'admin')) {
         handleQuickLogin('ADMIN');
       } else {
-        setErrorMsg('Username atau password tidak sesuai! (Demo: hana/hana123, umi/umi123, admin/admin123, bendahara/bendahara123, kepsek/kepsek123)');
+        setErrorMsg('Username atau password tidak sesuai! Silakan gunakan tombol pilihan akun di atas atau periksa kembali kredensial Anda.');
       }
     } else if (activeTab === 'WALI_KELAS') {
       handleQuickLogin('WALI_KELAS');
@@ -454,7 +454,7 @@ export default function LoginView({ data, onLogin }) {
             )}
 
             {/* ========================================================= */}
-            {/* FORM ROLE 2: PIMPINAN & STAF TU (KEPSEK, BENDAHARA, KASIR HANA, KASIR UMI) */}
+            {/* FORM ROLE 2: PIMPINAN & STAF TU (KEPSEK, BENDAHARA, KASIR BISMAN, KASIR PARIWISATA) */}
             {/* ========================================================= */}
             {(activeTab === 'ADMIN' || activeTab === 'STAFF') && (
               <div className="space-y-3.5">
@@ -530,7 +530,7 @@ export default function LoginView({ data, onLogin }) {
                           : 'text-blue-900 hover:bg-blue-100/60'
                       }`}
                     >
-                      💼 Kasir Hana (BisMan)
+                      💼 Kasir Bisnis & Manajemen
                     </button>
                     <button
                       type="button"
@@ -546,7 +546,7 @@ export default function LoginView({ data, onLogin }) {
                           : 'text-rose-900 hover:bg-rose-100/60'
                       }`}
                     >
-                      🏖️ Kasir Umi (Pariwisata)
+                      🏖️ Kasir Pariwisata
                     </button>
                   </div>
                 </div>
@@ -711,7 +711,7 @@ export default function LoginView({ data, onLogin }) {
                 type="button"
                 onClick={() => handleQuickLogin('KASIR_HANA')}
                 className="px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-blue-800 rounded-lg text-xs font-bold border border-blue-300 transition cursor-pointer"
-                title="Login sebagai Kasir Kelompok Bisnis Manajemen: AKL, MPLB, PM (username: hana)"
+                title="Login sebagai Kasir Kelompok Bisnis & Manajemen: AKL, MPLB, PM"
               >
                 💼 Kasir Bisnis & Manajemen
               </button>
@@ -719,7 +719,7 @@ export default function LoginView({ data, onLogin }) {
                 type="button"
                 onClick={() => handleQuickLogin('KASIR_UMI')}
                 className="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-800 rounded-lg text-xs font-bold border border-rose-300 transition cursor-pointer"
-                title="Login sebagai Kasir Kelompok Pariwisata: Kecantikan & Spa, Perhotelan (username: umi)"
+                title="Login sebagai Kasir Kelompok Pariwisata: Kecantikan & Spa, Perhotelan"
               >
                 🏖️ Kasir Pariwisata
               </button>

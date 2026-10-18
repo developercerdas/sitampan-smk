@@ -302,7 +302,7 @@ export default function App() {
 
         {/* Content Body (Safe area bottom padding untuk Android address bar) */}
         <main className="flex-1 p-3 sm:p-5 lg:p-7 max-w-7xl w-full mx-auto space-y-6 pb-28 md:pb-12">
-          {/* Dashboard Real-Time (Admin, Bendahara, Kepala Sekolah, Kasir Hana, Kasir Umi) */}
+          {/* Dashboard Real-Time (Admin, Bendahara, Kepala Sekolah, Kasir BisMan, Kasir Pariwisata) */}
           {activeTab === 'dashboard' && (role === 'ADMIN' || role === 'BENDAHARA' || role === 'KEPALA_SEKOLAH' || role === 'KASIR_HANA' || role === 'KASIR_UMI') && (
             <DashboardView 
               data={data} 
@@ -313,7 +313,7 @@ export default function App() {
             />
           )}
 
-          {/* Menu Loket Kasir (Admin, Bendahara, Kasir Hana, Kasir Umi) */}
+          {/* Menu Loket Kasir (Admin, Bendahara, Kasir BisMan, Kasir Pariwisata) */}
           {activeTab === 'kasir' && (role === 'ADMIN' || role === 'BENDAHARA' || role === 'KASIR_HANA' || role === 'KASIR_UMI') && (
             <KasirView
               data={data}
@@ -325,7 +325,7 @@ export default function App() {
             />
           )}
 
-          {/* Menu Persiapan PPDB & Penerimaan Siswa Baru (Admin, Bendahara, Kepala Sekolah, Kasir Hana, Kasir Umi) */}
+          {/* Menu Persiapan PPDB & Penerimaan Siswa Baru (Admin, Bendahara, Kepala Sekolah, Kasir BisMan, Kasir Pariwisata) */}
           {activeTab === 'ppdb' && (role === 'ADMIN' || role === 'BENDAHARA' || role === 'KEPALA_SEKOLAH' || role === 'KASIR_HANA' || role === 'KASIR_UMI') && (
             <PpdbView
               data={data}
@@ -335,7 +335,7 @@ export default function App() {
             />
           )}
 
-          {/* Buku Pager (Bisa diakses Admin, Bendahara, Kepala Sekolah, Wali Kelas, Kasir Hana, Kasir Umi) */}
+          {/* Buku Pager (Bisa diakses Admin, Bendahara, Kepala Sekolah, Wali Kelas, Kasir BisMan, Kasir Pariwisata) */}
           {activeTab === 'buku-pager' && (role === 'ADMIN' || role === 'BENDAHARA' || role === 'KEPALA_SEKOLAH' || role === 'WALI_KELAS' || role === 'KASIR_HANA' || role === 'KASIR_UMI') && (
             <BukuPagerView
               data={data}
@@ -346,7 +346,7 @@ export default function App() {
             />
           )}
 
-          {/* Kartu SPP (Bisa diakses Siswa/Ortu, Admin, Bendahara, Kepala Sekolah, Wali Kelas, Kasir Hana, Kasir Umi) */}
+          {/* Kartu SPP (Bisa diakses Siswa/Ortu, Admin, Bendahara, Kepala Sekolah, Wali Kelas, Kasir BisMan, Kasir Pariwisata) */}
           {activeTab === 'kartu-spp' && (
             <KartuSppView
               data={data}
