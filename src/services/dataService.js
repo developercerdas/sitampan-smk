@@ -134,9 +134,24 @@ export const dataService = {
           dataPerluUpdate = true;
         }
 
+        // Sinkronkan pos biaya jika belum lengkap (SERAGAM, OSIS, MAJALAH, SARPRAS)
+        if (!parsed.posBiaya || !parsed.posBiaya.some(p => p.id === 'SERAGAM')) {
+          const existingIds = new Set((parsed.posBiaya || []).map(p => p.id));
+          INITIAL_DATA.posBiaya.forEach(p => {
+            if (!existingIds.has(p.id)) {
+              if (!parsed.posBiaya) parsed.posBiaya = [];
+              parsed.posBiaya.push(p);
+            }
+          });
+          dataPerluUpdate = true;
+        }
+
         // Sinkronkan modul PPDB jika belum ada di LocalStorage
         if (!parsed.masterPpdb) {
           parsed.masterPpdb = INITIAL_DATA.masterPpdb;
+          dataPerluUpdate = true;
+        } else if (!parsed.masterPpdb.posBiayaPpdb || !parsed.masterPpdb.posBiayaPpdb.some(p => p.id === 'PPDB_SERAGAM')) {
+          parsed.masterPpdb.posBiayaPpdb = INITIAL_DATA.masterPpdb.posBiayaPpdb;
           dataPerluUpdate = true;
         }
         if (!parsed.calonSiswaPpdb) {
@@ -152,9 +167,10 @@ export const dataService = {
           this.saveData(parsed);
         }
 
-        // Pastikan setiap siswa memiliki field tanggalLahir
+        // Pastikan setiap siswa memiliki field posBayar & tanggalLahir
         parsed.siswa = (parsed.siswa || []).map((s) => ({
           ...s,
+          posBayar: s.posBayar || {},
           tanggalLahir: s.tanggalLahir || (
             s.nis === '12640' ? '2008-08-17' :
             s.nis === '12643' ? '2008-05-12' :
@@ -164,6 +180,32 @@ export const dataService = {
             '2008-07-15'
           )
         }));
+
+        // Pastikan setiap calon siswa memiliki field posBayar & vaStatus yang sinkron
+        parsed.calonSiswaPpdb = (parsed.calonSiswaPpdb || []).map((cs) => {
+          let posBayar = cs.posBayar || {};
+          // Jika posBayar masih kosong tetapi totalBayar > 0, alokasikan secara sekuensial
+          if (Object.keys(posBayar).length === 0 && (cs.totalBayar || 0) > 0 && parsed.masterPpdb?.posBiayaPpdb) {
+            posBayar = {};
+            let remaining = cs.totalBayar;
+            parsed.masterPpdb.posBiayaPpdb.forEach(p => {
+              if (remaining <= 0) {
+                posBayar[p.id] = 0;
+              } else if (remaining >= p.nominal) {
+                posBayar[p.id] = p.nominal;
+                remaining -= p.nominal;
+              } else {
+                posBayar[p.id] = remaining;
+                remaining = 0;
+              }
+            });
+          }
+          return {
+            ...cs,
+            posBayar,
+            vaStatus: cs.vaStatus || (cs.statusBayar === 'LUNAS' ? 'SUDAH_BAYAR' : cs.statusBayar === 'CICILAN' ? 'SUDAH_BAYAR' : 'BELUM_BAYAR')
+          };
+        });
       } else {
         parsed = JSON.parse(JSON.stringify(INITIAL_DATA));
       }
@@ -218,10 +260,13 @@ export const dataService = {
     const siswa = data.siswa[siswaIndex];
     const noKwitansi = `KWT-${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}${String(new Date().getDate()).padStart(2, '0')}-${Math.floor(1000 + Math.random() * 9000)}`;
 
+    if (!siswa.bayarBulanan) siswa.bayarBulanan = {};
+    if (!siswa.posBayar) siswa.posBayar = {};
+
     // Update kolom setoran siswa berdasarkan rincian yang dibayar (Mendukung Pembayaran Penuh & Cicilan)
-    rincianItems.forEach((item) => {
-      const bayarNominal = Number(item.bayar);
-      if (item.tipe === 'BULANAN') {
+    (rincianItems || []).forEach((item) => {
+      const bayarNominal = Number(item.bayar !== undefined ? item.bayar : item.nominal || 0);
+      if (item.tipe === 'BULANAN' && item.namaBulan) {
         siswa.bayarBulanan[item.namaBulan] = (siswa.bayarBulanan[item.namaBulan] || 0) + bayarNominal;
       } else if (item.posId === 'DU') {
         siswa.duJuli = (siswa.duJuli || 0) + bayarNominal;
@@ -229,8 +274,14 @@ export const dataService = {
         siswa.spi = (siswa.spi || 0) + bayarNominal;
       } else if (item.posId === 'TUNGGAKAN_LALU') {
         siswa.tunggakanLalu = (siswa.tunggakanLalu || 0) + bayarNominal;
+      } else if (item.posId) {
+        siswa.posBayar[item.posId] = (siswa.posBayar[item.posId] || 0) + bayarNominal;
       }
     });
+
+    if (metode === 'VA_TRANSFER' || nomorReferensi) {
+      siswa.vaStatus = 'SUDAH_BAYAR';
+    }
 
     const transaksiBaru = {
       id: noKwitansi,
@@ -242,7 +293,7 @@ export const dataService = {
       total: Number(nominal),
       metode: metode || 'TUNAI',
       nomorReferensi: nomorReferensi || null,
-      petugas: petugas || 'Kasir TU (Ibu Rini)',
+      petugas: petugas || 'Kasir TU',
       statusRaport: statusRaport || 'Boleh Ambil',
       catatan: catatan || '',
       rincian: rincianItems
@@ -253,9 +304,45 @@ export const dataService = {
     return transaksiBaru;
   },
 
+  // 4b. Verifikasi Pembayaran VA Manual oleh Admin (Tombol 'Sudah Bayar')
+  verifikasiPembayaranVa({ siswaId, nominal, petugas, rincianItems, nomorReferensi, catatan }) {
+    return this.catatPembayaran({
+      siswaId,
+      nominal,
+      metode: 'VA_TRANSFER',
+      nomorReferensi: nomorReferensi || `VA-VERIF-${Date.now().toString().slice(-6)}`,
+      petugas: petugas || 'Admin Pusat (Verifikasi VA)',
+      rincianItems,
+      catatan: catatan || 'Verifikasi Pembayaran Virtual Account (Telah Dikonfirmasi Admin)'
+    });
+  },
+
+  // 4c. Fungsi Pembantu: Alokasikan Otomatis dari Total Uang Diterima
+  alokasikanOtomatis(items, totalUang) {
+    let sisaUang = Math.max(0, Number(totalUang) || 0);
+    const hasilAlokasi = {};
+
+    (items || []).forEach(it => {
+      const sisaItem = Math.max(0, Number(it.sisa || it.sisaHarusBayar || 0));
+      if (sisaUang <= 0 || sisaItem <= 0) {
+        hasilAlokasi[it.id || it.posId] = 0;
+      } else if (sisaUang >= sisaItem) {
+        hasilAlokasi[it.id || it.posId] = sisaItem;
+        sisaUang -= sisaItem;
+      } else {
+        hasilAlokasi[it.id || it.posId] = sisaUang;
+        sisaUang = 0;
+      }
+    });
+
+    return hasilAlokasi;
+  },
+
   // 5. Hitung Ringkasan Keuangan Siswa (Total Tagihan, Total Bayar, Sisa Tunggakan)
   getKalkulasiSiswa(siswa) {
     const data = this.getData();
+    if (!siswa) return null;
+
     const posSpp = data.posBiaya?.find((p) => p.id === 'SPP');
     const nominalSpp = (posSpp?.tarifJurusan && siswa?.jurusanKode && posSpp.tarifJurusan[siswa.jurusanKode]) || posSpp?.nominalDefault || 325000;
     
@@ -264,13 +351,87 @@ export const dataService = {
 
     const bulanDaftar = ['Agustus', 'September', 'Oktober', 'November', 'Desember', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni'];
 
-    // Hitung yang sudah dibayar
+    // Hitung yang sudah dibayar SPP
     let totalBayarSpp = 0;
     bulanDaftar.forEach((bln) => {
       totalBayarSpp += Number(siswa.bayarBulanan?.[bln] || 0);
     });
 
-    const totalSudahBayar = (Number(siswa.duJuli) || 0) + totalBayarSpp;
+    // Susun Rincian Lengkap Seluruh Pos Tagihan Siswa (Untuk Kasir & Kuitansi)
+    const posBayarMap = siswa.posBayar || {};
+    const daftarItemTagihan = [];
+
+    // 1. DU + Juli
+    const sudahDu = Number(siswa.duJuli) || 0;
+    daftarItemTagihan.push({
+      id: 'DU',
+      posId: 'DU',
+      nama: posDu?.nama || 'Daftar Ulang (DU + Juli)',
+      tipe: 'SEKALI_BAYAR',
+      target: nominalDu,
+      sudahMasuk: sudahDu,
+      sisa: Math.max(0, nominalDu - sudahDu),
+      status: sudahDu >= nominalDu ? 'LUNAS' : sudahDu > 0 ? 'CICILAN' : 'BELUM_BAYAR'
+    });
+
+    // 2. SPI (Uang Gedung)
+    const posSpi = data.posBiaya?.find((p) => p.id === 'SPI');
+    const nominalSpi = (posSpi?.tarifJurusan && siswa?.jurusanKode && posSpi.tarifJurusan[siswa.jurusanKode]) || posSpi?.nominalDefault || 2000000;
+    const sudahSpi = Number(siswa.spi) || 0;
+    if (siswa.tingkat === 'X' || sudahSpi > 0 || (posSpi && posSpi.targetTingkat === 'SEMUA')) {
+      daftarItemTagihan.push({
+        id: 'SPI',
+        posId: 'SPI',
+        nama: posSpi?.nama || 'Sumbangan Pengembangan Institusi (SPI / Gedung)',
+        tipe: 'SEKALI_BAYAR',
+        target: nominalSpi,
+        sudahMasuk: sudahSpi,
+        sisa: Math.max(0, nominalSpi - sudahSpi),
+        status: sudahSpi >= nominalSpi ? 'LUNAS' : sudahSpi > 0 ? 'CICILAN' : 'BELUM_BAYAR'
+      });
+    }
+
+    // 3. Seluruh Pos Biaya Master Lainnya (Seragam, OSIS, Majalah, Sarpras, Praktik, dll.)
+    (data.posBiaya || []).forEach((pos) => {
+      if (['SPP', 'DU', 'SPI', 'TABUNGAN', 'TUNGGAKAN_LALU'].includes(pos.id)) return;
+      const matchJurusan = pos.targetJurusan === 'SEMUA' || pos.targetJurusan === siswa.jurusanKode;
+      const matchTingkat = pos.targetTingkat === 'SEMUA' || pos.targetTingkat === siswa.tingkat;
+      if (!matchJurusan || !matchTingkat) return;
+
+      const target = (pos.tarifJurusan && pos.tarifJurusan[siswa.jurusanKode]) || pos.nominalDefault || 0;
+      const sudah = Number(posBayarMap[pos.id]) || 0;
+      daftarItemTagihan.push({
+        id: `POS_${pos.id}`,
+        posId: pos.id,
+        nama: pos.nama,
+        tipe: pos.tipe || 'SEKALI_BAYAR',
+        target,
+        sudahMasuk: sudah,
+        sisa: Math.max(0, target - sudah),
+        status: sudah >= target && target > 0 ? 'LUNAS' : sudah > 0 ? 'CICILAN' : target === 0 ? 'LUNAS' : 'BELUM_BAYAR'
+      });
+    });
+
+    // 4. SPP Bulanan (11 Bulan)
+    bulanDaftar.forEach((bln) => {
+      const bayar = Number(siswa.bayarBulanan?.[bln] || 0);
+      daftarItemTagihan.push({
+        id: `BULAN_${bln}`,
+        posId: 'SPP',
+        namaBulan: bln,
+        nama: `SPP Bulan ${bln} 2026/2027`,
+        tipe: 'BULANAN',
+        target: nominalSpp,
+        sudahMasuk: bayar,
+        sisa: Math.max(0, nominalSpp - bayar),
+        status: bayar >= nominalSpp ? 'LUNAS' : bayar > 0 ? 'CICILAN' : 'BELUM_BAYAR'
+      });
+    });
+
+    // Total kalkulasi
+    const totalSemuaTagihan = daftarItemTagihan.reduce((acc, it) => acc + it.target, 0);
+    const totalSemuaSudahBayar = daftarItemTagihan.reduce((acc, it) => acc + it.sudahMasuk, 0);
+    const totalSisaPiutang = daftarItemTagihan.reduce((acc, it) => acc + it.sisa, 0);
 
     // Hitung tunggakan berjalan (misal cut-off sampai Desember)
     const targetBulanSmt1 = ['Agustus', 'September', 'Oktober', 'November', 'Desember'];
@@ -283,12 +444,15 @@ export const dataService = {
     });
 
     const duBelumLunas = (Number(siswa.duJuli) || 0) < nominalDu ? nominalDu - (Number(siswa.duJuli) || 0) : 0;
-    const totalTunggakanAktif = tunggakanSmt1 + duBelumLunas + (Number(siswa.tunggakanLalu) || 0) + (Number(siswa.spi) || 0);
+    const totalTunggakanAktif = tunggakanSmt1 + duBelumLunas + (Number(siswa.tunggakanLalu) || 0);
 
     return {
       nominalSpp,
       nominalDu,
-      totalSudahBayar,
+      totalSudahBayar: totalSemuaSudahBayar,
+      totalSemuaTagihan,
+      totalSisaPiutang,
+      daftarItemTagihan,
       totalTunggakanAktif,
       duBelumLunas,
       tunggakanSmt1,
@@ -675,10 +839,20 @@ export const dataService = {
     const bayarNominal = Number(nominal);
     calon.totalBayar = (calon.totalBayar || 0) + bayarNominal;
 
+    if (!calon.posBayar) calon.posBayar = {};
+    (rincianItems || []).forEach(it => {
+      const nom = Number(it.bayar !== undefined ? it.bayar : it.nominal || 0);
+      if (it.posId) {
+        calon.posBayar[it.posId] = (calon.posBayar[it.posId] || 0) + nom;
+      }
+    });
+
     if (calon.totalBayar >= calon.totalTagihan) {
       calon.statusBayar = 'LUNAS';
+      calon.vaStatus = 'SUDAH_BAYAR';
     } else if (calon.totalBayar > 0) {
       calon.statusBayar = 'CICILAN';
+      calon.vaStatus = 'SUDAH_BAYAR';
     }
 
     const transaksiPpdb = {
@@ -700,6 +874,160 @@ export const dataService = {
     data.riwayatPembayaranPpdb.unshift(transaksiPpdb);
     this.saveData(data);
     return transaksiPpdb;
+  },
+
+  // 12b. CRUD Master Pos Biaya PPDB (Tambah, Edit, Hapus)
+  tambahPosBiayaPpdb({ nama, nominal, wajib, keterangan }) {
+    const data = this.getData();
+    if (!data.masterPpdb) data.masterPpdb = INITIAL_DATA.masterPpdb;
+    if (!data.masterPpdb.posBiayaPpdb) data.masterPpdb.posBiayaPpdb = [];
+
+    const id = 'PPDB_' + nama.toUpperCase().replace(/\s+/g, '_').replace(/[^A-Z0-9_]/g, '') + '_' + Math.floor(100 + Math.random() * 900);
+    const baru = {
+      id,
+      nama: nama.trim(),
+      nominal: Number(nominal) || 0,
+      wajib: !!wajib,
+      keterangan: keterangan || ''
+    };
+    data.masterPpdb.posBiayaPpdb.push(baru);
+
+    // Sync totalTagihan on all calon siswa
+    const totalTagihanBaru = data.masterPpdb.posBiayaPpdb.reduce((acc, p) => acc + Number(p.nominal || 0), 0);
+    (data.calonSiswaPpdb || []).forEach(cs => {
+      cs.totalTagihan = totalTagihanBaru;
+      if (cs.totalBayar >= cs.totalTagihan && cs.totalTagihan > 0) {
+        cs.statusBayar = 'LUNAS';
+      } else if (cs.totalBayar > 0) {
+        cs.statusBayar = 'CICILAN';
+      } else {
+        cs.statusBayar = 'BELUM_BAYAR';
+      }
+    });
+
+    this.saveData(data);
+    return baru;
+  },
+
+  updatePosBiayaPpdb(id, updatedFields) {
+    const data = this.getData();
+    if (!data.masterPpdb?.posBiayaPpdb) return null;
+    const index = data.masterPpdb.posBiayaPpdb.findIndex(p => p.id === id);
+    if (index === -1) throw new Error('Pos biaya PPDB tidak ditemukan');
+
+    data.masterPpdb.posBiayaPpdb[index] = {
+      ...data.masterPpdb.posBiayaPpdb[index],
+      ...updatedFields,
+      nominal: updatedFields.nominal !== undefined ? Number(updatedFields.nominal) : data.masterPpdb.posBiayaPpdb[index].nominal
+    };
+
+    const totalTagihanBaru = data.masterPpdb.posBiayaPpdb.reduce((acc, p) => acc + Number(p.nominal || 0), 0);
+    (data.calonSiswaPpdb || []).forEach(cs => {
+      cs.totalTagihan = totalTagihanBaru;
+      if (cs.totalBayar >= cs.totalTagihan && cs.totalTagihan > 0) {
+        cs.statusBayar = 'LUNAS';
+      } else if (cs.totalBayar > 0) {
+        cs.statusBayar = 'CICILAN';
+      } else {
+        cs.statusBayar = 'BELUM_BAYAR';
+      }
+    });
+
+    this.saveData(data);
+    return data.masterPpdb.posBiayaPpdb[index];
+  },
+
+  hapusPosBiayaPpdb(id) {
+    const data = this.getData();
+    if (!data.masterPpdb?.posBiayaPpdb) return false;
+    data.masterPpdb.posBiayaPpdb = data.masterPpdb.posBiayaPpdb.filter(p => p.id !== id);
+
+    const totalTagihanBaru = data.masterPpdb.posBiayaPpdb.reduce((acc, p) => acc + Number(p.nominal || 0), 0);
+    (data.calonSiswaPpdb || []).forEach(cs => {
+      cs.totalTagihan = totalTagihanBaru;
+      if (cs.totalBayar >= cs.totalTagihan && cs.totalTagihan > 0) {
+        cs.statusBayar = 'LUNAS';
+      } else if (cs.totalBayar > 0) {
+        cs.statusBayar = 'CICILAN';
+      } else {
+        cs.statusBayar = 'BELUM_BAYAR';
+      }
+    });
+
+    this.saveData(data);
+    return true;
+  },
+
+  // 12c. Verifikasi Pembayaran VA PPDB oleh Admin (Tombol 'Sudah Bayar')
+  verifikasiPembayaranVaPpdb({ calonSiswaId, nominal, petugas, rincianItems, nomorReferensi, catatan }) {
+    const data = this.getData();
+    const calon = (data.calonSiswaPpdb || []).find((s) => s.id === Number(calonSiswaId));
+    if (!calon) throw new Error('Calon siswa tidak ditemukan');
+
+    const calc = this.getKalkulasiPpdb(calon);
+    const nominalFinal = Number(nominal) > 0 ? Number(nominal) : calc.totalSisa;
+
+    let itemsToPay = rincianItems;
+    if (!itemsToPay || itemsToPay.length === 0) {
+      const alokasi = this.alokasikanOtomatis(calc.daftarItemTagihan, nominalFinal);
+      itemsToPay = calc.daftarItemTagihan
+        .filter((it) => (alokasi[it.id] || 0) > 0)
+        .map((it) => ({
+          posId: it.posId,
+          nama: it.nama,
+          nominal: alokasi[it.id],
+          bayar: alokasi[it.id],
+          sisaSetelahBayar: Math.max(0, it.sisa - alokasi[it.id])
+        }));
+    }
+
+    return this.catatPembayaranPpdb({
+      calonSiswaId,
+      nominal: nominalFinal,
+      metode: 'VA_TRANSFER',
+      nomorReferensi: nomorReferensi || `VA-PPDB-VERIF-${calon.va || Date.now().toString().slice(-6)}`,
+      petugas: petugas || 'Admin Pusat (Verifikasi VA PPDB)',
+      rincianItems: itemsToPay,
+      catatan: catatan || 'Verifikasi Transfer Virtual Account Otomatis Terinci (Dikonfirmasi Admin)'
+    });
+  },
+
+  // 12d. Hitung Kalkulasi Rincian Tagihan Calon Siswa PPDB (Untuk Kasir & Cicilan Fleksibel)
+  getKalkulasiPpdb(calon) {
+    const data = this.getData();
+    if (!calon) return null;
+
+    const posList = data.masterPpdb?.posBiayaPpdb || [];
+    const posBayarMap = calon.posBayar || {};
+
+    const daftarItemTagihan = posList.map((pos) => {
+      const target = Number(pos.nominal || 0);
+      const sudahMasuk = Number(posBayarMap[pos.id] || 0);
+      const sisa = Math.max(0, target - sudahMasuk);
+      const status = sudahMasuk >= target && target > 0 ? 'LUNAS' : sudahMasuk > 0 ? 'CICILAN' : target === 0 ? 'LUNAS' : 'BELUM_BAYAR';
+      return {
+        id: pos.id,
+        posId: pos.id,
+        nama: pos.nama,
+        wajib: pos.wajib,
+        target,
+        sudahMasuk,
+        sisa,
+        status
+      };
+    });
+
+    const totalTagihan = daftarItemTagihan.reduce((acc, it) => acc + it.target, 0);
+    const totalSudahBayar = daftarItemTagihan.reduce((acc, it) => acc + it.sudahMasuk, 0);
+    const totalSisa = Math.max(0, totalTagihan - totalSudahBayar);
+
+    return {
+      totalTagihan,
+      totalSudahBayar,
+      totalSisa,
+      daftarItemTagihan,
+      isLunas: totalSisa === 0
+    };
   },
 
   updateMasterPpdb(newMasterPpdb) {

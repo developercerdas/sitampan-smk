@@ -73,6 +73,20 @@ export default function PpdbView({
   const [modalTambahKelasOpen, setModalTambahKelasOpen] = useState(false);
   const [modalPromosiOpen, setModalPromosiOpen] = useState(null);
 
+  // Master Pos Biaya PPDB State (Tambah, Edit, Hapus)
+  const [modalPosPpdbOpen, setModalPosPpdbOpen] = useState(false);
+  const [editPosPpdbId, setEditPosPpdbId] = useState(null);
+  const [formPosPpdb, setFormPosPpdb] = useState({
+    nama: '',
+    nominal: '',
+    wajib: true,
+    keterangan: ''
+  });
+
+  // State Rincian Cicilan & Alokasi Pintar Bayar PPDB
+  const [ppdbSelectedItems, setPpdbSelectedItems] = useState({});
+  const [uangDiterimaPpdb, setUangDiterimaPpdb] = useState('');
+
   // Form Calon Siswa State
   const [formCalon, setFormCalon] = useState({
     nama: '',
@@ -243,40 +257,132 @@ export default function PpdbView({
     }
   };
 
-  // Handler Buka Modal Bayar PPDB
+  // Handler Buka Modal Bayar PPDB (Dengan Rincian Item Dinamis & Alokasi Pintar)
   const handleBukaBayar = (calon) => {
     setBayarCalonSiswa(calon);
-    const sisa = Math.max(0, (calon.totalTagihan || 0) - (calon.totalBayar || 0));
-    
-    // Inisialisasi rincian pos tagihan default
-    const posList = data.masterPpdb?.posBiayaPpdb || [];
-    const itemsInit = {};
-    posList.forEach(p => {
-      itemsInit[p.id] = {
-        posId: p.id,
-        nama: p.nama,
-        nominal: p.nominal,
-        dipilih: true
-      };
+    const calc = dataService.getKalkulasiPpdb(calon);
+    const initialSelected = {};
+    (calc?.daftarItemTagihan || []).forEach(it => {
+      if (it.sisa > 0) {
+        initialSelected[it.id] = {
+          posId: it.posId,
+          nama: it.nama,
+          target: it.target,
+          sudahMasuk: it.sudahMasuk,
+          sisa: it.sisa,
+          bayar: it.sisa, // Default: bayar lunas sisa item ini
+          isCicilan: false
+        };
+      }
     });
 
+    setPpdbSelectedItems(initialSelected);
+    setUangDiterimaPpdb(calc?.totalSisa > 0 ? String(calc.totalSisa) : '');
     setFormBayar({
-      nominal: sisa > 0 ? sisa : 0,
+      nominal: calc?.totalSisa > 0 ? calc.totalSisa : 0,
       metode: 'TUNAI',
       nomorReferensi: '',
-      catatan: `Pembayaran Registrasi PPDB & Uang Masuk - ${calon.nama}`,
-      itemsTerpilih: itemsInit
+      catatan: `Pembayaran Registrasi PPDB & Uang Masuk - ${calon.nama}`
     });
     setModalBayarOpen(true);
   };
+
+  // Helper Bayar Pas Seluruh Sisa Tagihan PPDB
+  const handleBayarPenuhPpdb = () => {
+    if (!bayarCalonSiswa) return;
+    const calc = dataService.getKalkulasiPpdb(bayarCalonSiswa);
+    const newItems = {};
+    (calc?.daftarItemTagihan || []).forEach(it => {
+      if (it.sisa > 0) {
+        newItems[it.id] = {
+          posId: it.posId,
+          nama: it.nama,
+          target: it.target,
+          sudahMasuk: it.sudahMasuk,
+          sisa: it.sisa,
+          bayar: it.sisa,
+          isCicilan: false
+        };
+      }
+    });
+    setPpdbSelectedItems(newItems);
+    setUangDiterimaPpdb(calc?.totalSisa > 0 ? String(calc.totalSisa) : '');
+  };
+
+  // Helper Alokasi Otomatis dari Nominal Uang Masuk ke Pos Tagihan Secara Berurutan
+  const handleAlokasiOtomatisPpdb = () => {
+    if (!bayarCalonSiswa) return;
+    const nominalUang = Number(uangDiterimaPpdb);
+    if (!nominalUang || nominalUang <= 0) {
+      alert('Masukkan nominal uang yang diterima terlebih dahulu (contoh: 500000)!');
+      return;
+    }
+    const calc = dataService.getKalkulasiPpdb(bayarCalonSiswa);
+    const alokasi = dataService.alokasikanOtomatis(calc.daftarItemTagihan, nominalUang);
+    const newItems = {};
+    calc.daftarItemTagihan.forEach(it => {
+      const uangItem = alokasi[it.id] || 0;
+      if (uangItem > 0) {
+        newItems[it.id] = {
+          posId: it.posId,
+          nama: it.nama,
+          target: it.target,
+          sudahMasuk: it.sudahMasuk,
+          sisa: it.sisa,
+          bayar: uangItem,
+          isCicilan: uangItem < it.sisa
+        };
+      }
+    });
+    setPpdbSelectedItems(newItems);
+  };
+
+  const handleTogglePpdbItem = (posId, itemData) => {
+    setPpdbSelectedItems(prev => {
+      const copy = { ...prev };
+      if (copy[posId]) {
+        delete copy[posId];
+      } else {
+        copy[posId] = {
+          posId: itemData.posId,
+          nama: itemData.nama,
+          target: itemData.target,
+          sudahMasuk: itemData.sudahMasuk,
+          sisa: itemData.sisa,
+          bayar: itemData.sisa,
+          isCicilan: false
+        };
+      }
+      return copy;
+    });
+  };
+
+  const handleUpdateNominalItemPpdb = (posId, val, maxSisa) => {
+    const nominalAngka = Math.max(0, Math.min(Number(val) || 0, maxSisa));
+    setPpdbSelectedItems(prev => {
+      if (!prev[posId]) return prev;
+      return {
+        ...prev,
+        [posId]: {
+          ...prev[posId],
+          bayar: nominalAngka,
+          isCicilan: nominalAngka < maxSisa
+        }
+      };
+    });
+  };
+
+  const totalDipilihPpdb = Object.values(ppdbSelectedItems).reduce(
+    (acc, curr) => acc + Number(curr.bayar || 0),
+    0
+  );
 
   // Handler Simpan Transaksi Pembayaran PPDB
   const handleSimpanBayar = (e) => {
     e.preventDefault();
     if (!bayarCalonSiswa) return;
-    const nominalAngka = Number(formBayar.nominal);
-    if (nominalAngka <= 0) {
-      alert('Nominal pembayaran harus lebih besar dari 0!');
+    if (totalDipilihPpdb <= 0) {
+      alert('Pilih minimal satu pos pembayaran PPDB dan masukkan nominal bayar/cicilan!');
       return;
     }
 
@@ -291,32 +397,128 @@ export default function PpdbView({
           : 'Petugas Kasir PPDB'
       );
 
-      // Rincian items yang dibayar
-      const rincianList = Object.values(formBayar.itemsTerpilih)
-        .filter(it => it.dipilih)
-        .map(it => ({
-          posId: it.posId,
-          nama: it.nama,
-          nominal: Number(it.nominal)
-        }));
+      const rincianList = Object.values(ppdbSelectedItems).map(it => ({
+        posId: it.posId,
+        nama: it.nama,
+        nominal: Number(it.bayar),
+        bayar: Number(it.bayar),
+        sisaSetelahBayar: Math.max(0, it.sisa - it.bayar),
+        isCicilan: it.isCicilan
+      }));
 
       const kwt = dataService.catatPembayaranPpdb({
         calonSiswaId: bayarCalonSiswa.id,
-        nominal: nominalAngka,
+        nominal: totalDipilihPpdb,
         metode: formBayar.metode,
-        nomorReferensi: formBayar.nomorReferensi || null,
+        nomorReferensi: formBayar.nomorReferensi || (formBayar.metode === 'VA_TRANSFER' ? `VA-${Date.now().toString().slice(-6)}` : null),
         petugas: namaPetugas,
         catatan: formBayar.catatan,
-        rincianItems: rincianList.length > 0 ? rincianList : [{ posId: 'PPDB_UMUM', nama: 'Setoran Biaya PPDB', nominal: nominalAngka }]
+        rincianItems: rincianList
       });
 
       onUpdateData();
       setModalBayarOpen(false);
       setModalKuitansiPpdb(kwt);
-      setNotifPesan({ tipe: 'sukses', teks: `Pembayaran Rp ${nominalAngka.toLocaleString('id-ID')} berhasil dicatat! Kuitansi siap dicetak.` });
+      setNotifPesan({ tipe: 'sukses', teks: `Pembayaran Rp ${totalDipilihPpdb.toLocaleString('id-ID')} berhasil dicatat! Kuitansi siap dicetak.` });
       setTimeout(() => setNotifPesan({ tipe: '', teks: '' }), 4000);
     } catch (err) {
       alert(err.message || 'Terjadi kesalahan saat memproses pembayaran PPDB');
+    }
+  };
+
+  // Handler Verifikasi VA Calon Siswa (Tombol 'Sudah Bayar' Admin 1-Klik)
+  const handleVerifikasiVaCalon = (calon, customNominal) => {
+    const calc = dataService.getKalkulasiPpdb(calon);
+    const sisa = customNominal !== undefined ? customNominal : (calc ? calc.totalSisa : Math.max(0, (calon.totalTagihan || 0) - (calon.totalBayar || 0)));
+    if (sisa <= 0) {
+      alert(`Calon siswa "${calon.nama}" sudah lunas seluruh biaya PPDB!`);
+      return;
+    }
+
+    if (confirm(`Verifikasi pembayaran Virtual Account (VA) untuk calon siswa:\n\nNama: ${calon.nama}\nNo. VA: ${calon.va}\nNominal: Rp ${sisa.toLocaleString('id-ID')}\n\nTandai transaksi ini sebagai SUDAH BAYAR?`)) {
+      try {
+        const namaPetugas = currentUser?.nama || 'Admin Pusat TU (Verifikasi VA)';
+        const kwt = dataService.verifikasiPembayaranVaPpdb({
+          calonSiswaId: calon.id,
+          nominal: sisa,
+          petugas: namaPetugas
+        });
+        onUpdateData();
+        setModalBayarOpen(false);
+        setModalKuitansiPpdb(kwt);
+        setNotifPesan({
+          tipe: 'sukses',
+          teks: `Pembayaran VA calon siswa ${calon.nama} sebesar Rp ${sisa.toLocaleString('id-ID')} telah BERHASIL DIVERIFIKASI (Sudah Bayar)!`
+        });
+        setTimeout(() => setNotifPesan({ tipe: '', teks: '' }), 4500);
+      } catch (err) {
+        alert(err.message || 'Gagal memverifikasi pembayaran VA');
+      }
+    }
+  };
+
+  // Master Pos Biaya PPDB Handlers (Tambah, Edit, Hapus)
+  const handleBukaTambahPosPpdb = () => {
+    setEditPosPpdbId(null);
+    setFormPosPpdb({ nama: '', nominal: '', wajib: true, keterangan: '' });
+    setModalPosPpdbOpen(true);
+  };
+
+  const handleBukaEditPosPpdb = (pos) => {
+    setEditPosPpdbId(pos.id);
+    setFormPosPpdb({
+      nama: pos.nama,
+      nominal: pos.nominal,
+      wajib: !!pos.wajib,
+      keterangan: pos.keterangan || ''
+    });
+    setModalPosPpdbOpen(true);
+  };
+
+  const handleSimpanPosPpdb = (e) => {
+    e.preventDefault();
+    if (!formPosPpdb.nama.trim()) {
+      alert('Nama pos tagihan PPDB wajib diisi!');
+      return;
+    }
+    const nom = Number(formPosPpdb.nominal);
+    if (isNaN(nom) || nom < 0) {
+      alert('Nominal pos tagihan harus angka valid dan tidak negatif!');
+      return;
+    }
+
+    try {
+      if (editPosPpdbId) {
+        dataService.updatePosBiayaPpdb(editPosPpdbId, {
+          nama: formPosPpdb.nama.trim(),
+          nominal: nom,
+          wajib: formPosPpdb.wajib,
+          keterangan: formPosPpdb.keterangan.trim()
+        });
+        setNotifPesan({ tipe: 'sukses', teks: `Pos biaya PPDB "${formPosPpdb.nama}" berhasil diperbarui!` });
+      } else {
+        dataService.tambahPosBiayaPpdb({
+          nama: formPosPpdb.nama.trim(),
+          nominal: nom,
+          wajib: formPosPpdb.wajib,
+          keterangan: formPosPpdb.keterangan.trim()
+        });
+        setNotifPesan({ tipe: 'sukses', teks: `Pos biaya PPDB baru "${formPosPpdb.nama}" berhasil ditambahkan!` });
+      }
+      onUpdateData();
+      setModalPosPpdbOpen(false);
+      setTimeout(() => setNotifPesan({ tipe: '', teks: '' }), 4000);
+    } catch (err) {
+      alert(err.message || 'Gagal menyimpan pos biaya PPDB');
+    }
+  };
+
+  const handleHapusPosPpdb = (pos) => {
+    if (confirm(`Apakah Anda yakin ingin menghapus pos biaya PPDB "${pos.nama}" (Rp ${Number(pos.nominal).toLocaleString('id-ID')})?`)) {
+      dataService.hapusPosBiayaPpdb(pos.id);
+      onUpdateData();
+      setNotifPesan({ tipe: 'sukses', teks: `Pos biaya PPDB "${pos.nama}" berhasil dihapus!` });
+      setTimeout(() => setNotifPesan({ tipe: '', teks: '' }), 4000);
     }
   };
 
@@ -733,9 +935,17 @@ export default function PpdbView({
                               {copiedVa === s.va ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
                             </button>
                           </div>
-                          <p className="text-[10px] text-slate-400 mt-0.5">
-                            Auto / Manual VA Bank Mitra
-                          </p>
+                          <div className="mt-1 flex items-center gap-1">
+                            <span className={`inline-block px-1.5 py-0.5 rounded text-[9px] font-bold ${
+                              s.vaStatus === 'SUDAH_BAYAR' || s.statusBayar === 'LUNAS'
+                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                : s.statusBayar === 'CICILAN'
+                                ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                                : 'bg-indigo-50 text-indigo-700 border border-indigo-200'
+                            }`}>
+                              {s.vaStatus === 'SUDAH_BAYAR' || s.statusBayar === 'LUNAS' ? '✓ VA Terverifikasi' : '⏳ Auto VA Aktif'}
+                            </span>
+                          </div>
                         </td>
 
                         {/* Kolom 4: Rincian Pembayaran */}
@@ -782,11 +992,22 @@ export default function PpdbView({
                             <button
                               onClick={() => handleBukaBayar(s)}
                               className="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer shadow-xs"
-                              title="Bayar Uang Masuk / PPDB"
+                              title="Bayar Uang Masuk / PPDB (Alokasi Pintar & Cicilan Bebas)"
                             >
                               <CreditCard className="w-3.5 h-3.5" />
                               <span className="hidden md:inline">Bayar</span>
                             </button>
+
+                            {sisa > 0 && (
+                              <button
+                                onClick={() => handleVerifikasiVaCalon(s)}
+                                className="px-2.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer shadow-xs"
+                                title="Verifikasi Mutasi Transfer VA: Tandai Sudah Bayar"
+                              >
+                                <ShieldCheck className="w-3.5 h-3.5 text-amber-300" />
+                                <span className="hidden lg:inline">Sudah Bayar</span>
+                              </button>
+                            )}
 
                             <button
                               onClick={() => setModalKartuPpdb(s)}
@@ -874,13 +1095,25 @@ export default function PpdbView({
                       </div>
                     </div>
 
-                    <button
-                      onClick={() => handleBukaBayar(calon)}
-                      className="mt-3 w-full py-1.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black rounded-lg text-xs transition flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
-                    >
-                      <CreditCard className="w-3.5 h-3.5" />
-                      <span>Input Pembayaran</span>
-                    </button>
+                    <div className="flex items-center gap-2 mt-3">
+                      <button
+                        onClick={() => handleBukaBayar(calon)}
+                        className="flex-1 py-1.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black rounded-lg text-xs transition flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
+                      >
+                        <CreditCard className="w-3.5 h-3.5" />
+                        <span>Input Bayar</span>
+                      </button>
+                      {sisa > 0 && (
+                        <button
+                          onClick={() => handleVerifikasiVaCalon(calon)}
+                          className="px-2.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg text-xs transition flex items-center justify-center gap-1 cursor-pointer shadow-xs"
+                          title="Verifikasi VA: Tandai Sudah Bayar"
+                        >
+                          <ShieldCheck className="w-3.5 h-3.5 text-amber-300" />
+                          <span>Sudah Bayar</span>
+                        </button>
+                      )}
+                    </div>
                   </div>
                 );
               })}
@@ -1053,31 +1286,123 @@ export default function PpdbView({
       )}
 
       {/* ========================================================= */}
-      {/* TAB 4: MASTER POS BIAYA & GELOMBANG PPDB                   */}
+      {/* TAB 4: MASTER POS BIAYA & GELOMBANG PPDB (CRUD LENGKAP)    */}
       {/* ========================================================= */}
       {subTab === 'master-biaya' && (
         <div className="space-y-6">
-          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-4">
-            <h3 className="text-base font-black text-slate-900 flex items-center gap-2">
-              <DollarSign className="w-5 h-5 text-amber-600" />
-              <span>Struktur Biaya Pendaftaran & Uang Masuk PPDB</span>
-            </h3>
-            <p className="text-xs text-slate-500">
-              Pos biaya pendaftaran yang otomatis dibebankan kepada setiap calon siswa baru yang mendaftar.
-            </p>
+          <div className="bg-amber-50 border border-amber-200 p-4 sm:p-5 rounded-2xl flex items-start gap-3.5">
+            <div className="p-2 bg-amber-400 text-slate-950 rounded-xl font-bold flex-shrink-0">
+              <DollarSign className="w-5 h-5" />
+            </div>
+            <div>
+              <h4 className="font-extrabold text-amber-950 text-sm">
+                Master Pos Biaya PPDB Fleksibel (Bisa Ditambah, Diedit & Dihapus)
+              </h4>
+              <p className="text-xs text-amber-900 mt-1 leading-relaxed">
+                Setiap pos biaya PPDB (misalnya: <strong>Uang Sekolah bulan Juli 2026, Uang Seragam & Atribut, Iuran OSIS 2026/2027, Iuran Majalah, Iuran Perawatan Sarana, Formulir</strong>, dll.) dapat Anda ubah tarifnya, ditambah pos baru, atau dihapus sewaktu-waktu. Perubahan otomatis menyinkronkan total tagihan seluruh calon siswa baru.
+              </p>
+            </div>
+          </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-              {(data.masterPpdb?.posBiayaPpdb || []).map((pos) => (
-                <div key={pos.id} className="p-4 rounded-xl border border-slate-200 bg-slate-50/60 space-y-2">
-                  <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">
-                    {pos.wajib ? 'Wajib Awal' : 'Dapat Dicicil'}
-                  </span>
-                  <p className="font-extrabold text-slate-900 text-sm">{pos.nama}</p>
-                  <p className="font-mono text-xl font-black text-emerald-700">
-                    Rp {Number(pos.nominal).toLocaleString('id-ID')}
-                  </p>
-                </div>
-              ))}
+          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-100">
+              <div>
+                <h3 className="text-base font-black text-slate-900 flex items-center gap-2">
+                  <DollarSign className="w-5 h-5 text-amber-600" />
+                  <span>Daftar Master Pos Biaya Penerimaan Siswa Baru (PPDB)</span>
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Rincian komponen biaya yang dibebankan kepada calon siswa baru pada masa pendaftaran dan registrasi ulang.
+                </p>
+              </div>
+
+              <button
+                onClick={handleBukaTambahPosPpdb}
+                className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black rounded-xl text-xs sm:text-sm shadow-md transition flex items-center gap-1.5 cursor-pointer"
+              >
+                <Plus className="w-4 h-4" />
+                <span>+ Tambah Pos Biaya PPDB Baru</span>
+              </button>
+            </div>
+
+            {/* Tabel Master Pos Biaya PPDB */}
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs sm:text-sm">
+                <thead className="bg-slate-50 text-slate-600 uppercase text-[11px] font-black border-b border-slate-200">
+                  <tr>
+                    <th className="px-4 py-3 text-center w-12">No</th>
+                    <th className="px-4 py-3">Nama Pos Biaya Tagihan</th>
+                    <th className="px-4 py-3">Sifat Pembayaran</th>
+                    <th className="px-4 py-3 text-right">Tarif Biaya (Rp)</th>
+                    <th className="px-4 py-3">Keterangan</th>
+                    <th className="px-4 py-3 text-center">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {(data.masterPpdb?.posBiayaPpdb || []).length === 0 ? (
+                    <tr>
+                      <td colSpan="6" className="text-center py-8 text-slate-400">
+                        Belum ada pos biaya PPDB yang dikonfigurasi. Klik tombol "+ Tambah Pos Biaya PPDB Baru" di atas.
+                      </td>
+                    </tr>
+                  ) : (
+                    (data.masterPpdb?.posBiayaPpdb || []).map((pos, idx) => (
+                      <tr key={pos.id} className="hover:bg-slate-50/80 transition">
+                        <td className="px-4 py-3.5 font-bold text-slate-400 text-center w-12">{idx + 1}</td>
+                        <td className="px-4 py-3.5">
+                          <p className="font-extrabold text-slate-900">{pos.nama}</p>
+                          <span className="font-mono text-[10px] text-slate-400">ID: {pos.id}</span>
+                        </td>
+                        <td className="px-4 py-3.5">
+                          <span className={`inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold ${
+                            pos.wajib
+                              ? 'bg-amber-100 text-amber-800 border border-amber-300'
+                              : 'bg-blue-100 text-blue-800 border border-blue-300'
+                          }`}>
+                            {pos.wajib ? '★ Wajib Awal' : 'Dapat Dicicil'}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3.5 text-right font-mono font-black text-emerald-700 text-sm">
+                          Rp {Number(pos.nominal || 0).toLocaleString('id-ID')}
+                        </td>
+                        <td className="px-4 py-3.5 text-slate-600 text-xs">
+                          {pos.keterangan || '-'}
+                        </td>
+                        <td className="px-4 py-3.5 text-center">
+                          <div className="flex items-center justify-center gap-1.5">
+                            <button
+                              onClick={() => handleBukaEditPosPpdb(pos)}
+                              className="p-1.5 text-slate-500 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition cursor-pointer"
+                              title="Edit Pos Biaya"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => handleHapusPosPpdb(pos)}
+                              className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer"
+                              title="Hapus Pos Biaya"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                  {/* Total Tagihan PPDB Keseluruhan */}
+                  <tr className="bg-amber-50/70 border-t-2 border-slate-300 font-black">
+                    <td colSpan="3" className="px-4 py-3.5 text-slate-900 text-right uppercase tracking-wider text-xs">
+                      TOTAL BIAYA MASUK KESELURUHAN (TAGIHAN AWAL PPDB):
+                    </td>
+                    <td className="px-4 py-3.5 text-right font-mono text-emerald-800 text-base">
+                      Rp {(data.masterPpdb?.posBiayaPpdb || []).reduce((acc, p) => acc + Number(p.nominal || 0), 0).toLocaleString('id-ID')}
+                    </td>
+                    <td colSpan="2" className="px-4 py-3.5 text-slate-500 text-xs font-normal italic">
+                      Diberikan otomatis kepada seluruh calon siswa baru
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
@@ -1273,125 +1598,422 @@ export default function PpdbView({
       )}
 
       {/* ========================================================= */}
-      {/* MODAL 2: INPUT BAYAR KASIR PPDB                           */}
+      {/* MODAL 2: INPUT BAYAR KASIR PPDB (ALOKASI & CICILAN PER ITEM) */}
       {/* ========================================================= */}
-      {modalBayarOpen && bayarCalonSiswa && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
-          <div className="bg-white rounded-3xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden animate-scaleUp max-h-[92vh] flex flex-col">
-            <div className="bg-gradient-to-r from-emerald-600 to-teal-700 text-white px-5 sm:px-6 py-4 flex items-center justify-between flex-shrink-0">
-              <div>
-                <h3 className="font-black text-base flex items-center gap-2">
-                  <CreditCard className="w-5 h-5" />
-                  <span>Input Pembayaran Biaya PPDB</span>
-                </h3>
-                <p className="text-xs text-emerald-100 mt-0.5">
-                  {bayarCalonSiswa.nama} ({bayarCalonSiswa.noPendaftaran}) • {bayarCalonSiswa.jurusanKode}
-                </p>
+      {modalBayarOpen && bayarCalonSiswa && (() => {
+        const calcPpdb = dataService.getKalkulasiPpdb(bayarCalonSiswa) || { totalTagihan: 0, totalSudahBayar: 0, totalSisa: 0, daftarItemTagihan: [] };
+        const sisaSaatIni = calcPpdb.totalSisa;
+        const totalUangAkanDibayar = totalDipilihPpdb;
+        const kekuranganAkhir = Math.max(0, sisaSaatIni - totalUangAkanDibayar);
+
+        return (
+          <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
+            <div className="bg-white rounded-3xl max-w-4xl w-full shadow-2xl border border-slate-200 overflow-hidden animate-scaleUp max-h-[94vh] flex flex-col">
+              {/* Header Modal */}
+              <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-indigo-800 text-white px-5 sm:px-6 py-4 flex items-center justify-between flex-shrink-0">
+                <div>
+                  <h3 className="font-black text-base sm:text-lg flex items-center gap-2">
+                    <CreditCard className="w-5 h-5 text-amber-300" />
+                    <span>Loket Kasir Pembayaran Calon Siswa PPDB</span>
+                  </h3>
+                  <p className="text-xs text-emerald-100 mt-0.5">
+                    {bayarCalonSiswa.nama} ({bayarCalonSiswa.noPendaftaran}) • Jurusan: <strong>{bayarCalonSiswa.jurusanKode}</strong> • VA: <span className="font-mono">{bayarCalonSiswa.va}</span>
+                  </p>
+                </div>
+                <button
+                  onClick={() => setModalBayarOpen(false)}
+                  className="text-white/80 hover:text-white font-bold text-lg p-1 cursor-pointer"
+                >
+                  ✕
+                </button>
               </div>
+
+              <div className="p-5 sm:p-6 space-y-4 overflow-y-auto flex-1">
+                {/* 3 KPI Badges Ringkasan Keuangan Siswa PPDB */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200">
+                    <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Total Biaya Masuk PPDB</span>
+                    <span className="text-xl font-black font-mono text-slate-900">
+                      Rp {calcPpdb.totalTagihan.toLocaleString('id-ID')}
+                    </span>
+                  </div>
+
+                  <div className="bg-emerald-50 p-3.5 rounded-2xl border border-emerald-200">
+                    <span className="text-[11px] font-bold text-emerald-700 uppercase tracking-wider block">Total Sudah Masuk</span>
+                    <span className="text-xl font-black font-mono text-emerald-800">
+                      Rp {calcPpdb.totalSudahBayar.toLocaleString('id-ID')}
+                    </span>
+                  </div>
+
+                  <div className="bg-amber-50 p-3.5 rounded-2xl border border-amber-200">
+                    <span className="text-[11px] font-bold text-amber-800 uppercase tracking-wider block">Sisa Kewajiban Tagihan</span>
+                    <span className="text-xl font-black font-mono text-amber-700">
+                      Rp {sisaSaatIni.toLocaleString('id-ID')}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Bilah Alokasi Otomatis & Input Uang Pintar */}
+                <div className="bg-gradient-to-r from-amber-50 via-orange-50 to-amber-50 p-4 rounded-2xl border border-amber-200 flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex-1 min-w-[260px]">
+                    <label className="block text-xs font-black text-amber-950 uppercase mb-1 flex items-center gap-1.5">
+                      <Sparkles className="w-4 h-4 text-amber-600" />
+                      <span>Input Nominal Uang Diterima (Untuk Alokasi Otomatis)</span>
+                    </label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-2.5 text-xs font-black text-amber-700 font-mono">Rp</span>
+                      <input
+                        type="number"
+                        min="0"
+                        placeholder="Contoh: 500000 atau nominal transfer VA..."
+                        value={uangDiterimaPpdb}
+                        onChange={(e) => setUangDiterimaPpdb(e.target.value)}
+                        className="w-full pl-10 pr-3 py-2 bg-white border border-amber-300 rounded-xl text-sm font-mono font-black text-slate-900 focus:ring-2 focus:ring-amber-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 flex-wrap self-end">
+                    <button
+                      type="button"
+                      onClick={handleAlokasiOtomatisPpdb}
+                      className="px-3.5 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-xl text-xs font-black shadow-xs transition flex items-center gap-1.5 cursor-pointer"
+                      title="Alokasikan otomatis uang yang diterima dari pos atas ke bawah"
+                    >
+                      <span>🎯 Alokasikan Otomatis</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handleBayarPenuhPpdb}
+                      className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black shadow-xs transition flex items-center gap-1.5 cursor-pointer"
+                      title="Bayar lunas seluruh pos tagihan yang belum lunas"
+                    >
+                      <span>⚡ Bayar Pas Sisa Tagihan</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPpdbSelectedItems({});
+                        setUangDiterimaPpdb('');
+                      }}
+                      className="px-3 py-2 bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 rounded-xl text-xs font-bold transition cursor-pointer"
+                    >
+                      <span>🔄 Reset</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Tabel Rincian Pos Tagihan PPDB (Input Manual / Cicilan per Item & Indikator Sisa Kekurangan) */}
+                <div className="border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs sm:text-sm">
+                      <thead className="bg-slate-100 text-slate-700 text-[11px] font-black border-b border-slate-200 uppercase">
+                        <tr>
+                          <th className="px-3 py-2.5 text-center w-10">Pilih</th>
+                          <th className="px-3 py-2.5">Pos Tagihan PPDB</th>
+                          <th className="px-3 py-2.5 text-right">Tarif</th>
+                          <th className="px-3 py-2.5 text-right">Sudah Masuk</th>
+                          <th className="px-3 py-2.5 text-right">Sisa Piutang</th>
+                          <th className="px-3 py-2.5 text-right min-w-[140px]">Bayar Sekarang (Rp)</th>
+                          <th className="px-3 py-2.5 text-right">Kekurangan Nanti (Rp)</th>
+                          <th className="px-3 py-2.5 text-center">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {calcPpdb.daftarItemTagihan.map((it) => {
+                          const itemTerpilih = ppdbSelectedItems[it.id];
+                          const isChecked = !!itemTerpilih;
+                          const bayarSekarang = itemTerpilih ? Number(itemTerpilih.bayar || 0) : 0;
+                          const sisaKurangNanti = Math.max(0, it.sisa - bayarSekarang);
+
+                          return (
+                            <tr key={it.id} className={isChecked ? 'bg-amber-50/50' : 'hover:bg-slate-50'}>
+                              {/* Checkbox */}
+                              <td className="px-3 py-2.5 text-center">
+                                <input
+                                  type="checkbox"
+                                  disabled={it.sisa === 0}
+                                  checked={isChecked}
+                                  onChange={() => handleTogglePpdbItem(it.id, it)}
+                                  className="w-4 h-4 rounded text-amber-600 focus:ring-amber-500 cursor-pointer disabled:opacity-40"
+                                />
+                              </td>
+
+                              {/* Nama Pos */}
+                              <td className="px-3 py-2.5">
+                                <p className="font-extrabold text-slate-900 text-xs sm:text-sm">{it.nama}</p>
+                                <span className={`inline-block text-[9px] font-bold px-1.5 py-0.2 rounded mt-0.5 ${
+                                  it.wajib ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-800'
+                                }`}>
+                                  {it.wajib ? 'Wajib Awal' : 'Dapat Dicicil'}
+                                </span>
+                              </td>
+
+                              {/* Tarif */}
+                              <td className="px-3 py-2.5 text-right font-mono text-slate-600 text-xs">
+                                Rp {it.target.toLocaleString('id-ID')}
+                              </td>
+
+                              {/* Sudah Masuk */}
+                              <td className="px-3 py-2.5 text-right font-mono text-emerald-700 text-xs font-bold">
+                                Rp {it.sudahMasuk.toLocaleString('id-ID')}
+                              </td>
+
+                              {/* Sisa Piutang */}
+                              <td className="px-3 py-2.5 text-right font-mono font-bold text-amber-700 text-xs">
+                                Rp {it.sisa.toLocaleString('id-ID')}
+                              </td>
+
+                              {/* Input Bayar Sekarang (Manual / Auto) */}
+                              <td className="px-3 py-2.5 text-right">
+                                {it.sisa === 0 ? (
+                                  <span className="text-xs text-emerald-700 font-bold font-mono">Lunas (Rp 0)</span>
+                                ) : (
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    max={it.sisa}
+                                    value={isChecked ? bayarSekarang : ''}
+                                    placeholder="0"
+                                    disabled={!isChecked}
+                                    onChange={(e) => handleUpdateNominalItemPpdb(it.id, e.target.value, it.sisa)}
+                                    className="w-32 px-2.5 py-1 text-right font-mono font-bold text-xs sm:text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 bg-white disabled:bg-slate-100"
+                                  />
+                                )}
+                              </td>
+
+                              {/* Kekurangan Nanti (Sisa Kurang Rp) */}
+                              <td className="px-3 py-2.5 text-right font-mono">
+                                {it.sisa === 0 ? (
+                                  <span className="text-slate-400 text-xs">-</span>
+                                ) : sisaKurangNanti === 0 ? (
+                                  <span className="text-emerald-700 font-black text-xs">Rp 0 (Lunas)</span>
+                                ) : (
+                                  <span className="text-rose-600 font-bold text-xs">
+                                    Rp {sisaKurangNanti.toLocaleString('id-ID')}
+                                  </span>
+                                )}
+                              </td>
+
+                              {/* Status */}
+                              <td className="px-3 py-2.5 text-center">
+                                <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-black uppercase ${
+                                  it.sisa === 0 || (isChecked && sisaKurangNanti === 0)
+                                    ? 'bg-emerald-100 text-emerald-800'
+                                    : isChecked && bayarSekarang > 0
+                                    ? 'bg-amber-100 text-amber-800'
+                                    : 'bg-rose-100 text-rose-800'
+                                }`}>
+                                  {it.sisa === 0 || (isChecked && sisaKurangNanti === 0)
+                                    ? 'Lunas'
+                                    : isChecked && bayarSekarang > 0
+                                    ? 'Cicilan'
+                                    : 'Belum'}
+                                </span>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                      {/* Baris Total Setoran Saat Ini */}
+                      <tfoot className="bg-slate-50 border-t-2 border-slate-300 font-black">
+                        <tr>
+                          <td colSpan="5" className="px-3 py-3 text-right uppercase tracking-wider text-xs text-slate-800">
+                            TOTAL NOMINAL SETORAN INI:
+                          </td>
+                          <td className="px-3 py-3 text-right font-mono text-emerald-700 text-sm sm:text-base">
+                            Rp {totalUangAkanDibayar.toLocaleString('id-ID')}
+                          </td>
+                          <td className="px-3 py-3 text-right font-mono text-amber-700 text-xs sm:text-sm">
+                            Kurang: Rp {kekuranganAkhir.toLocaleString('id-ID')}
+                          </td>
+                          <td className="px-3 py-3 text-center text-xs text-slate-500">
+                            {kekuranganAkhir === 0 ? '✓ Pelunasan' : '★ Cicilan'}
+                          </td>
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+                </div>
+
+                {/* Form Metode Bayar, Referensi & Catatan */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
+                      Metode Pembayaran
+                    </label>
+                    <select
+                      value={formBayar.metode}
+                      onChange={(e) => setFormBayar({ ...formBayar, metode: e.target.value })}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs sm:text-sm font-bold bg-white focus:ring-2 focus:ring-emerald-500"
+                    >
+                      <option value="TUNAI">💵 Tunai (Loket Kasir TU)</option>
+                      <option value="VA_TRANSFER">⚡ Virtual Account (Auto Transfer Bank)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
+                      Nomor Referensi / Bank
+                    </label>
+                    <input
+                      type="text"
+                      value={formBayar.nomorReferensi}
+                      onChange={(e) => setFormBayar({ ...formBayar, nomorReferensi: e.target.value })}
+                      placeholder="Contoh: BNI-VA-..."
+                      className="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs sm:text-sm font-mono focus:ring-2 focus:ring-emerald-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
+                      Keterangan / Catatan Kuitansi
+                    </label>
+                    <input
+                      type="text"
+                      value={formBayar.catatan}
+                      onChange={(e) => setFormBayar({ ...formBayar, catatan: e.target.value })}
+                      placeholder="Cicilan / pelunasan seragam & formulir..."
+                      className="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-emerald-500"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer Modal Actions */}
+              <div className="bg-slate-50 px-5 sm:px-6 py-4 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3 flex-shrink-0">
+                <div className="text-xs text-slate-500 font-mono">
+                  Sisa Tagihan Nanti: <strong className="text-amber-700">Rp {kekuranganAkhir.toLocaleString('id-ID')}</strong>
+                </div>
+
+                <div className="flex items-center gap-2.5">
+                  <button
+                    type="button"
+                    onClick={() => setModalBayarOpen(false)}
+                    className="px-4 py-2 border border-slate-300 text-slate-700 rounded-xl text-xs font-bold hover:bg-slate-100 transition cursor-pointer"
+                  >
+                    Batal
+                  </button>
+
+                  {/* Tombol Khusus Admin / Petugas: Verifikasi VA 1-Klik */}
+                  {sisaSaatIni > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => handleVerifikasiVaCalon(bayarCalonSiswa, totalUangAkanDibayar > 0 ? totalUangAkanDibayar : sisaSaatIni)}
+                      className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-black shadow-md transition flex items-center gap-1.5 cursor-pointer"
+                      title="Verifikasi Mutasi Transfer Virtual Account: Tandai Sudah Bayar"
+                    >
+                      <ShieldCheck className="w-4 h-4 text-amber-300" />
+                      <span>✅ Tandai Sudah Bayar (Verifikasi VA)</span>
+                    </button>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={handleSimpanBayar}
+                    className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black shadow-md transition flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>💵 Simpan Pembayaran & Cetak Kuitansi</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* ========================================================= */}
+      {/* MODAL: TAMBAH / EDIT MASTER POS BIAYA PPDB                */}
+      {/* ========================================================= */}
+      {modalPosPpdbOpen && (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full shadow-2xl border border-slate-200 overflow-hidden animate-scaleUp">
+            <div className="bg-gradient-to-r from-amber-500 to-orange-600 text-white px-5 sm:px-6 py-4 flex items-center justify-between">
+              <h3 className="font-black text-base flex items-center gap-2">
+                <DollarSign className="w-5 h-5" />
+                <span>{editPosPpdbId ? 'Edit Pos Biaya PPDB' : 'Tambah Pos Biaya PPDB Baru'}</span>
+              </h3>
               <button
-                onClick={() => setModalBayarOpen(false)}
-                className="text-white/80 hover:text-white font-bold text-lg p-1"
+                onClick={() => setModalPosPpdbOpen(false)}
+                className="text-white/80 hover:text-white font-bold text-lg p-1 cursor-pointer"
               >
                 ✕
               </button>
             </div>
 
-            <form onSubmit={handleSimpanBayar} className="p-5 sm:p-6 space-y-4 overflow-y-auto flex-1">
-              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
-                <div className="flex justify-between text-xs">
-                  <span className="text-slate-500">Virtual Account (VA):</span>
-                  <strong className="font-mono text-indigo-700">{bayarCalonSiswa.va}</strong>
-                </div>
-                <div className="flex justify-between text-xs">
-                  <span className="text-slate-500">Total Tagihan Awal:</span>
-                  <span className="font-mono font-bold">Rp {(bayarCalonSiswa.totalTagihan || 0).toLocaleString('id-ID')}</span>
-                </div>
-                <div className="flex justify-between text-xs">
-                  <span className="text-slate-500">Sudah Masuk:</span>
-                  <span className="font-mono font-bold text-emerald-700">Rp {(bayarCalonSiswa.totalBayar || 0).toLocaleString('id-ID')}</span>
-                </div>
-                <div className="flex justify-between text-xs pt-1 border-t border-slate-200">
-                  <span className="font-bold text-slate-700">Sisa Tagihan PPDB:</span>
-                  <strong className="font-mono text-amber-600 font-black">
-                    Rp {Math.max(0, (bayarCalonSiswa.totalTagihan || 0) - (bayarCalonSiswa.totalBayar || 0)).toLocaleString('id-ID')}
-                  </strong>
-                </div>
+            <form onSubmit={handleSimpanPosPpdb} className="p-5 sm:p-6 space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
+                  Nama Pos Biaya PPDB *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={formPosPpdb.nama}
+                  onChange={(e) => setFormPosPpdb({ ...formPosPpdb, nama: e.target.value })}
+                  placeholder="Misal: Uang Seragam, Iuran OSIS, Iuran Majalah..."
+                  className="w-full px-3.5 py-2 border border-slate-300 rounded-xl text-sm font-bold focus:ring-2 focus:ring-amber-500"
+                />
               </div>
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
-                  Nominal Pembayaran Diterima (Rp) *
+                  Nominal Biaya (Rp) *
                 </label>
                 <input
                   type="number"
                   required
-                  min="1"
-                  value={formBayar.nominal}
-                  onChange={(e) => setFormBayar({ ...formBayar, nominal: e.target.value })}
-                  placeholder="Misal: 1100000"
-                  className="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-lg font-mono font-black text-emerald-700 focus:ring-2 focus:ring-emerald-500"
+                  min="0"
+                  value={formPosPpdb.nominal}
+                  onChange={(e) => setFormPosPpdb({ ...formPosPpdb, nominal: e.target.value })}
+                  placeholder="750000"
+                  className="w-full px-3.5 py-2 border border-slate-300 rounded-xl text-sm font-mono font-black text-emerald-700 focus:ring-2 focus:ring-amber-500"
                 />
-                <p className="text-[11px] text-slate-500 mt-1">
-                  Bisa bayar lunas penuh atau nyicil sebagian (alokasikan fleksibel).
-                </p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
-                    Metode Pembayaran
-                  </label>
-                  <select
-                    value={formBayar.metode}
-                    onChange={(e) => setFormBayar({ ...formBayar, metode: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs sm:text-sm font-bold bg-white focus:ring-2 focus:ring-emerald-500"
-                  >
-                    <option value="TUNAI">💵 Tunai (Loket Kasir)</option>
-                    <option value="VA_TRANSFER">⚡ Virtual Account (Auto Transfer)</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
-                    No. Referensi / Bank
-                  </label>
-                  <input
-                    type="text"
-                    value={formBayar.nomorReferensi}
-                    onChange={(e) => setFormBayar({ ...formBayar, nomorReferensi: e.target.value })}
-                    placeholder="BNI-VA-..."
-                    className="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs sm:text-sm font-mono focus:ring-2 focus:ring-emerald-500"
-                  />
-                </div>
               </div>
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
-                  Catatan / Keterangan Kuitansi
+                  Sifat Pembayaran
+                </label>
+                <select
+                  value={formPosPpdb.wajib ? 'true' : 'false'}
+                  onChange={(e) => setFormPosPpdb({ ...formPosPpdb, wajib: e.target.value === 'true' })}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm font-bold bg-white focus:ring-2 focus:ring-amber-500"
+                >
+                  <option value="true">★ Wajib Lunas Awal Registrasi</option>
+                  <option value="false">Dapat Dicicil Selama Pendaftaran</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
+                  Keterangan (Opsional)
                 </label>
                 <input
                   type="text"
-                  value={formBayar.catatan}
-                  onChange={(e) => setFormBayar({ ...formBayar, catatan: e.target.value })}
-                  placeholder="Pelunasan Biaya Formulir & Seragam..."
-                  className="w-full px-3.5 py-2 border border-slate-300 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-emerald-500"
+                  value={formPosPpdb.keterangan}
+                  onChange={(e) => setFormPosPpdb({ ...formPosPpdb, keterangan: e.target.value })}
+                  placeholder="Atribut lengkap, jas almamater, dasi, topi..."
+                  className="w-full px-3.5 py-2 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-amber-500"
                 />
               </div>
 
               <div className="pt-3 border-t border-slate-200 flex items-center justify-end gap-2.5">
                 <button
                   type="button"
-                  onClick={() => setModalBayarOpen(false)}
+                  onClick={() => setModalPosPpdbOpen(false)}
                   className="px-4 py-2 border border-slate-300 text-slate-700 rounded-xl text-xs font-bold hover:bg-slate-50 transition cursor-pointer"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black transition cursor-pointer shadow-md flex items-center gap-1.5"
+                  className="px-5 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-xl text-xs font-black transition cursor-pointer shadow-md"
                 >
-                  <CheckCircle2 className="w-4 h-4" />
-                  <span>Proses & Terbitkan Kuitansi</span>
+                  {editPosPpdbId ? 'Simpan Perubahan' : 'Tambahkan Pos Biaya'}
                 </button>
               </div>
             </form>

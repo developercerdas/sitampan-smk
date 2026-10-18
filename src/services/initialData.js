@@ -74,7 +74,7 @@ export const INITIAL_DATA = {
   posBiaya: [
     { 
       id: 'SPP', 
-      nama: 'Uang Sekolah (SPP Bulanan)', 
+      nama: 'Uang Sekolah bulan Juli 2026 (SPP Bulanan)', 
       tipe: 'BULANAN', 
       nominalDefault: 325000,
       targetJurusan: 'SEMUA',
@@ -87,6 +87,15 @@ export const INITIAL_DATA = {
         HTL: 360000
       },
       keterangan: 'Tarif SPP disesuaikan dengan kebutuhan modul & praktek kejuruan'
+    },
+    { 
+      id: 'SERAGAM', 
+      nama: 'Uang Seragam & Atribut Sekolah', 
+      tipe: 'SEKALI_BAYAR', 
+      nominalDefault: 750000,
+      targetJurusan: 'SEMUA',
+      targetTingkat: 'SEMUA',
+      keterangan: 'Paket seragam kejuruan, batik, pramuka, dan kelengkapan atribut'
     },
     { 
       id: 'TABUNGAN', 
@@ -167,11 +176,12 @@ export const INITIAL_DATA = {
     },
     { 
       id: 'OSIS', 
-      nama: 'Iuran OSIS (1 Tahun)', 
+      nama: 'Iuran OSIS tahun 2026/2027', 
       tipe: 'SEKALI_BAYAR', 
       nominalDefault: 220000,
       targetJurusan: 'SEMUA',
-      targetTingkat: 'SEMUA'
+      targetTingkat: 'SEMUA',
+      keterangan: 'Iuran kegiatan OSIS dan kesiswaan 1 tahun ajaran'
     },
     { 
       id: 'LEMBAGA', 
@@ -183,19 +193,21 @@ export const INITIAL_DATA = {
     },
     { 
       id: 'MAJALAH', 
-      nama: 'Majalah, Pentas Seni & Pelepasan', 
+      nama: 'Iuran Majalah', 
       tipe: 'SEKALI_BAYAR', 
-      nominalDefault: 225000,
+      nominalDefault: 75000,
       targetJurusan: 'SEMUA',
-      targetTingkat: 'XII'
+      targetTingkat: 'SEMUA',
+      keterangan: 'Iuran majalah sekolah, buletin vokasi dan literasi siswa'
     },
     { 
       id: 'SARPRAS', 
-      nama: 'Perawatan Sarana Prasarana', 
+      nama: 'Iuran Perawatan Sarana', 
       tipe: 'SEKALI_BAYAR', 
       nominalDefault: 100000,
       targetJurusan: 'SEMUA',
-      targetTingkat: 'SEMUA'
+      targetTingkat: 'SEMUA',
+      keterangan: 'Perawatan fasilitas laboratorium, bengkel kejuruan dan ruang kelas'
     },
     { 
       id: 'MPLS', 
@@ -898,10 +910,13 @@ export const INITIAL_DATA = {
     bankMitraVa: 'Bank BNI / Mandiri / Jateng',
     kodePrefixVa: '8808',
     posBiayaPpdb: [
-      { id: 'PPDB_FORMULIR', nama: 'Formulir & Registrasi PPDB', nominal: 150000, wajib: true },
-      { id: 'PPDB_SERAGAM', nama: 'Paket Seragam & Atribut Sekolah (5 Stel)', nominal: 750000, wajib: true },
-      { id: 'PPDB_MPLS', nama: 'Kegiatan MPLS & Pengenalan Vokasi', nominal: 200000, wajib: true },
-      { id: 'PPDB_SPI_AWAL', nama: 'Uang Pangkal / SPI Masuk (Tahap 1)', nominal: 1000000, wajib: false }
+      { id: 'PPDB_FORMULIR', nama: 'Formulir & Registrasi PPDB', nominal: 150000, wajib: true, keterangan: 'Biaya formulir dan administrasi registrasi' },
+      { id: 'PPDB_SERAGAM', nama: 'Uang Seragam & Atribut Sekolah (5 Stel)', nominal: 750000, wajib: true, keterangan: 'Paket seragam lengkap kejuruan' },
+      { id: 'PPDB_OSIS', nama: 'Iuran OSIS Siswa Baru 2026/2027', nominal: 220000, wajib: false, keterangan: 'Iuran kegiatan OSIS tahun pertama' },
+      { id: 'PPDB_MAJALAH', nama: 'Iuran Majalah & Literasi', nominal: 75000, wajib: false, keterangan: 'Buletin dan modul orientasi vokasi' },
+      { id: 'PPDB_SARPRAS', nama: 'Iuran Perawatan Sarana', nominal: 100000, wajib: false, keterangan: 'Perawatan fasilitas awal masuk' },
+      { id: 'PPDB_MPLS', nama: 'Kegiatan MPLS & Pengenalan Vokasi', nominal: 200000, wajib: true, keterangan: 'Masa Pengenalan Lingkungan Sekolah' },
+      { id: 'PPDB_SPI_AWAL', nama: 'Uang Pangkal / SPI Masuk (Tahap 1)', nominal: 1000000, wajib: false, keterangan: 'Sumbangan Pengembangan Institusi' }
     ],
     kuotaJurusan: {
       AKL: { targetSiswa: 72, rombelPerkiraan: 2 },

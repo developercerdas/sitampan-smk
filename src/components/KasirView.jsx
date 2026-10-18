@@ -122,8 +122,9 @@ export default function KasirView({
   const nominalSpp = (posSpp?.tarifJurusan && selectedSiswa?.jurusanKode && posSpp.tarifJurusan[selectedSiswa.jurusanKode]) || posSpp?.nominalDefault || 325000;
 
   // Selected items to pay in current transaction
-  // Structure: { [key]: { posId, posNama, targetTotal, sudahMasuk, bayar, sisa, isCicilan } }
+  // Structure: { [key]: { posId, namaBulan, posNama, targetTotal, sudahMasuk, bayar, sisaHarusBayar, isCicilan, tipe } }
   const [selectedItems, setSelectedItems] = useState({});
+  const [uangDiterima, setUangDiterima] = useState('');
 
   const toggleItem = (key, itemData) => {
     setSelectedItems((prev) => {
@@ -142,7 +143,7 @@ export default function KasirView({
   };
 
   const updateNominalCicilan = (key, nominalBaru, maxSisa) => {
-    const val = Math.max(0, Math.min(Number(nominalBaru), maxSisa));
+    const val = Math.max(0, Math.min(Number(nominalBaru) || 0, maxSisa));
     setSelectedItems((prev) => {
       if (!prev[key]) return prev;
       return {
@@ -154,6 +155,67 @@ export default function KasirView({
         }
       };
     });
+  };
+
+  // Tombol Cerdas: Bayar Penuh Sesuai Total (VA / Lunas Semua)
+  const handleBayarPenuhSemua = () => {
+    if (!kalkulasi?.daftarItemTagihan) return;
+    const newItems = {};
+    let total = 0;
+    kalkulasi.daftarItemTagihan.forEach(it => {
+      if (it.sisa > 0) {
+        newItems[it.id] = {
+          posId: it.posId,
+          namaBulan: it.namaBulan,
+          posNama: it.nama,
+          targetTotal: it.target,
+          sudahMasuk: it.sudahMasuk,
+          sisaHarusBayar: it.sisa,
+          tipe: it.tipe,
+          bayar: it.sisa,
+          isCicilan: false
+        };
+        total += it.sisa;
+      }
+    });
+    setSelectedItems(newItems);
+    setUangDiterima(total > 0 ? String(total) : '');
+  };
+
+  // Tombol Cerdas: Alokasikan Otomatis dari Total Uang Diterima
+  const handleAlokasiOtomatis = () => {
+    const nominalUang = Number(uangDiterima);
+    if (!nominalUang || nominalUang <= 0) {
+      alert('Masukkan nominal uang yang diterima terlebih dahulu pada kotak input (contoh: 500000)!');
+      return;
+    }
+    if (!kalkulasi?.daftarItemTagihan) return;
+
+    const alokasiMap = dataService.alokasikanOtomatis(kalkulasi.daftarItemTagihan, nominalUang);
+    const newItems = {};
+    kalkulasi.daftarItemTagihan.forEach(it => {
+      const uangItem = alokasiMap[it.id] || 0;
+      if (uangItem > 0) {
+        newItems[it.id] = {
+          posId: it.posId,
+          namaBulan: it.namaBulan,
+          posNama: it.nama,
+          targetTotal: it.target,
+          sudahMasuk: it.sudahMasuk,
+          sisaHarusBayar: it.sisa,
+          tipe: it.tipe,
+          bayar: uangItem,
+          isCicilan: uangItem < it.sisa
+        };
+      }
+    });
+    setSelectedItems(newItems);
+  };
+
+  // Reset Pilihan
+  const handleResetPilihan = () => {
+    setSelectedItems({});
+    setUangDiterima('');
   };
 
   const totalTagihanDipilih = Object.values(selectedItems).reduce(
@@ -173,7 +235,7 @@ export default function KasirView({
         item: it.isCicilan
           ? `${it.posNama} (Cicilan Sebagian)`
           : it.posNama,
-        sisaSetelahBayar: it.sisaHarusBayar - it.bayar
+        sisaSetelahBayar: Math.max(0, it.sisaHarusBayar - it.bayar)
       }));
 
       const res = dataService.catatPembayaran({
@@ -187,18 +249,67 @@ export default function KasirView({
         statusRaport: kalkulasi.totalTunggakanAktif - totalTagihanDipilih <= 0 ? 'Boleh Ambil Rapor' : 'Tertahan Sebagian (Dalam Cicilan)'
       });
 
-      // Confetti celebration
       confetti({
         particleCount: 60,
         spread: 60,
         origin: { y: 0.7 }
       });
 
-      // Reset form pilihan
       setSelectedItems({});
+      setUangDiterima('');
       onUpdateData();
+      onShowKuitansi(res);
+    } catch (e) {
+      alert('Terjadi kesalahan: ' + e.message);
+    }
+  };
 
-      // Buka modal kuitansi langsung
+  // Verifikasi Pembayaran VA Manual oleh Admin (Tombol 'Sudah Bayar')
+  const handleVerifikasiVa = () => {
+    if (!selectedSiswa) return;
+    const nominal = totalTagihanDipilih > 0 ? totalTagihanDipilih : kalkulasi.totalSisaPiutang;
+    if (nominal <= 0) {
+      alert('Tagihan siswa ini sudah lunas sepenuhnya!');
+      return;
+    }
+
+    try {
+      let itemsArray = Object.values(selectedItems).map((it) => ({
+        ...it,
+        item: it.isCicilan ? `${it.posNama} (Cicilan Sebagian)` : it.posNama,
+        sisaSetelahBayar: Math.max(0, it.sisaHarusBayar - it.bayar)
+      }));
+
+      // Jika belum ada item yang dicentang kasir, otomatis verifikasi lunas seluruh item
+      if (itemsArray.length === 0) {
+        itemsArray = kalkulasi.daftarItemTagihan.filter(it => it.sisa > 0).map(it => ({
+          posId: it.posId,
+          namaBulan: it.namaBulan,
+          posNama: it.nama,
+          targetTotal: it.target,
+          sudahMasuk: it.sudahMasuk,
+          sisaHarusBayar: it.sisa,
+          tipe: it.tipe,
+          bayar: it.sisa,
+          isCicilan: false,
+          item: it.nama,
+          sisaSetelahBayar: 0
+        }));
+      }
+
+      const res = dataService.verifikasiPembayaranVa({
+        siswaId: selectedSiswa.id,
+        nominal,
+        petugas: petugasNama || 'Admin Pusat (Verifikasi VA)',
+        rincianItems: itemsArray,
+        nomorReferensi: `VA-AUTO-${selectedSiswa.va || Date.now().toString().slice(-6)}`,
+        catatan: catatan || 'Verifikasi Transfer Virtual Account Otomatis Terinci (Dikonfirmasi Admin)'
+      });
+
+      confetti({ particleCount: 70, spread: 70, origin: { y: 0.6 } });
+      setSelectedItems({});
+      setUangDiterima('');
+      onUpdateData();
       onShowKuitansi(res);
     } catch (e) {
       alert('Terjadi kesalahan: ' + e.message);
@@ -415,436 +526,364 @@ export default function KasirView({
                       {kelasSiswa?.nama} ({selectedSiswa.jurusanKode})
                     </span>
                   </div>
-                  <p className="text-xs text-slate-500 mt-1">
-                    NIS: <strong>{selectedSiswa.nis}</strong> • No. Virtual Account: <strong className="font-mono text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded">{selectedSiswa.va}</strong>
-                  </p>
+                  <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                    <span className="text-xs text-slate-500">
+                      NIS: <strong>{selectedSiswa.nis}</strong>
+                    </span>
+                    <span className="text-slate-300">•</span>
+                    <span className="text-xs text-slate-500 flex items-center gap-1.5">
+                      No. Virtual Account: 
+                      <strong className="font-mono text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded font-black">
+                        {selectedSiswa.va}
+                      </strong>
+                    </span>
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
+                      selectedSiswa.vaStatus === 'SUDAH_BAYAR' || kalkulasi.totalSisaPiutang === 0
+                        ? 'bg-emerald-100 text-emerald-800'
+                        : 'bg-amber-100 text-amber-900'
+                    }`}>
+                      {selectedSiswa.vaStatus === 'SUDAH_BAYAR' || kalkulasi.totalSisaPiutang === 0 ? '✓ VA Terverifikasi' : '⏳ Menunggu Transfer VA'}
+                    </span>
+                  </div>
                 </div>
 
                 <div className="text-right">
-                  <p className="text-xs text-slate-500 font-medium">Sisa Tunggakan Aktif</p>
-                  <p className="text-2xl font-black text-rose-600 font-mono">
-                    Rp {kalkulasi.totalTunggakanAktif.toLocaleString('id-ID')}
-                  </p>
-                  <p className="text-xs text-slate-500 mt-0.5">
-                    Syarat Rapor: <span className="font-semibold">{kalkulasi.syaratRaport}</span>
+                  <p className="text-xs text-slate-500 font-medium">Syarat Pengambilan Rapor</p>
+                  <p className={`text-sm font-bold ${kalkulasi.isLunasSmt1 ? 'text-emerald-700' : 'text-rose-600'}`}>
+                    {kalkulasi.syaratRaport}
                   </p>
                 </div>
               </div>
 
-              {/* Checklist Tagihan yang Bisa Dipilih untuk Dibayar / Dicicil */}
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <h4 className="text-sm font-bold text-slate-800 flex items-center gap-2">
-                    <span>Pilih Pos Tagihan yang Mau Dibayar / Dicicil:</span>
+              {/* 4 Kartu Ringkasan Keuangan Siswa Terpilih */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200">
+                  <p className="text-[11px] font-bold text-slate-500 uppercase">Total Seluruh Tagihan</p>
+                  <p className="text-lg font-black font-mono text-slate-900 mt-0.5">
+                    Rp {kalkulasi.totalSemuaTagihan.toLocaleString('id-ID')}
+                  </p>
+                  <p className="text-[10px] text-slate-400 mt-0.5">Semua pos biaya & SPP berjalan</p>
+                </div>
+
+                <div className="p-3.5 bg-emerald-50 rounded-xl border border-emerald-200">
+                  <p className="text-[11px] font-bold text-emerald-700 uppercase">Total Sudah Terbayar</p>
+                  <p className="text-lg font-black font-mono text-emerald-800 mt-0.5">
+                    Rp {kalkulasi.totalSudahBayar.toLocaleString('id-ID')}
+                  </p>
+                  <p className="text-[10px] text-emerald-600 mt-0.5">Uang masuk tunai & transfer VA</p>
+                </div>
+
+                <div className="p-3.5 bg-rose-50 rounded-xl border border-rose-200">
+                  <p className="text-[11px] font-bold text-rose-700 uppercase">Sisa Piutang / Belum Bayar</p>
+                  <p className="text-lg font-black font-mono text-rose-700 mt-0.5">
+                    Rp {kalkulasi.totalSisaPiutang.toLocaleString('id-ID')}
+                  </p>
+                  <p className="text-[10px] text-rose-500 mt-0.5">Kekurangan total yang harus disetor</p>
+                </div>
+              </div>
+
+              {/* Bilah Input Uang Diterima & Smart Allocation Engine */}
+              <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 p-4 sm:p-5 rounded-2xl border border-blue-200 space-y-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div>
+                    <h4 className="text-xs sm:text-sm font-black text-slate-900 flex items-center gap-1.5">
+                      <Sparkles className="w-4 h-4 text-amber-500" />
+                      <span>Input Uang Diterima & Alokasi Otomatis (VA / Tunai / Nyicil Fleksibel)</span>
+                    </h4>
+                    <p className="text-[11px] text-slate-600 mt-0.5">
+                      Ketik uang yang dibawa/ditransfer, lalu klik <strong>Alokasikan Otomatis</strong> untuk merinci lunas/cicilan dari item atas ke bawah secara otomatis.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2.5 pt-1">
+                  <div className="relative flex-1 min-w-[200px]">
+                    <span className="absolute left-3 top-2.5 text-xs font-black text-slate-400">Rp</span>
+                    <input
+                      type="number"
+                      placeholder="Ketik uang masuk (misal: 500000)..."
+                      value={uangDiterima}
+                      onChange={(e) => setUangDiterima(e.target.value)}
+                      className="w-full pl-9 pr-3 py-2 bg-white border border-blue-300 rounded-xl text-sm font-mono font-black text-slate-900 focus:ring-2 focus:ring-blue-500 shadow-xs"
+                    />
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleAlokasiOtomatis}
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs cursor-pointer"
+                    title="Alokasikan uang masuk secara berurutan ke tiap item tagihan"
+                  >
+                    <span>🎯 Alokasikan Otomatis</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleBayarPenuhSemua}
+                    className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs cursor-pointer"
+                    title="Bayar lunas seluruh pos tagihan sesuai total tagihan VA"
+                  >
+                    <span>⚡ Bayar Pas Seluruh Tagihan ({kalkulasi.totalSisaPiutang.toLocaleString('id-ID')})</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleResetPilihan}
+                    className="px-3 py-2 bg-white hover:bg-slate-100 text-slate-600 rounded-xl text-xs font-bold transition border border-slate-300 cursor-pointer"
+                    title="Kosongkan pilihan centang"
+                  >
+                    <span>🔄 Reset</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Tabel Rincian Pos Tagihan (Kolom per Item) */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-2">
+                    <Receipt className="w-4 h-4 text-blue-600" />
+                    <span>Daftar Rincian Tagihan Keuangan Siswa (Bisa Diisi / Nyicil per Pos):</span>
                   </h4>
-                  <span className="text-xs bg-amber-50 text-amber-800 border border-amber-200 px-2.5 py-1 rounded-lg font-semibold">
-                    💡 Centang pos, lalu ubah nominal jika ingin mencicil sebagian
+                  <span className="text-[11px] text-slate-500">
+                    Pos terpilih: <strong className="text-blue-700">{Object.keys(selectedItems).length} item</strong>
                   </span>
                 </div>
 
-                <div className="grid grid-cols-1 gap-3.5">
-                  {/* Pos 1: Daftar Ulang (DU) */}
-                  {(() => {
-                    const targetDu = 905000;
-                    const sudahMasuk = selectedSiswa.duJuli || 0;
-                    const sisaDu = Math.max(0, targetDu - sudahMasuk);
-                    const isSelected = !!selectedItems['DU'];
-                    const currentBayar = selectedItems['DU']?.bayar || sisaDu;
-
-                    return (
-                      <div className={`p-4 rounded-xl border transition ${
-                        sisaDu === 0
-                          ? 'bg-slate-50 border-slate-200 opacity-60'
-                          : isSelected
-                          ? 'bg-blue-50/70 border-blue-500 shadow-xs ring-1 ring-blue-500'
-                          : 'bg-white border-slate-200 hover:border-blue-300'
-                      }`}>
-                        <div className="flex items-center justify-between cursor-pointer" onClick={() => {
-                          if (sisaDu > 0) {
-                            toggleItem('DU', {
-                              posId: 'DU',
-                              posNama: 'Daftar Ulang (DU + Juli)',
-                              targetTotal: targetDu,
-                              sudahMasuk,
-                              sisaHarusBayar: sisaDu,
-                              tipe: 'SEKALI_BAYAR'
-                            });
-                          }
-                        }}>
-                          <div className="flex items-center gap-3">
-                            {sisaDu === 0 ? (
-                              <CheckSquare className="w-5 h-5 text-emerald-600" />
-                            ) : isSelected ? (
-                              <CheckSquare className="w-5 h-5 text-blue-600" />
-                            ) : (
-                              <Square className="w-5 h-5 text-slate-400" />
-                            )}
-                            <div>
-                              <p className="text-sm font-bold text-slate-900">Daftar Ulang (Paket DU + Juli)</p>
-                              <p className="text-xs text-slate-500">
-                                Target: Rp {targetDu.toLocaleString('id-ID')} • Sudah Masuk: <strong className="text-emerald-700">Rp {sudahMasuk.toLocaleString('id-ID')}</strong>
-                              </p>
-                            </div>
-                          </div>
-
-                          <div className="text-right">
-                            <span className={`text-xs font-bold font-mono px-2 py-0.5 rounded ${
-                              sisaDu === 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'
-                            }`}>
-                              {sisaDu === 0 ? 'LUNAS' : `Sisa: Rp ${sisaDu.toLocaleString('id-ID')}`}
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Kontrol Input Cicilan jika dicentang */}
-                        {isSelected && sisaDu > 0 && (
-                          <div className="mt-3 pt-3 border-t border-blue-200 flex flex-wrap items-center justify-between gap-3 bg-white p-3 rounded-lg border border-blue-100">
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs font-bold text-slate-700">Nominal Disetor/Dicicil:</span>
-                              <div className="relative">
-                                <span className="absolute left-2.5 top-1.5 text-xs font-bold text-slate-500">Rp</span>
-                                <input
-                                  type="number"
-                                  value={currentBayar}
-                                  onChange={(e) => updateNominalCicilan('DU', e.target.value, sisaDu)}
-                                  className="w-36 pl-8 pr-2 py-1 text-sm font-bold font-mono border border-slate-300 rounded-lg bg-amber-50 focus:bg-white"
-                                />
-                              </div>
-                              <span className="text-xs font-bold text-slate-500">
-                                (Sisa Nanti: Rp {(sisaDu - currentBayar).toLocaleString('id-ID')})
-                              </span>
-                            </div>
-
-                            {/* Tombol Cepat Cicil */}
-                            <div className="flex items-center gap-1.5">
-                              <button
-                                type="button"
-                                onClick={() => updateNominalCicilan('DU', 200000, sisaDu)}
-                                className="text-[11px] font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-1 rounded"
-                              >
-                                Cicil 200rb
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => updateNominalCicilan('DU', 300000, sisaDu)}
-                                className="text-[11px] font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-1 rounded"
-                              >
-                                Cicil 300rb
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => updateNominalCicilan('DU', sisaDu, sisaDu)}
-                                className="text-[11px] font-bold bg-blue-100 hover:bg-blue-200 text-blue-800 px-2 py-1 rounded"
-                              >
-                                Bayar Lunas Sisa
-                              </button>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })()}
-
-                  {/* Pos 2: SPI (Sumbangan Pengembangan Institusi / Gedung) */}
-                  {(() => {
-                    const targetSpi = 2000000;
-                    const sudahMasukSpi = selectedSiswa.spi || 0;
-                    const sisaSpi = Math.max(0, targetSpi - sudahMasukSpi);
-                    const isSelected = !!selectedItems['SPI'];
-                    const currentBayar = selectedItems['SPI']?.bayar || sisaSpi;
-
-                    return (
-                      <div className={`p-4 rounded-xl border transition ${
-                        sisaSpi === 0
-                          ? 'bg-slate-50 border-slate-200 opacity-60'
-                          : isSelected
-                          ? 'bg-blue-50/70 border-blue-500 shadow-xs ring-1 ring-blue-500'
-                          : 'bg-white border-slate-200 hover:border-blue-300'
-                      }`}>
-                        <div className="flex items-center justify-between cursor-pointer" onClick={() => {
-                          if (sisaSpi > 0) {
-                            toggleItem('SPI', {
-                              posId: 'SPI',
-                              posNama: 'SPI (Sumbangan Pengembangan Institusi)',
-                              targetTotal: targetSpi,
-                              sudahMasuk: sudahMasukSpi,
-                              sisaHarusBayar: sisaSpi,
-                              tipe: 'SEKALI_BAYAR'
-                            });
-                          }
-                        }}>
-                          <div className="flex items-center gap-3">
-                            {sisaSpi === 0 ? (
-                              <CheckSquare className="w-5 h-5 text-emerald-600" />
-                            ) : isSelected ? (
-                              <CheckSquare className="w-5 h-5 text-blue-600" />
-                            ) : (
-                              <Square className="w-5 h-5 text-slate-400" />
-                            )}
-                            <div>
-                              <p className="text-sm font-bold text-slate-900">SPI (Uang Gedung / Sarana)</p>
-                              <p className="text-xs text-slate-500">
-                                Target: Rp {targetSpi.toLocaleString('id-ID')} • Sudah Dicicil: <strong className="text-emerald-700">Rp {sudahMasukSpi.toLocaleString('id-ID')}</strong>
-                              </p>
-                            </div>
-                          </div>
-
-                          <div className="text-right">
-                            <span className={`text-xs font-bold font-mono px-2 py-0.5 rounded ${
-                              sisaSpi === 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'
-                            }`}>
-                              {sisaSpi === 0 ? 'LUNAS' : `Sisa: Rp ${sisaSpi.toLocaleString('id-ID')}`}
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Kontrol Input Cicilan jika dicentang */}
-                        {isSelected && sisaSpi > 0 && (
-                          <div className="mt-3 pt-3 border-t border-blue-200 flex flex-wrap items-center justify-between gap-3 bg-white p-3 rounded-lg border border-blue-100">
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs font-bold text-slate-700">Nominal Cicilan SPI:</span>
-                              <div className="relative">
-                                <span className="absolute left-2.5 top-1.5 text-xs font-bold text-slate-500">Rp</span>
-                                <input
-                                  type="number"
-                                  value={currentBayar}
-                                  onChange={(e) => updateNominalCicilan('SPI', e.target.value, sisaSpi)}
-                                  className="w-36 pl-8 pr-2 py-1 text-sm font-bold font-mono border border-slate-300 rounded-lg bg-amber-50 focus:bg-white"
-                                />
-                              </div>
-                              <span className="text-xs font-bold text-slate-500">
-                                (Sisa Nanti: Rp {(sisaSpi - currentBayar).toLocaleString('id-ID')})
-                              </span>
-                            </div>
-
-                            {/* Tombol Cepat Cicil */}
-                            <div className="flex items-center gap-1.5">
-                              <button
-                                type="button"
-                                onClick={() => updateNominalCicilan('SPI', 250000, sisaSpi)}
-                                className="text-[11px] font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-1 rounded"
-                              >
-                                Cicil 250rb
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => updateNominalCicilan('SPI', 500000, sisaSpi)}
-                                className="text-[11px] font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-1 rounded"
-                              >
-                                Cicil 500rb
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => updateNominalCicilan('SPI', sisaSpi, sisaSpi)}
-                                className="text-[11px] font-bold bg-blue-100 hover:bg-blue-200 text-blue-800 px-2 py-1 rounded"
-                              >
-                                Bayar Lunas Sisa
-                              </button>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })()}
-
-                  {/* Pos 3: SPP Bulanan (Bisa Dicicil per Bulan) */}
-                  <div className="bg-slate-50/70 p-4 rounded-xl border border-slate-200">
-                    <p className="text-xs font-bold uppercase text-slate-600 mb-2">
-                      SPP Bulanan (Bisa Bayar Lunas atau Nyicil per Bulan):
-                    </p>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      {bulanList.map((bln) => {
-                        const sudahBayar = selectedSiswa.bayarBulanan?.[bln] || 0;
-                        const sisaBulan = Math.max(0, nominalSpp - sudahBayar);
-                        const key = `BULAN_${bln}`;
-                        const isSelected = !!selectedItems[key];
-                        const currentBayar = selectedItems[key]?.bayar || sisaBulan;
+                <div className="overflow-x-auto border border-slate-200 rounded-2xl">
+                  <table className="w-full text-xs text-left">
+                    <thead className="bg-slate-50 text-slate-700 uppercase font-bold border-b border-slate-200">
+                      <tr>
+                        <th className="p-3 w-10 text-center">Pilih</th>
+                        <th className="p-3">Pos Tagihan & Kategori</th>
+                        <th className="p-3 text-right">Tarif Total</th>
+                        <th className="p-3 text-right">Sudah Masuk</th>
+                        <th className="p-3 text-right">Sisa Piutang</th>
+                        <th className="p-3 text-center min-w-[200px]">Bayar Sekarang (Input Manual/Auto)</th>
+                        <th className="p-3 text-right">Kekurangan Nanti</th>
+                        <th className="p-3 text-center">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 font-medium text-slate-800">
+                      {(kalkulasi.daftarItemTagihan || []).map((item) => {
+                        const isSelected = !!selectedItems[item.id];
+                        const bayarSekarang = isSelected ? (selectedItems[item.id]?.bayar !== undefined ? selectedItems[item.id].bayar : item.sisa) : 0;
+                        const sisaNanti = Math.max(0, item.sisa - bayarSekarang);
+                        const isLunasPenuh = item.sisa === 0 || (isSelected && sisaNanti === 0);
 
                         return (
-                          <div
-                            key={bln}
-                            className={`p-3 rounded-xl border transition ${
-                              sisaBulan === 0
-                                ? 'bg-emerald-50/40 border-emerald-200 opacity-60'
+                          <tr 
+                            key={item.id} 
+                            className={`transition ${
+                              item.sisa === 0
+                                ? 'bg-slate-50/50 opacity-60'
                                 : isSelected
-                                ? 'bg-blue-50 border-blue-500 ring-1 ring-blue-500 shadow-xs'
-                                : 'bg-white border-slate-200 hover:border-blue-300'
+                                ? 'bg-blue-50/60'
+                                : 'hover:bg-slate-50'
                             }`}
                           >
-                            <div
-                              className="flex items-center justify-between cursor-pointer"
-                              onClick={() => {
-                                if (sisaBulan > 0) {
-                                  toggleItem(key, {
-                                    posId: 'SPP',
-                                    namaBulan: bln,
-                                    posNama: `SPP Bulan ${bln}`,
-                                    targetTotal: nominalSpp,
-                                    sudahMasuk: sudahBayar,
-                                    sisaHarusBayar: sisaBulan,
-                                    tipe: 'BULANAN'
-                                  });
-                                }
-                              }}
-                            >
-                              <div className="flex items-center gap-2">
-                                {sisaBulan === 0 ? (
-                                  <CheckSquare className="w-4 h-4 text-emerald-600" />
-                                ) : isSelected ? (
-                                  <CheckSquare className="w-4 h-4 text-blue-600" />
-                                ) : (
-                                  <Square className="w-4 h-4 text-slate-400" />
-                                )}
-                                <div>
-                                  <p className="text-sm font-bold text-slate-800">{bln}</p>
-                                  <p className="text-[11px] text-slate-500">
-                                    Sudah: Rp {sudahBayar.toLocaleString('id-ID')}
-                                  </p>
-                                </div>
-                              </div>
-                              <span className={`text-xs font-mono font-bold ${
-                                sisaBulan === 0 ? 'text-emerald-700' : 'text-slate-800'
-                              }`}>
-                                {sisaBulan === 0 ? 'LUNAS' : `Sisa: ${sisaBulan.toLocaleString('id-ID')}`}
-                              </span>
-                            </div>
-
-                            {/* Form Cicil Bulan Ini */}
-                            {isSelected && sisaBulan > 0 && (
-                              <div className="mt-2 pt-2 border-t border-blue-200 flex items-center justify-between gap-2">
-                                <div className="flex items-center gap-1.5">
-                                  <span className="text-[11px] font-bold text-slate-600">Cicil:</span>
-                                  <input
-                                    type="number"
-                                    value={currentBayar}
-                                    onChange={(e) => updateNominalCicilan(key, e.target.value, sisaBulan)}
-                                    className="w-24 px-1.5 py-0.5 text-xs font-bold font-mono border border-slate-300 rounded bg-amber-50"
-                                  />
-                                </div>
-                                <button
-                                  type="button"
-                                  onClick={() => updateNominalCicilan(key, sisaBulan, sisaBulan)}
-                                  className="text-[10px] font-bold text-blue-700 hover:underline"
-                                >
-                                  Lunas Sisa
-                                </button>
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* Pos Biaya Lain-Lain & Praktik Kejuruan (Custom Pos Biaya) */}
-                  {(() => {
-                    const customPosList = (data.posBiaya || []).filter((p) => {
-                      if (['SPP', 'DU', 'SPI', 'TUNGGAKAN_LALU'].includes(p.id)) return false;
-                      const matchJurusan = p.targetJurusan === 'SEMUA' || p.targetJurusan === selectedSiswa?.jurusanKode;
-                      const matchTingkat = p.targetTingkat === 'SEMUA' || p.targetTingkat === selectedSiswa?.tingkat;
-                      return matchJurusan && matchTingkat;
-                    });
-
-                    if (customPosList.length === 0) return null;
-
-                    return (
-                      <div className="pt-2">
-                        <div className="flex items-center justify-between mb-2">
-                          <h5 className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
-                            <span className="w-2 h-2 rounded-full bg-purple-500"></span>
-                            Pos Biaya Lain-Lain & Praktik Kejuruan ({selectedSiswa?.jurusanKode}):
-                          </h5>
-                          <span className="text-[11px] text-slate-500">
-                            Sesuai Jurusan & Tingkat Siswa
-                          </span>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                          {customPosList.map((pos) => {
-                            const key = `POS_${pos.id}`;
-                            const targetNominal = (pos.tarifJurusan && selectedSiswa?.jurusanKode && pos.tarifJurusan[selectedSiswa.jurusanKode]) || pos.nominalDefault || 0;
-                            const isSelected = !!selectedItems[key];
-                            const currentBayar = selectedItems[key]?.bayar !== undefined ? selectedItems[key].bayar : targetNominal;
-
-                            return (
-                              <div
-                                key={pos.id}
-                                className={`p-3.5 rounded-xl border transition ${
-                                  isSelected
-                                    ? 'bg-purple-50/80 border-purple-400 shadow-xs ring-1 ring-purple-400'
-                                    : 'bg-white border-slate-200 hover:border-purple-300'
-                                }`}
-                              >
-                                <div
-                                  className="flex items-center justify-between cursor-pointer"
-                                  onClick={() => {
-                                    toggleItem(key, {
-                                      posId: pos.id,
-                                      posNama: pos.nama,
-                                      targetTotal: targetNominal,
-                                      sudahMasuk: 0,
-                                      sisaHarusBayar: targetNominal,
-                                      tipe: pos.tipe || 'SEKALI_BAYAR'
+                            <td className="p-3 text-center">
+                              <input
+                                type="checkbox"
+                                disabled={item.sisa === 0}
+                                checked={isSelected}
+                                onChange={() => {
+                                  if (item.sisa > 0) {
+                                    toggleItem(item.id, {
+                                      posId: item.posId,
+                                      namaBulan: item.namaBulan,
+                                      posNama: item.nama,
+                                      targetTotal: item.target,
+                                      sudahMasuk: item.sudahMasuk,
+                                      sisaHarusBayar: item.sisa,
+                                      tipe: item.tipe
                                     });
-                                  }}
-                                >
-                                  <div className="flex items-center gap-2.5">
-                                    {isSelected ? (
-                                      <CheckSquare className="w-4 h-4 text-purple-600 flex-shrink-0" />
-                                    ) : (
-                                      <Square className="w-4 h-4 text-slate-400 flex-shrink-0" />
-                                    )}
-                                    <div>
-                                      <p className="text-xs font-bold text-slate-900 leading-tight">
-                                        {pos.nama}
-                                      </p>
-                                      <p className="text-[10px] text-slate-500 mt-0.5">
-                                        {pos.targetJurusan !== 'SEMUA' ? `Khusus ${pos.targetJurusan}` : 'Semua Jurusan'} • {pos.tipe === 'BULANAN' ? 'Bulanan' : 'Sekali Bayar'}
-                                      </p>
-                                    </div>
+                                  }
+                                }}
+                                className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 cursor-pointer"
+                              />
+                            </td>
+
+                            <td className="p-3">
+                              <p className="font-extrabold text-slate-900 leading-tight">
+                                {item.nama}
+                              </p>
+                              <div className="flex items-center gap-1.5 mt-0.5">
+                                <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded ${
+                                  item.tipe === 'BULANAN'
+                                    ? 'bg-blue-100 text-blue-800'
+                                    : 'bg-purple-100 text-purple-800'
+                                }`}>
+                                  {item.tipe === 'BULANAN' ? 'Bulanan' : 'Sekali Bayar'}
+                                </span>
+                              </div>
+                            </td>
+
+                            <td className="p-3 text-right font-mono font-bold text-slate-700">
+                              Rp {item.target.toLocaleString('id-ID')}
+                            </td>
+
+                            <td className="p-3 text-right font-mono font-bold text-emerald-700">
+                              Rp {item.sudahMasuk.toLocaleString('id-ID')}
+                            </td>
+
+                            <td className="p-3 text-right font-mono font-bold text-slate-900">
+                              Rp {item.sisa.toLocaleString('id-ID')}
+                            </td>
+
+                            {/* Kolom Input Bayar Sekarang & Quick Chips */}
+                            <td className="p-3 text-center">
+                              {item.sisa > 0 ? (
+                                <div className="space-y-1">
+                                  <div className="relative inline-block w-full max-w-[170px]">
+                                    <span className="absolute left-2.5 top-1.5 text-[11px] font-bold text-slate-400">Rp</span>
+                                    <input
+                                      type="number"
+                                      value={isSelected ? bayarSekarang : ''}
+                                      placeholder={item.sisa.toLocaleString('id-ID')}
+                                      onChange={(e) => {
+                                        if (!isSelected) {
+                                          toggleItem(item.id, {
+                                            posId: item.posId,
+                                            namaBulan: item.namaBulan,
+                                            posNama: item.nama,
+                                            targetTotal: item.target,
+                                            sudahMasuk: item.sudahMasuk,
+                                            sisaHarusBayar: item.sisa,
+                                            tipe: item.tipe
+                                          });
+                                        }
+                                        updateNominalCicilan(item.id, e.target.value, item.sisa);
+                                      }}
+                                      className={`w-full pl-8 pr-2 py-1 text-xs font-mono font-bold border rounded-lg transition ${
+                                        isSelected
+                                          ? 'border-blue-400 bg-white text-blue-900 focus:ring-1 focus:ring-blue-500'
+                                          : 'border-slate-300 bg-slate-50 text-slate-500'
+                                      }`}
+                                    />
                                   </div>
 
-                                  <div className="text-right">
-                                    <span className="text-xs font-mono font-bold text-slate-800">
-                                      Rp {targetNominal.toLocaleString('id-ID')}
-                                    </span>
-                                  </div>
-                                </div>
-
-                                {isSelected && (
-                                  <div className="mt-2.5 pt-2.5 border-t border-purple-200 flex items-center justify-between gap-2">
-                                    <div className="flex items-center gap-1.5">
-                                      <span className="text-[11px] font-bold text-slate-700">Bayar/Cicil:</span>
-                                      <div className="relative">
-                                        <span className="absolute left-1.5 top-0.5 text-[10px] font-bold text-slate-400">Rp</span>
-                                        <input
-                                          type="number"
-                                          value={currentBayar}
-                                          onChange={(e) => updateNominalCicilan(key, e.target.value, targetNominal)}
-                                          className="w-28 pl-6 pr-1.5 py-0.5 text-xs font-mono font-bold border border-slate-300 rounded bg-white"
-                                        />
-                                      </div>
-                                    </div>
+                                  {/* Chip Cepat Bayar per Baris */}
+                                  <div className="flex items-center justify-center gap-1 flex-wrap">
                                     <button
                                       type="button"
-                                      onClick={() => updateNominalCicilan(key, targetNominal, targetNominal)}
-                                      className="text-[10px] font-bold text-purple-700 hover:underline"
+                                      onClick={() => {
+                                        if (!isSelected) {
+                                          toggleItem(item.id, {
+                                            posId: item.posId,
+                                            namaBulan: item.namaBulan,
+                                            posNama: item.nama,
+                                            targetTotal: item.target,
+                                            sudahMasuk: item.sudahMasuk,
+                                            sisaHarusBayar: item.sisa,
+                                            tipe: item.tipe
+                                          });
+                                        }
+                                        updateNominalCicilan(item.id, item.sisa, item.sisa);
+                                      }}
+                                      className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-100 hover:bg-blue-200 text-blue-800 cursor-pointer"
                                     >
-                                      Lunas (Rp {targetNominal.toLocaleString('id-ID')})
+                                      Lunas Sisa
                                     </button>
+                                    {item.sisa > 100000 && (
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          if (!isSelected) {
+                                            toggleItem(item.id, {
+                                              posId: item.posId,
+                                              namaBulan: item.namaBulan,
+                                              posNama: item.nama,
+                                              targetTotal: item.target,
+                                              sudahMasuk: item.sudahMasuk,
+                                              sisaHarusBayar: item.sisa,
+                                              tipe: item.tipe
+                                            });
+                                          }
+                                          updateNominalCicilan(item.id, 100000, item.sisa);
+                                        }}
+                                        className="text-[9px] font-semibold px-1.5 py-0.5 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 cursor-pointer"
+                                      >
+                                        100rb
+                                      </button>
+                                    )}
+                                    {item.sisa > 250000 && (
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          if (!isSelected) {
+                                            toggleItem(item.id, {
+                                              posId: item.posId,
+                                              namaBulan: item.namaBulan,
+                                              posNama: item.nama,
+                                              targetTotal: item.target,
+                                              sudahMasuk: item.sudahMasuk,
+                                              sisaHarusBayar: item.sisa,
+                                              tipe: item.tipe
+                                            });
+                                          }
+                                          updateNominalCicilan(item.id, 250000, item.sisa);
+                                        }}
+                                        className="text-[9px] font-semibold px-1.5 py-0.5 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 cursor-pointer"
+                                      >
+                                        250rb
+                                      </button>
+                                    )}
                                   </div>
-                                )}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    );
-                  })()}
+                                </div>
+                              ) : (
+                                <span className="text-[11px] font-bold text-emerald-700 font-mono">
+                                  ✓ Sudah Lunas
+                                </span>
+                              )}
+                            </td>
+
+                            {/* Kolom Kekurangan Nanti (Sisa Kurang Rp) */}
+                            <td className="p-3 text-right font-mono">
+                              {item.sisa === 0 ? (
+                                <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold">
+                                  LUNAS (Rp 0)
+                                </span>
+                              ) : isSelected ? (
+                                sisaNanti === 0 ? (
+                                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-black">
+                                    LUNAS (Rp 0)
+                                  </span>
+                                ) : (
+                                  <span className="text-[10px] px-2 py-0.5 rounded-md bg-amber-100 text-amber-900 font-black">
+                                    Kurang: Rp {sisaNanti.toLocaleString('id-ID')}
+                                  </span>
+                                )
+                              ) : (
+                                <span className="text-[10px] px-2 py-0.5 rounded-md bg-rose-50 text-rose-700 font-bold">
+                                  Kurang: Rp {item.sisa.toLocaleString('id-ID')}
+                                </span>
+                              )}
+                            </td>
+
+                            <td className="p-3 text-center">
+                              <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
+                                item.sisa === 0 || (isSelected && sisaNanti === 0)
+                                  ? 'bg-emerald-100 text-emerald-800'
+                                  : (item.sudahMasuk > 0 || (isSelected && bayarSekarang > 0))
+                                  ? 'bg-amber-100 text-amber-900'
+                                  : 'bg-slate-100 text-slate-600'
+                              }`}>
+                                {item.sisa === 0 || (isSelected && sisaNanti === 0)
+                                  ? 'LUNAS'
+                                  : (item.sudahMasuk > 0 || (isSelected && bayarSekarang > 0))
+                                  ? 'CICILAN'
+                                  : 'BELUM'}
+                              </span>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
                 </div>
               </div>
 
-              {/* Form Metode Bayar & Submit Kasir */}
+              {/* Form Metode Bayar, Verifikasi VA, dan Submit Kasir */}
               <div className="pt-4 border-t border-slate-200 space-y-4 bg-slate-50 -mx-6 -mb-6 p-6 rounded-b-2xl">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
@@ -855,10 +894,10 @@ export default function KasirView({
                       <button
                         type="button"
                         onClick={() => setMetodeBayar('TUNAI')}
-                        className={`py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 border transition ${
+                        className={`py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 border transition cursor-pointer ${
                           metodeBayar === 'TUNAI'
                             ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
-                            : 'bg-white text-slate-700 border-slate-200'
+                            : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
                         }`}
                       >
                         <Banknote className="w-4 h-4" />
@@ -868,14 +907,14 @@ export default function KasirView({
                       <button
                         type="button"
                         onClick={() => setMetodeBayar('VA_TRANSFER')}
-                        className={`py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 border transition ${
+                        className={`py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 border transition cursor-pointer ${
                           metodeBayar === 'VA_TRANSFER'
                             ? 'bg-purple-600 text-white border-purple-600 shadow-xs'
-                            : 'bg-white text-slate-700 border-slate-200'
+                            : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
                         }`}
                       >
                         <Smartphone className="w-4 h-4" />
-                        Simulasi VA
+                        Virtual Account
                       </button>
                     </div>
                   </div>
@@ -888,7 +927,7 @@ export default function KasirView({
                       type="text"
                       value={petugasNama}
                       onChange={(e) => setPetugasNama(e.target.value)}
-                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm"
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm font-semibold"
                     />
                   </div>
 
@@ -906,30 +945,49 @@ export default function KasirView({
                   </div>
                 </div>
 
-                {/* Bar Total & Tombol Cetak Kuitansi */}
+                {/* Bar Total, Sisa Kekurangan & Tombol Aksi */}
                 <div className="flex flex-wrap items-center justify-between gap-4 pt-3 border-t border-slate-200">
-                  <div>
-                    <p className="text-xs text-slate-500 font-semibold uppercase">Total Pembayaran / Cicilan Saat Ini</p>
-                    <p className="text-2xl font-black text-slate-900 font-mono">
-                      Rp {totalTagihanDipilih.toLocaleString('id-ID')}
-                    </p>
-                    <p className="text-xs text-slate-500 mt-0.5">
-                      Jumlah pos yang disetor: {Object.keys(selectedItems).length} item
+                  <div className="space-y-0.5">
+                    <p className="text-xs text-slate-500 font-semibold uppercase">Total Pembayaran Disetor Saat Ini:</p>
+                    <div className="flex items-baseline gap-3">
+                      <p className="text-2xl font-black text-slate-900 font-mono">
+                        Rp {totalTagihanDipilih.toLocaleString('id-ID')}
+                      </p>
+                      <span className="text-xs text-slate-500 font-mono">
+                        (Sisa Kekurangan: <strong className="text-rose-600 font-bold">Rp {Math.max(0, kalkulasi.totalSisaPiutang - totalTagihanDipilih).toLocaleString('id-ID')}</strong>)
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-400">
+                      Item yang dibayar: {Object.keys(selectedItems).length} pos tagihan
                     </p>
                   </div>
 
-                  <button
-                    onClick={handleProsesBayar}
-                    disabled={totalTagihanDipilih <= 0}
-                    className={`px-6 py-3 rounded-xl font-bold flex items-center gap-2 shadow-md transition ${
-                      totalTagihanDipilih > 0
-                        ? 'bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer hover:shadow-lg'
-                        : 'bg-slate-300 text-slate-500 cursor-not-allowed'
-                    }`}
-                  >
-                    <Receipt className="w-5 h-5" />
-                    Proses Bayar & Terbitkan Kuitansi
-                  </button>
+                  <div className="flex items-center gap-2.5 flex-wrap">
+                    {/* Tombol Verifikasi VA Manual oleh Admin (Tombol 'Sudah Bayar') */}
+                    <button
+                      type="button"
+                      onClick={handleVerifikasiVa}
+                      className="px-4 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-black shadow-md transition flex items-center gap-2 cursor-pointer hover:shadow-lg"
+                      title="Verifikasi langsung pembayaran via nomor VA (Tandai Sudah Bayar)"
+                    >
+                      <CheckCircle2 className="w-4 h-4 text-emerald-300" />
+                      <span>✅ Verifikasi VA: Tandai Sudah Bayar</span>
+                    </button>
+
+                    {/* Tombol Pembayaran Reguler */}
+                    <button
+                      onClick={handleProsesBayar}
+                      disabled={totalTagihanDipilih <= 0}
+                      className={`px-5 py-3 rounded-xl font-black text-xs flex items-center gap-2 shadow-md transition ${
+                        totalTagihanDipilih > 0
+                          ? 'bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer hover:shadow-lg'
+                          : 'bg-slate-300 text-slate-500 cursor-not-allowed'
+                      }`}
+                    >
+                      <Receipt className="w-4 h-4" />
+                      <span>Proses Bayar & Terbitkan Kuitansi</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
