@@ -210,13 +210,13 @@ export default function MasterJurusanView({ data, onUpdateData, setActiveTab }) 
                   {j.nama}
                 </h3>
                 <div className="mt-2 text-xs flex items-center gap-1.5 text-slate-500 font-medium">
-                  <span>Kasir Loket:</span>
+                  <span>Alokasi Loket:</span>
                   <span className={`font-bold px-2 py-0.5 rounded-md text-[11px] ${
-                    (j.kasirPj === 'Umi' || j.kode === 'KSP' || j.kode === 'HTL')
+                    (j.kelompok === 'PARIWISATA' || j.kode === 'KSP' || j.kode === 'HTL' || j.kasirPj === 'Umi')
                       ? 'bg-rose-50 text-rose-700 border border-rose-200'
                       : 'bg-blue-50 text-blue-700 border border-blue-200'
                   }`}>
-                    {j.kasirPj || (j.kelompok === 'PARIWISATA' || j.kode === 'KSP' || j.kode === 'HTL' ? 'Umi' : 'Hana')}
+                    {j.kelompok === 'PARIWISATA' || j.kode === 'KSP' || j.kode === 'HTL' || j.kasirPj === 'Umi' ? 'Loket Pariwisata' : 'Loket Bisnis & Manajemen'}
                   </span>
                 </div>
               </div>
@@ -309,15 +309,15 @@ export default function MasterJurusanView({ data, onUpdateData, setActiveTab }) 
 
                 <div>
                   <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">
-                    Kasir Penanggung Jawab
+                    Alokasi Loket Kasir
                   </label>
                   <select
                     value={formData.kasirPj}
                     onChange={(e) => setFormData({ ...formData, kasirPj: e.target.value })}
                     className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs font-bold text-slate-800 focus:ring-2 focus:ring-purple-500"
                   >
-                    <option value="Hana">👩‍💼 Hana (Kasir BisMan)</option>
-                    <option value="Umi">👩‍💼 Umi (Kasir Pariwisata)</option>
+                    <option value="Hana">💼 Loket Bisnis & Manajemen</option>
+                    <option value="Umi">🏖️ Loket Pariwisata</option>
                   </select>
                 </div>
               </div>

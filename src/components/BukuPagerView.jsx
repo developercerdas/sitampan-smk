@@ -118,7 +118,7 @@ export default function BukuPagerView({
               className="bg-slate-50 border border-slate-300 font-bold text-slate-800 text-xs sm:text-sm rounded-xl px-3.5 py-2 focus:ring-2 focus:ring-blue-500"
             >
               {(!isKasirTetap || isKasirHana) && (
-                <optgroup label="💼 Kelompok Bisnis & Manajemen (Kasir: Hana)">
+                <optgroup label="💼 Kelompok Bisnis & Manajemen">
                   {kelasBisMan.map((k) => (
                     <option key={k.id} value={k.id}>
                       {k.nama} • Wali: {k.waliKelas} {isWaliKelas && k.id === currentUser?.kelasId ? '★ (Kelas Anda)' : ''}
@@ -127,7 +127,7 @@ export default function BukuPagerView({
                 </optgroup>
               )}
               {(!isKasirTetap || isKasirUmi) && (
-                <optgroup label="🏖️ Kelompok Pariwisata (Kasir: Umi)">
+                <optgroup label="🏖️ Kelompok Pariwisata">
                   {kelasPariwisata.map((k) => (
                     <option key={k.id} value={k.id}>
                       {k.nama} • Wali: {k.waliKelas} {isWaliKelas && k.id === currentUser?.kelasId ? '★ (Kelas Anda)' : ''}

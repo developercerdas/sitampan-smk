@@ -281,13 +281,15 @@ export default function PpdbView({
     }
 
     try {
-      const namaPetugas = isKasirHana 
-        ? 'Kasir TU - Hana (Bisnis Manajemen)'
-        : isKasirUmi
-        ? 'Kasir TU - Umi (Pariwisata)'
-        : isBendahara
-        ? 'Bendahara Sekolah'
-        : currentUser?.nama || 'Petugas Kasir PPDB';
+      const namaPetugas = currentUser?.nama || (
+        isKasirHana 
+          ? 'Kasir TU - Bisnis & Manajemen'
+          : isKasirUmi
+          ? 'Kasir TU - Pariwisata'
+          : isBendahara
+          ? 'Bendahara Sekolah'
+          : 'Petugas Kasir PPDB'
+      );
 
       // Rincian items yang dibayar
       const rincianList = Object.values(formBayar.itemsTerpilih)

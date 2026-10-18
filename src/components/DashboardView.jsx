@@ -163,9 +163,9 @@ export default function DashboardView({
             </div>
             <h2 className="text-2xl sm:text-3xl font-black mt-2 tracking-tight">
               {isKasirHana 
-                ? '💼 Dashboard Loket Kasir 1: Bisnis & Manajemen'
+                ? '💼 Dashboard Loket: Bisnis & Manajemen'
                 : isKasirUmi
-                ? '🏖️ Dashboard Loket Kasir 2: Pariwisata'
+                ? '🏖️ Dashboard Loket: Pariwisata'
                 : isBendahara
                 ? '💰 Dashboard Real-Time Keuangan Sekolah'
                 : isKepsek
@@ -174,9 +174,9 @@ export default function DashboardView({
             </h2>
             <p className="text-amber-200 text-xs sm:text-sm font-bold mt-1">
               {isKasirHana
-                ? 'Layanan Kasir Khusus: Jurusan AKL, MPLB, dan PM (Kasir: Hana Pratiwi, A.Md.)'
+                ? 'Layanan Loket: Jurusan AKL, MPLB, dan PM'
                 : isKasirUmi
-                ? 'Layanan Kasir Khusus: Jurusan Kecantikan & Spa dan Perhotelan (Kasir: Umi Kalsum, S.E.)'
+                ? 'Layanan Loket: Jurusan Kecantikan & Spa dan Perhotelan'
                 : isBendahara
                 ? 'Manajemen Arus Kas, Setoran Tunai Loket & Rekapitulasi Perbankan'
                 : isKepsek
@@ -233,23 +233,23 @@ export default function DashboardView({
           <div>
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
-                {isKasirHana ? 'Loket Kasir 1' : isKasirUmi ? 'Loket Kasir 2' : 'Mode Sudut Pandang'}
+                {isKasirHana ? 'Loket Keuangan' : isKasirUmi ? 'Loket Keuangan' : 'Mode Sudut Pandang'}
               </span>
               <span className="text-[11px] font-bold text-slate-500">
                 {isKasirHana
-                  ? 'Petugas Kasir: Hana Pratiwi (AKL, MPLB, PM)'
+                  ? 'Loket: Bisnis & Manajemen (AKL, MPLB, PM)'
                   : isKasirUmi
-                  ? 'Petugas Kasir: Umi Kalsum (KSP, HTL)'
+                  ? 'Loket: Pariwisata (KSP, HTL)'
                   : effectiveKelompok === 'BISNIS_MANAJEMEN'
-                  ? 'Sudut Pandang Kasir: Hana (BisMan)'
+                  ? 'Sudut Pandang: Bisnis & Manajemen'
                   : effectiveKelompok === 'PARIWISATA'
-                  ? 'Sudut Pandang Kasir: Umi (Pariwisata)'
+                  ? 'Sudut Pandang: Pariwisata'
                   : 'Manajemen Pusat (Seluruh 5 Jurusan)'}
               </span>
             </div>
             <h3 className="text-base font-black text-slate-900 mt-0.5">
               {effectiveKelompok === 'BISNIS_MANAJEMEN'
-                ? '💼 Kelompok BisMan (AKL, MPLB, PM)'
+                ? '💼 Kelompok Bisnis & Manajemen (AKL, MPLB, PM)'
                 : effectiveKelompok === 'PARIWISATA'
                 ? '🏖️ Kelompok Pariwisata (Kecantikan & Spa, Perhotelan)'
                 : '🏢 Semua Rombel (5 Jurusan Pusat)'}
@@ -287,7 +287,7 @@ export default function DashboardView({
                   : 'text-blue-900 hover:bg-blue-100/60'
               }`}
             >
-              💼 Kelompok BisMan (Loket Hana)
+              💼 Kelompok Bisnis & Manajemen
             </button>
             <button
               type="button"
@@ -298,13 +298,13 @@ export default function DashboardView({
                   : 'text-rose-900 hover:bg-rose-100/60'
               }`}
             >
-              🏖️ Kelompok Pariwisata (Loket Umi)
+              🏖️ Kelompok Pariwisata
             </button>
           </div>
         ) : (
           <div className="px-3.5 py-2 bg-slate-100 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span>Loket Resmi: {isKasirHana ? 'Hana Pratiwi (BisMan)' : 'Umi Kalsum (Pariwisata)'}</span>
+            <span>Loket Resmi: {isKasirHana ? 'Kelompok Bisnis & Manajemen' : 'Kelompok Pariwisata'}</span>
           </div>
         )}
       </div>

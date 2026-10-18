@@ -52,12 +52,9 @@ export default function KasirView({
   const [catatan, setCatatan] = useState('');
 
   const [petugasNama, setPetugasNama] = useState(() => {
-    if (isKasirHana) return 'Kasir TU - Hana (Bisnis Manajemen)';
-    if (isKasirUmi) return 'Kasir TU - Umi (Pariwisata)';
-    if (currentUser?.petugasLabel) return currentUser.petugasLabel;
-    if (kelompokFilter === 'BISNIS_MANAJEMEN') return 'Kasir TU - Hana (Bisnis Manajemen)';
-    if (kelompokFilter === 'PARIWISATA') return 'Kasir TU - Umi (Pariwisata)';
     if (currentUser?.nama) return currentUser.nama;
+    if (kelompokFilter === 'BISNIS_MANAJEMEN') return 'Kasir TU - Bisnis & Manajemen';
+    if (kelompokFilter === 'PARIWISATA') return 'Kasir TU - Pariwisata';
     return 'Admin Pusat TU';
   });
 
@@ -77,11 +74,11 @@ export default function KasirView({
     if (activeKelompok) {
       setInternalKelompok(activeKelompok);
       if (activeKelompok === 'BISNIS_MANAJEMEN') {
-        setPetugasNama('Kasir TU - Hana (Bisnis Manajemen)');
+        setPetugasNama(currentUser?.nama || 'Kasir TU - Bisnis & Manajemen');
       } else if (activeKelompok === 'PARIWISATA') {
-        setPetugasNama('Kasir TU - Umi (Pariwisata)');
+        setPetugasNama(currentUser?.nama || 'Kasir TU - Pariwisata');
       } else {
-        setPetugasNama('Admin Pusat TU');
+        setPetugasNama(currentUser?.nama || 'Admin Pusat TU');
       }
 
       const matchSiswa = data.siswa.find((s) => {
@@ -253,16 +250,16 @@ export default function KasirView({
             </div>
             <h3 className="text-base font-black text-slate-900 mt-0.5">
               {kelompokFilter === 'BISNIS_MANAJEMEN'
-                ? '💼 Kelompok BisMan (Loket Hana)'
+                ? '💼 Kelompok Bisnis & Manajemen'
                 : kelompokFilter === 'PARIWISATA'
-                ? '🏖️ Kelompok Pariwisata (Loket Umi)'
+                ? '🏖️ Kelompok Pariwisata'
                 : '🏢 Semua Rombel (5 Jurusan Pusat)'}
             </h3>
             <p className="text-xs text-slate-500 mt-0.5">
               {kelompokFilter === 'BISNIS_MANAJEMEN'
-                ? 'Penanggung jawab: Kasir Hana — Melayani siswa AKL, MPLB, dan PM.'
+                ? 'Layanan loket keuangan siswa jurusan AKL, MPLB, dan PM.'
                 : kelompokFilter === 'PARIWISATA'
-                ? 'Penanggung jawab: Kasir Umi — Melayani siswa Kecantikan & Spa dan Perhotelan.'
+                ? 'Layanan loket keuangan siswa jurusan Kecantikan & Spa dan Perhotelan.'
                 : 'Pusat Manajemen: Memantau dan melayani seluruh 5 jurusan sekolah.'}
             </p>
           </div>
@@ -284,31 +281,31 @@ export default function KasirView({
             </button>
             <button
               type="button"
-              onClick={() => handleGantiKelompok('BISNIS_MANAJEMEN', 'Kasir TU - Hana (Bisnis Manajemen)')}
+              onClick={() => handleGantiKelompok('BISNIS_MANAJEMEN', 'Kasir TU - Bisnis & Manajemen')}
               className={`flex-1 md:flex-none px-3.5 py-2 rounded-lg transition flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap ${
                 kelompokFilter === 'BISNIS_MANAJEMEN'
                   ? 'bg-blue-600 text-white shadow-xs font-black'
                   : 'text-blue-900 hover:bg-blue-100/60'
               }`}
             >
-              💼 Kelompok BisMan (Loket Hana)
+              💼 Kelompok Bisnis & Manajemen
             </button>
             <button
               type="button"
-              onClick={() => handleGantiKelompok('PARIWISATA', 'Kasir TU - Umi (Pariwisata)')}
+              onClick={() => handleGantiKelompok('PARIWISATA', 'Kasir TU - Pariwisata')}
               className={`flex-1 md:flex-none px-3.5 py-2 rounded-lg transition flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap ${
                 kelompokFilter === 'PARIWISATA'
                   ? 'bg-rose-600 text-white shadow-xs font-black'
                   : 'text-rose-900 hover:bg-rose-100/60'
               }`}
             >
-              🏖️ Kelompok Pariwisata (Loket Umi)
+              🏖️ Kelompok Pariwisata
             </button>
           </div>
         ) : (
           <div className="px-3.5 py-2 bg-slate-100 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span>Loket Resmi: {currentUser?.kelompokNama || 'Kelompok Khusus'}</span>
+            <span>Loket Resmi: {kelompokFilter === 'BISNIS_MANAJEMEN' ? 'Kelompok Bisnis & Manajemen' : kelompokFilter === 'PARIWISATA' ? 'Kelompok Pariwisata' : (currentUser?.kelompokNama || 'Kelompok Khusus')}</span>
           </div>
         )}
       </div>

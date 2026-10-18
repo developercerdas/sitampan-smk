@@ -65,23 +65,23 @@ export default function LoginView({ data, onLogin }) {
       onLogin({
         role: 'KASIR_HANA',
         isKasirTetap: true,
-        nama: 'Hana Pratiwi, A.Md. (Kasir Bisnis Manajemen)',
+        nama: 'Kasir TU - Bisnis & Manajemen',
         username: 'hana',
         kasirKelompok: 'BISNIS_MANAJEMEN',
         kelompokNama: 'Kelompok Bisnis & Manajemen',
         allowedJurusan: ['AKL', 'MPLB', 'PM'],
-        petugasLabel: 'Kasir TU - Hana (Bisnis Manajemen)'
+        petugasLabel: 'Kasir TU - Bisnis & Manajemen'
       });
     } else if (role === 'KASIR_UMI') {
       onLogin({
         role: 'KASIR_UMI',
         isKasirTetap: true,
-        nama: 'Umi Kalsum, S.E. (Kasir Pariwisata)',
+        nama: 'Kasir TU - Pariwisata',
         username: 'umi',
         kasirKelompok: 'PARIWISATA',
         kelompokNama: 'Kelompok Pariwisata',
         allowedJurusan: ['KSP', 'HTL'],
-        petugasLabel: 'Kasir TU - Umi (Pariwisata)'
+        petugasLabel: 'Kasir TU - Pariwisata'
       });
     } else if (role === 'ADMIN') {
       onLogin({
@@ -570,9 +570,9 @@ export default function LoginView({ data, onLogin }) {
                       : staffRole === 'BENDAHARA'
                       ? 'Hj. Siti Nurhaliza, S.E. (Bendahara Sekolah)'
                       : staffRole === 'KASIR_HANA'
-                      ? 'Hana Pratiwi, A.Md. — Kasir Kelompok Bisnis Manajemen'
+                      ? 'Kasir Loket 1 — Kelompok Bisnis & Manajemen'
                       : staffRole === 'KASIR_UMI'
-                      ? 'Umi Kalsum, S.E. — Kasir Kelompok Pariwisata'
+                      ? 'Kasir Loket 2 — Kelompok Pariwisata'
                       : 'Ahmad Junaidi, S.Kom. — Admin Pusat (Semua Jurusan)'}
                   </p>
                   <p className="text-[11px] opacity-80 leading-tight">
@@ -711,17 +711,17 @@ export default function LoginView({ data, onLogin }) {
                 type="button"
                 onClick={() => handleQuickLogin('KASIR_HANA')}
                 className="px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-blue-800 rounded-lg text-xs font-bold border border-blue-300 transition cursor-pointer"
-                title="Login sebagai Kasir Hana (Kelompok Bisnis Manajemen: AKL, MPLB, PM)"
+                title="Login sebagai Kasir Kelompok Bisnis Manajemen: AKL, MPLB, PM (username: hana)"
               >
-                💼 Kasir Hana (BisMan)
+                💼 Kasir Bisnis & Manajemen
               </button>
               <button
                 type="button"
                 onClick={() => handleQuickLogin('KASIR_UMI')}
                 className="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-800 rounded-lg text-xs font-bold border border-rose-300 transition cursor-pointer"
-                title="Login sebagai Kasir Umi (Kelompok Pariwisata: Kecantikan & Spa, Perhotelan)"
+                title="Login sebagai Kasir Kelompok Pariwisata: Kecantikan & Spa, Perhotelan (username: umi)"
               >
-                🏖️ Kasir Umi (Pariwisata)
+                🏖️ Kasir Pariwisata
               </button>
               <button
                 type="button"

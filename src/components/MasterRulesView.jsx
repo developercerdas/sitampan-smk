@@ -63,7 +63,7 @@ export default function MasterRulesView({ data }) {
       activeClass: 'bg-slate-100 border-slate-500 shadow-xs ring-1 ring-slate-500',
       permissions: [
         { nama: 'Loket Pembayaran Kasir (Semua 5 Jurusan)', status: true },
-        { nama: 'Pembagian & Supervisi Kasir (Hana & Umi)', status: true },
+        { nama: 'Pembagian & Supervisi Loket (BisMan & Pariwisata)', status: true },
         { nama: 'Cetak Kuitansi Resmi & Stempel Lunas', status: true },
         { nama: 'Akses Rekapitulasi Buku Pager Semua Kelas', status: true },
         { nama: 'Ekspor Data Setoran ke Excel (.xlsx)', status: true },
@@ -74,15 +74,15 @@ export default function MasterRulesView({ data }) {
       ]
     },
     KASIR_HANA: {
-      nama: 'Kasir 1: Hana (Kelompok Bisnis & Manajemen)',
-      subjudul: 'Hana Pratiwi, A.Md.',
+      nama: 'Kasir 1 (Kelompok Bisnis & Manajemen)',
+      subjudul: 'Loket AKL, MPLB, dan PM',
       deskripsi: 'Bertanggung jawab melayani pembayaran, mutasi VA, dan kartu SPP siswa khusus jurusan AKL, MPLB, dan PM.',
       badge: 'Kasir BisMan',
       badgeColor: 'bg-blue-100 text-blue-800',
       activeClass: 'bg-blue-50 border-blue-500 shadow-xs ring-1 ring-blue-500',
       permissions: [
         { nama: 'Loket Kasir Siswa AKL, MPLB, & PM', status: true },
-        { nama: 'Cetak Kuitansi Resmi Stempel Kasir Hana', status: true },
+        { nama: 'Cetak Kuitansi Resmi Stempel Kasir BisMan', status: true },
         { nama: 'Buku Pager Setoran Rombel Bisnis Manajemen', status: true },
         { nama: 'Ekspor Setoran Kasir BisMan ke Excel', status: true },
         { nama: 'Monitoring Kartu SPP Siswa AKL, MPLB, PM', status: true },
@@ -92,15 +92,15 @@ export default function MasterRulesView({ data }) {
       ]
     },
     KASIR_UMI: {
-      nama: 'Kasir 2: Umi (Kelompok Pariwisata)',
-      subjudul: 'Umi Kalsum, S.E.',
+      nama: 'Kasir 2 (Kelompok Pariwisata)',
+      subjudul: 'Loket Kecantikan & Spa dan Perhotelan',
       deskripsi: 'Bertanggung jawab melayani pembayaran, mutasi VA, dan kartu SPP siswa khusus jurusan Kecantikan & Spa dan Perhotelan.',
       badge: 'Kasir Pariwisata',
       badgeColor: 'bg-rose-100 text-rose-800',
       activeClass: 'bg-rose-50 border-rose-500 shadow-xs ring-1 ring-rose-500',
       permissions: [
         { nama: 'Loket Kasir Siswa Kecantikan & Perhotelan', status: true },
-        { nama: 'Cetak Kuitansi Resmi Stempel Kasir Umi', status: true },
+        { nama: 'Cetak Kuitansi Resmi Stempel Kasir Pariwisata', status: true },
         { nama: 'Buku Pager Setoran Rombel Pariwisata', status: true },
         { nama: 'Ekspor Setoran Kasir Pariwisata ke Excel', status: true },
         { nama: 'Monitoring Kartu SPP Siswa KSP & HTL', status: true },
@@ -234,7 +234,7 @@ export default function MasterRulesView({ data }) {
               }`}
             >
               <div>
-                <p className="font-bold text-sm text-slate-900">💼 Kasir Hana (BisMan)</p>
+                <p className="font-bold text-sm text-slate-900">💼 Kasir Bisnis & Manajemen</p>
                 <p className="text-xs text-slate-500">{roleRules.KASIR_HANA.subjudul}</p>
               </div>
               <span className={`text-xs font-bold px-2 py-0.5 rounded ${roleRules.KASIR_HANA.badgeColor}`}>
@@ -251,7 +251,7 @@ export default function MasterRulesView({ data }) {
               }`}
             >
               <div>
-                <p className="font-bold text-sm text-slate-900">🏖️ Kasir Umi (Pariwisata)</p>
+                <p className="font-bold text-sm text-slate-900">🏖️ Kasir Pariwisata</p>
                 <p className="text-xs text-slate-500">{roleRules.KASIR_UMI.subjudul}</p>
               </div>
               <span className={`text-xs font-bold px-2 py-0.5 rounded ${roleRules.KASIR_UMI.badgeColor}`}>

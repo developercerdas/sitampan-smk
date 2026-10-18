@@ -281,7 +281,7 @@ export default function App() {
                 }`}
               >
                 <span>💼</span>
-                <span>Kelompok BisMan (Loket Hana)</span>
+                <span>Kelompok Bisnis & Manajemen</span>
               </button>
 
               <button
@@ -294,7 +294,7 @@ export default function App() {
                 }`}
               >
                 <span>🏖️</span>
-                <span>Kelompok Pariwisata (Loket Umi)</span>
+                <span>Kelompok Pariwisata</span>
               </button>
             </div>
           </div>

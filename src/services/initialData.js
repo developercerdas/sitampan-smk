@@ -1077,7 +1077,7 @@ export const INITIAL_DATA = {
       tanggal: '2027-03-05',
       total: 2100000,
       metode: 'TUNAI',
-      petugas: 'Kasir TU - Hana (Bisnis Manajemen)',
+      petugas: 'Kasir TU - Bisnis & Manajemen',
       catatan: 'Pelunasan Biaya Formulir, Seragam, MPLS, dan SPI Masuk Tahap 1',
       rincian: [
         { posId: 'PPDB_FORMULIR', nama: 'Formulir & Registrasi PPDB', nominal: 150000 },
@@ -1113,7 +1113,7 @@ export const INITIAL_DATA = {
       tanggal: '2027-03-25',
       total: 2250000,
       metode: 'TUNAI',
-      petugas: 'Kasir TU - Umi (Pariwisata)',
+      petugas: 'Kasir TU - Pariwisata',
       catatan: 'Pelunasan Penuh Biaya PPDB Kejuruan Kecantikan & Spa',
       rincian: [
         { posId: 'PPDB_FORMULIR', nama: 'Formulir & Registrasi PPDB', nominal: 150000 },

@@ -43,33 +43,33 @@ export default function Sidebar({
 
   // Daftar menu yang disesuaikan secara ketat sesuai RULE pengguna
   const getMenuItems = () => {
-    // 1. KASIR 1: HANA (Khusus Kasir Bisnis Manajemen)
+    // 1. KASIR 1: BISNIS MANAJEMEN
     if (isKasirHana) {
       return [
         {
-          group: 'LOKET KASIR BISMAN',
+          group: 'LOKET BISNIS & MANAJEMEN',
           items: [
             { id: 'kasir', label: 'Loket Kasir & Kuitansi (AKL, MPLB, PM)', icon: CreditCard, color: 'text-blue-500' },
             { id: 'ppdb', label: 'PPDB & Siswa Baru BisMan', icon: UserPlus, color: 'text-amber-400' },
             { id: 'buku-pager', label: 'Buku Pager Rombel BisMan', icon: BookOpen, color: 'text-indigo-500' },
             { id: 'kartu-spp', label: 'Cek Kartu SPP Siswa BisMan', icon: Smartphone, color: 'text-emerald-500' },
-            { id: 'dashboard', label: 'Dashboard Kasir Hana', icon: LayoutDashboard, color: 'text-amber-400' }
+            { id: 'dashboard', label: 'Dashboard Kasir BisMan', icon: LayoutDashboard, color: 'text-amber-400' }
           ]
         }
       ];
     }
 
-    // 2. KASIR 2: UMI (Khusus Kasir Pariwisata)
+    // 2. KASIR 2: PARIWISATA
     if (isKasirUmi) {
       return [
         {
-          group: 'LOKET KASIR PARIWISATA',
+          group: 'LOKET PARIWISATA',
           items: [
             { id: 'kasir', label: 'Loket Kasir & Kuitansi (KSP, HTL)', icon: CreditCard, color: 'text-rose-500' },
             { id: 'ppdb', label: 'PPDB & Siswa Baru Pariwisata', icon: UserPlus, color: 'text-amber-400' },
             { id: 'buku-pager', label: 'Buku Pager Rombel Pariwisata', icon: BookOpen, color: 'text-indigo-500' },
             { id: 'kartu-spp', label: 'Cek Kartu SPP Siswa Pariwisata', icon: Smartphone, color: 'text-emerald-500' },
-            { id: 'dashboard', label: 'Dashboard Kasir Umi', icon: LayoutDashboard, color: 'text-amber-400' }
+            { id: 'dashboard', label: 'Dashboard Kasir Pariwisata', icon: LayoutDashboard, color: 'text-amber-400' }
           ]
         }
       ];
